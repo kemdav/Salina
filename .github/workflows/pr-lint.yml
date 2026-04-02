@@ -1,0 +1,33 @@
+name: PR Lint
+
+on:
+  pull_request:
+    branches: [ main ] # This ensures it only runs on PRs targeting your main branch
+
+jobs:
+  eslint:
+    name: ESLint Review
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write # Required so the bot can leave comments on the PR
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Matches the current standard for Next.js
+          cache: 'npm'       # Speeds up future runs by caching dependencies
+
+      - name: Install dependencies
+        run: npm ci          # Safe, clean install
+
+      - name: Run ESLint with Reviewdog
+        uses: reviewdog/action-eslint@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review # This is the magic that creates inline comments
+          eslint_flags: '--ext .js,.jsx,.ts,.tsx .'
