@@ -1,0 +1,9 @@
+# Catch-all for general code
+* @kemdav
+
+# UI and Design Tokens
+*.css   @dontstaycozy
+/src/components/ui/ @dontstaycozy
+
+# Database and Security
+*.sql   @dontstaycozy
