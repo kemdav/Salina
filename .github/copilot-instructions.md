@@ -68,7 +68,7 @@ salina/
 ```bash
 npm run lint          # ESLint (core-web-vitals + TypeScript)
 npm run typecheck     # tsc --noEmit (strict mode)
-npm run build         # Next.js production build via Turbopack
+npm run build         # Next.js production build
 npm run dev           # Dev server at http://localhost:3000
 ```
 
