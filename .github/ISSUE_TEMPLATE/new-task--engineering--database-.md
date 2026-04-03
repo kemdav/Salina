@@ -1,7 +1,7 @@
 ---
 name: New Task (Engineering, Database)
 about: Use this to create a new database task for the sprint.
-title: "[ENG] - Short description of task"
+title: "[ENG] Short description of task"
 labels: Database
 assignees: ''
 
