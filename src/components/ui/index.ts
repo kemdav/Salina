@@ -1,3 +1,3 @@
 export { Button } from './button';
 export { TextInput, PasswordInput } from './input';
-export { Badge } from './Badge';
+export { Badge } from './badge';
