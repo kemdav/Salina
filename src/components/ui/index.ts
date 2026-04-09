@@ -1,4 +1,3 @@
-export { Button } from './Button';
-export { TextInput } from './TextInput';
-export { PasswordInput } from './PasswordInput';
+export { Button } from './button';
+export { TextInput, PasswordInput } from './input';
 export { Badge } from './Badge';
