@@ -1,6 +1,51 @@
 @import "tailwindcss";
 
 :root {
+  /* Colors */
+  --primary: #C6623E;
+  --primary-hover: #A84E2E;
+  --primary-light: #F5E6E0;
+  --secondary: #95CDE0;
+  --accent: #8A6ED4;
+  --neutral: #FBF5F2;
+  --destructive: #DC2626;
+  --success: #16A34A;
+  --warning: #D97706;
+  --muted: #9CA3AF;
+  --surface-light: #FFFFFF;
+  --surface-dark: #1A1A1A;
+
+  /* Typography */
+  --font-heading: 'Plus Jakarta Sans', 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --text-h1: 45px;
+  --text-h2: 35px;
+  --text-h3: 25px;
+  --text-h4: 18px;
+  --text-h5: 16px;
+  --text-paragraph: 16px;
+
+  /* Spacing */
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-10: 40px;
+  --spacing-12: 48px;
+  --spacing-16: 64px;
+
+  /* Base */
+  --radius: 8px;
+  --sidebar-width: 260px;
+  --card-padding: 24px;
+  --grid-max-width: 1440px;
+  --grid-gutter: 24px;
+  --grid-margin: 80px;
+}
+
+:root {
   --background: #ffffff;
   --foreground: #171717;
 }
