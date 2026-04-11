@@ -27,7 +27,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 );
 Input.displayName = "Input";
 
-const PasswordInput = React.forwardRef<HTMLInputElement, InputProps>(
+const PasswordInput = React.forwardRef<HTMLInputElement, Omit<InputProps, "type">>(
   ({ className = "", error, ...props }, ref) => {
     const [showPassword, setShowPassword] = useState(false);
 
