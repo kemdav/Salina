@@ -3,6 +3,9 @@ import { resolveCurrentTenant } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import React from "react";
 
+function normalizeTenantSlug(value: string | null | undefined) {
+  return value?.trim().toLowerCase();
+}
 function SidebarPlaceholder() {
   return (
     <aside className="w-64 bg-slate-50 border-r border-border p-4 flex flex-col justify-between h-full">
@@ -42,16 +45,27 @@ function SidebarPlaceholder() {
 
 export default async function TenantLayout({
   children,
-  params: _params,
+  params,
 }: {
   children: React.ReactNode;
-  params: { tenantSlug: string };
+  params: Promise<{ tenantSlug: string }>;
 }) {
+  const { tenantSlug } = await params;
   const tenantContext = await resolveCurrentTenant();
   const tenant = tenantContext.tenant;
+  const requestedTenantSlug = normalizeTenantSlug(tenantSlug);
+  const resolvedTenantSlug = normalizeTenantSlug(tenantContext.tenantSlug);
 
   if (!tenant) {
-    redirect("/login");
+    redirect("/"); // make this /login if login page is implemented, or show a 404 not found page if you prefer
+  }
+
+  if (
+    requestedTenantSlug &&
+    resolvedTenantSlug &&
+    requestedTenantSlug !== resolvedTenantSlug
+  ) {
+    redirect(`/${tenantContext.tenantSlug}`);
   }
 
   // @ts-expect-error - Assuming themeConfig will be added to the Tenant type in lib/supabase/server.ts
