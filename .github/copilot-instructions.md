@@ -1,5 +1,8 @@
 # Copilot Cloud Agent Instructions
 
+- Follow the rules and guidelines defined in `AGENTS.md` for all tasks.
+- Prioritize the principles outlined in `AGENTS.md` when generating code or making suggestions.
+
 ## Repository Overview
 
 Salina is a **multi-tenant SaaS platform** ("The Operating System for Organizations"). Every accredited organization gets its own subdomain (e.g. `acme.salina.com`), complete namespace isolation via Supabase Row Level Security, and the full feature set — no paywalled tiers.
