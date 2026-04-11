@@ -1,10 +1,51 @@
 @import "tailwindcss";
 
 :root {
-  --primary: #2563eb; /* blue-600 */
-  --primary-hover: #1d4ed8; /* blue-700 */
-  --destructive: #ef4444; /* red-500 */
-  --success: #22c55e; /* green-500 */
+  /* Colors */
+  --primary: #c6623e;
+  --primary-hover: #a84e2e;
+  --primary-light: #f5e6e0;
+  --secondary: #95cde0;
+  --accent: #8a6ed4;
+  --neutral: #fbf5f2;
+  --destructive: #dc2626;
+  --success: #16a34a;
+  --warning: #d97706;
+  --muted: #9ca3af;
+  --surface-light: #ffffff;
+  --surface-dark: #1a1a1a;
+
+  /* Typography */
+  --font-heading: "Plus Jakarta Sans", "Space Grotesk", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --text-h1: 45px;
+  --text-h2: 35px;
+  --text-h3: 25px;
+  --text-h4: 18px;
+  --text-h5: 16px;
+  --text-paragraph: 16px;
+
+  /* Spacing */
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-10: 40px;
+  --spacing-12: 48px;
+  --spacing-16: 64px;
+
+  /* Base */
+  --radius: 8px;
+  --sidebar-width: 260px;
+  --card-padding: 24px;
+  --grid-max-width: 1440px;
+  --grid-gutter: 24px;
+  --grid-margin: 80px;
+}
+
+:root {
   --background: #ffffff;
   --foreground: #0f172a; /* slate-900 */
   --border: #e2e8f0; /* slate-200 */
