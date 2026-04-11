@@ -13,7 +13,7 @@ export default async function Home() {
             </p>
             <h1 className="max-w-2xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
               Proxy-derived tenant context is now available inside the
-              Appppppasdasda Router.
+              App Router.
             </h1>
             <p className="max-w-3xl text-base leading-7 text-stone-300 sm:text-lg">
               The request host is parsed in proxy.ts, forwarded as
