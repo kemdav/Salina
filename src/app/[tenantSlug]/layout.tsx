@@ -68,18 +68,8 @@ export default async function TenantLayout({
     redirect(`/${tenantContext.tenantSlug}`);
   }
 
-  // @ts-expect-error - Assuming themeConfig will be added to the Tenant type in lib/supabase/server.ts
-  const themeConfig = tenant.themeConfig || {};
-
-  // Injecting CSS variables to cascade branding overrides down the tree
-  const style = {
-    ...(themeConfig.primary && { "--primary": themeConfig.primary }),
-    ...(themeConfig.background && { "--background": themeConfig.background }),
-    ...(themeConfig.foreground && { "--foreground": themeConfig.foreground }),
-  } as React.CSSProperties;
-
   return (
-    <div className="flex h-screen w-full bg-background" style={style}>
+    <div className="flex h-screen w-full bg-background">
       <SidebarPlaceholder />
       <main className="flex-1 overflow-auto bg-background text-foreground">
         {children}
