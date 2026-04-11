@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const RESERVED_SUBDOMAINS = new Set(["www", "app", "admin", "api"]);
+import { RESERVED_SUBDOMAINS } from "@/lib/reserved-subdomains";
 
 function normalizeHost(rawHost: string | null): string {
   return (rawHost ?? "").trim().toLowerCase().split(":")[0];
