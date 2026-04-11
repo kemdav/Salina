@@ -42,7 +42,7 @@ function SidebarPlaceholder() {
 
 export default async function TenantLayout({
   children,
-  params,
+  params: _params,
 }: {
   children: React.ReactNode;
   params: { tenantSlug: string };
@@ -54,7 +54,7 @@ export default async function TenantLayout({
     redirect("/login");
   }
 
-  // @ts-ignore - Assuming themeConfig will be added to the Tenant type in lib/supabase/server.ts
+  // @ts-expect-error - Assuming themeConfig will be added to the Tenant type in lib/supabase/server.ts
   const themeConfig = tenant.themeConfig || {};
 
   // Injecting CSS variables to cascade branding overrides down the tree
