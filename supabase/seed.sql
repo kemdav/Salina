@@ -68,6 +68,15 @@ set
   email_confirmed_at = excluded.email_confirmed_at,
   raw_app_meta_data = excluded.raw_app_meta_data,
   raw_user_meta_data = excluded.raw_user_meta_data,
+  instance_id = excluded.instance_id,
+  confirmation_token = excluded.confirmation_token,
+  recovery_token = excluded.recovery_token,
+  email_change_token_new = excluded.email_change_token_new,
+  email_change = excluded.email_change,
+  phone_change = excluded.phone_change,
+  phone_change_token = excluded.phone_change_token,
+  email_change_token_current = excluded.email_change_token_current,
+  reauthentication_token = excluded.reauthentication_token,
   updated_at = timezone('utc', now());
 
 insert into auth.identities (
@@ -227,6 +236,15 @@ set
   email_confirmed_at = excluded.email_confirmed_at,
   raw_app_meta_data = excluded.raw_app_meta_data,
   raw_user_meta_data = excluded.raw_user_meta_data,
+  instance_id = excluded.instance_id,
+  confirmation_token = excluded.confirmation_token,
+  recovery_token = excluded.recovery_token,
+  email_change_token_new = excluded.email_change_token_new,
+  email_change = excluded.email_change,
+  phone_change = excluded.phone_change,
+  phone_change_token = excluded.phone_change_token,
+  email_change_token_current = excluded.email_change_token_current,
+  reauthentication_token = excluded.reauthentication_token,
   updated_at = timezone('utc', now());
 
 insert into auth.identities (
