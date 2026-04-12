@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
 
 // 1. Zod schema validates email format and minimum password length at the server boundary
 const loginSchema = z.object({
@@ -16,28 +16,24 @@ const loginSchema = z.object({
 async function createUserClient() {
   const cookieStore = await cookies();
 
-  return createClient(
+  return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      auth: {
-        flowType: "pkce",
-        persistSession: true,
-        detectSessionInUrl: false,
-        storage: {
-          getItem: (key) => cookieStore.get(key)?.value ?? null,
-          setItem: (key, value) => {
-            cookieStore.set(key, value, {
-              path: "/",
-              httpOnly: true,
-              secure: process.env.NODE_ENV === "production",
-              sameSite: "lax",
-              maxAge: 60 * 60 * 24 * 7, // 7 days
-            });
-          },
-          removeItem: (key) => {
-            cookieStore.delete(key);
-          },
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options),
+            );
+          } catch {
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
         },
       },
     },
