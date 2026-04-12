@@ -88,8 +88,8 @@ export async function signIn(email: string, password: string) {
   }
 
   // 6. Redirect to the tenant shell
-  // Note: Depending on your exact domain mapping strategy `tenant` resolves the route slug.
-  // In production it uses `tenant_slug.salina.com`, locally `tenant_slug.localhost:3000`.
+  // Note: Depending on your exact domain mapping strategy, the organization slug resolves the tenant subdomain.
+  // In production it uses `${tenantSlug}.${ROOT_DOMAIN}`, locally `${tenantSlug}.localhost:3000`.
   const { data: orgData, error: orgError } = await supabase
     .from("organizations")
     .select("slug")
