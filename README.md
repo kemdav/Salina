@@ -153,7 +153,7 @@ cp .env.example .env.local
 # Then paste the anon key, service role key, and URL from the supabase start output
 ```
 
-Open **<http://system-admin.localhost:3000>** — you should see the tenant runtime page showing "System Admin" as the resolved organization.
+Open **<http://salina.localhost:3000/login>** to sign in with a shared local auth host. After login, tenant redirects land on `*.salina.localhost` so the auth cookie stays scoped to local development.
 
 ### Seeded Demo Tenants
 
@@ -161,9 +161,9 @@ The `supabase/seed.sql` file pre-populates three tenants for local development:
 
 | Tenant | Slug | Local URL | Email | Password |
 | --- | --- | --- | --- | --- |
-| System Admin | `system-admin` | <http://system-admin.localhost:3000> | `system-admin@salina.dev` | `SalinaPreview123!` |
-| Acme | `acme` | <http://acme.localhost:3000> | `acme-admin@salina.dev` | `SalinaPreview123!` |
-| ICPEP.SE - CIT University | `icpep-se` | <http://icpep-se.localhost:3000> | `icpep-se-admin@salina.dev` | `SalinaPreview123!` |
+| System Admin | `system-admin` | <http://system-admin.salina.localhost:3000> | `system-admin@salina.dev` | `SalinaPreview123!` |
+| Acme | `acme` | <http://acme.salina.localhost:3000> | `acme-admin@salina.dev` | `SalinaPreview123!` |
+| ICPEP.SE - CIT University | `icpep-se` | <http://icpep-se.salina.localhost:3000> | `icpep-se-admin@salina.dev` | `SalinaPreview123!` |
 
 > These credentials are **local/preview only**. They are committed to the repo intentionally for development convenience.
 

@@ -13,6 +13,7 @@ export default function SandboxPage() {
       name: formData.get('name') as string,
       slug: formData.get('slug') as string,
       billingEmail: formData.get('email') as string,
+      organizationType: formData.get('organizationType') as string,
     });
     setResult(res);
   } catch (error) {
@@ -31,6 +32,14 @@ export default function SandboxPage() {
         <input name="name" placeholder="Organization Name (e.g., Tech Club)" className="border p-2 rounded" required />
         <input name="slug" placeholder="Slug (e.g., tech-club)" className="border p-2 rounded" required />
         <input name="email" type="email" placeholder="Billing Email" className="border p-2 rounded" required />
+        <select name="organizationType" className="border p-2 rounded" defaultValue="Other" required>
+          <option value="Business / Corporation">Business / Corporation</option>
+          <option value="Non-Profit Organization">Non-Profit Organization</option>
+          <option value="Association / Society">Association / Society</option>
+          <option value="Academic Institution">Academic Institution</option>
+          <option value="Government Agency">Government Agency</option>
+          <option value="Other">Other</option>
+        </select>
         
         <button type="submit" className="bg-[#C6623E] text-white p-2 rounded font-bold">
           Run Server Action

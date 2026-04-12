@@ -11,6 +11,7 @@ type OrganizationRecord = {
   billing_email: string | null;
   id: string;
   name: string;
+  organization_type: string | null;
   plan: string;
   slug: string;
 };
@@ -31,6 +32,7 @@ export type TenantContext = {
     billingEmail: string | null;
     id: string;
     name: string;
+    organizationType: string | null;
     plan: string;
     slug: string;
   } | null;
@@ -105,7 +107,7 @@ async function getOrganizationById(tenantId: string): Promise<OrganizationRecord
 
   const { data, error } = await client
     .from("organizations")
-    .select("id, slug, name, plan, billing_email")
+    .select("id, slug, name, plan, billing_email, organization_type")
     .eq("id", tenantId)
     .maybeSingle<OrganizationRecord>();
 
@@ -125,7 +127,7 @@ async function getOrganizationBySlug(tenantSlug: string): Promise<OrganizationRe
 
   const { data, error } = await client
     .from("organizations")
-    .select("id, slug, name, plan, billing_email")
+    .select("id, slug, name, plan, billing_email, organization_type")
     .eq("slug", tenantSlug)
     .maybeSingle<OrganizationRecord>();
 
@@ -229,6 +231,7 @@ export const resolveCurrentTenant = cache(async (): Promise<TenantContext> => {
             billingEmail: tenant.billing_email,
             id: tenant.id,
             name: tenant.name,
+            organizationType: tenant.organization_type,
             plan: tenant.plan,
             slug: tenant.slug,
           },
@@ -249,6 +252,7 @@ export const resolveCurrentTenant = cache(async (): Promise<TenantContext> => {
             billingEmail: tenant.billing_email,
             id: tenant.id,
             name: tenant.name,
+            organizationType: tenant.organization_type,
             plan: tenant.plan,
             slug: tenant.slug,
           },

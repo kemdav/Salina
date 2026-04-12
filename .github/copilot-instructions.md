@@ -185,9 +185,9 @@ Interactive features use React `useOptimistic` for instant feedback. No SWR, Rea
 
 | Tenant | Slug | URL | Email | Password |
 |---|---|---|---|---|
-| System Admin | `system-admin` | `http://system-admin.localhost:3000` | `system-admin@salina.dev` | `SalinaPreview123!` |
-| Acme | `acme` | `http://acme.localhost:3000` | `acme-admin@salina.dev` | `SalinaPreview123!` |
-| ICPEP.SE - CIT University | `icpep-se` | `http://icpep-se.localhost:3000` | `icpep-se-admin@salina.dev` | `SalinaPreview123!` |
+| System Admin | `system-admin` | `http://system-admin.salina.localhost:3000` | `system-admin@salina.dev` | `SalinaPreview123!` |
+| Acme | `acme` | `http://acme.salina.localhost:3000` | `acme-admin@salina.dev` | `SalinaPreview123!` |
+| ICPEP.SE - CIT University | `icpep-se` | `http://icpep-se.salina.localhost:3000` | `icpep-se-admin@salina.dev` | `SalinaPreview123!` |
 
 These credentials are local-only and committed intentionally.
 

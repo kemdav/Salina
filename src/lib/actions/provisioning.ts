@@ -1,18 +1,23 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { createClient, type PostgrestError } from "@supabase/supabase-js";
 import { z } from "zod";
 
+import { getTenantAppUrl } from "@/lib/root-domain";
 import { RESERVED_SUBDOMAINS } from "@/lib/reserved-subdomains";
+import { createUserClient } from "@/lib/supabase/user-server";
 
 const ORGANIZATION_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const SUPABASE_COOKIE_PREFIX = "sb-";
-const SUPABASE_AUTH_COOKIE_SUFFIX = "-auth-token";
+const ORGANIZATION_TYPES = [
+  "Business / Corporation",
+  "Non-Profit Organization",
+  "Association / Society",
+  "Academic Institution",
+  "Government Agency",
+  "Other",
+] as const;
 
-type AuthenticatedUserSession = {
-  access_token?: string;
-};
+type OrganizationType = (typeof ORGANIZATION_TYPES)[number];
 
 type OrganizationInsertResult = {
   id: string;
@@ -26,6 +31,14 @@ const provisionOrganizationSchema = z
       .toLowerCase()
       .email("Enter a valid billing email address."),
     name: z.string().trim().min(1, "Organization name is required."),
+    organizationType: z
+      .string()
+      .trim()
+      .refine(
+        (value): value is OrganizationType =>
+          ORGANIZATION_TYPES.includes(value as OrganizationType),
+        "Please select a valid organization type."
+      ),
     slug: z
       .string()
       .trim()
@@ -47,7 +60,7 @@ export type ProvisionOrganizationInput = z.input<
 >;
 
 export type ProvisionOrganizationResult =
-  | { ok: true; orgId: string }
+  | { ok: true; orgId: string; redirectUrl: string }
   | { ok: false; error: string };
 
 function createSupabaseAdminClient() {
@@ -69,156 +82,6 @@ function createSupabaseAdminClient() {
       },
     },
   });
-}
-
-function getSupabaseAuthCookieName(): string | null {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-
-  if (!url) {
-    return null;
-  }
-
-  try {
-    const hostNamespace = new URL(url).hostname.split(".")[0];
-
-    return `${SUPABASE_COOKIE_PREFIX}${hostNamespace}${SUPABASE_AUTH_COOKIE_SUFFIX}`;
-  } catch {
-    return null;
-  }
-}
-
-function decodeBase64Url(value: string): string | null {
-  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
-  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
-
-  try {
-    return Buffer.from(padded, "base64").toString("utf8");
-  } catch {
-    return null;
-  }
-}
-
-function decodeURIComponentSafely(value: string): string | null {
-  try {
-    return decodeURIComponent(value);
-  } catch {
-    return null;
-  }
-}
-
-function extractAccessToken(value: unknown): string | null {
-  if (typeof value === "string") {
-    return value.split(".").length === 3 ? value : null;
-  }
-
-  if (Array.isArray(value)) {
-    return typeof value[0] === "string" ? value[0] : null;
-  }
-
-  if (typeof value !== "object" || value === null) {
-    return null;
-  }
-
-  const accessToken = (value as AuthenticatedUserSession).access_token;
-
-  return typeof accessToken === "string" ? accessToken : null;
-}
-
-function parseAccessTokenFromCookieValue(rawValue: string): string | null {
-  const candidates = new Set<string>();
-
-  candidates.add(rawValue);
-
-  const decodedURIComponentValue = decodeURIComponentSafely(rawValue);
-
-  if (decodedURIComponentValue) {
-    candidates.add(decodedURIComponentValue);
-  }
-
-  for (const candidate of Array.from(candidates)) {
-    const withoutJsonPrefix = candidate.startsWith("j:")
-      ? candidate.slice(2)
-      : candidate;
-    const withoutQuotes = withoutJsonPrefix.replace(/^"|"$/g, "");
-
-    candidates.add(withoutQuotes);
-
-    if (withoutQuotes.startsWith("base64-")) {
-      const decodedBase64 = decodeBase64Url(withoutQuotes.slice("base64-".length));
-
-      if (decodedBase64) {
-        candidates.add(decodedBase64);
-      }
-    }
-
-    const decodedBase64 = decodeBase64Url(withoutQuotes);
-
-    if (decodedBase64) {
-      candidates.add(decodedBase64);
-    }
-  }
-
-  for (const candidate of candidates) {
-    const directToken = extractAccessToken(candidate);
-
-    if (directToken) {
-      return directToken;
-    }
-
-    try {
-      const parsedValue = JSON.parse(candidate);
-      const parsedToken = extractAccessToken(parsedValue);
-
-      if (parsedToken) {
-        return parsedToken;
-      }
-    } catch {
-      continue;
-    }
-  }
-
-  return null;
-}
-
-function getCookieChunkIndex(cookieName: string, baseName: string): number {
-  if (cookieName === baseName) {
-    return 0;
-  }
-
-  const chunkIndex = Number.parseInt(cookieName.slice(baseName.length + 1), 10);
-
-  return Number.isNaN(chunkIndex) ? Number.MAX_SAFE_INTEGER : chunkIndex + 1;
-}
-
-async function getSupabaseAccessTokenFromCookies(): Promise<string | null> {
-  const authCookieName = getSupabaseAuthCookieName();
-
-  if (!authCookieName) {
-    return null;
-  }
-
-  const cookieStore = await cookies();
-  const directCookie = cookieStore.get(authCookieName)?.value;
-
-  if (directCookie) {
-    return parseAccessTokenFromCookieValue(directCookie);
-  }
-
-  const chunkedCookieValue = cookieStore
-    .getAll()
-    .filter(({ name }) => name === authCookieName || name.startsWith(`${authCookieName}.`))
-    .sort((left, right) => {
-      return (
-        getCookieChunkIndex(left.name, authCookieName) -
-        getCookieChunkIndex(right.name, authCookieName)
-      );
-    })
-    .map(({ value }) => value)
-    .join("");
-
-  return chunkedCookieValue
-    ? parseAccessTokenFromCookieValue(chunkedCookieValue)
-    : null;
 }
 
 function isPostgrestError(error: unknown): error is PostgrestError {
@@ -273,8 +136,9 @@ export async function provisionOrganization(
   }
 
   const client = createSupabaseAdminClient();
+  const userClient = await createUserClient();
 
-  if (!client) {
+  if (!client || !userClient) {
     return {
       error: "Supabase server environment is not configured.",
       ok: false,
@@ -284,19 +148,10 @@ export async function provisionOrganization(
   let organizationId: string | null = null;
 
   try {
-    const accessToken = await getSupabaseAccessTokenFromCookies();
-
-    if (!accessToken) {
-      return {
-        error: "You must be signed in to create an organization.",
-        ok: false,
-      };
-    }
-
     const {
       data: { user },
       error: authError,
-    } = await client.auth.getUser(accessToken);
+    } = await userClient.auth.getUser();
 
     if (authError) {
       throw authError;
@@ -309,12 +164,13 @@ export async function provisionOrganization(
       };
     }
 
-    const { billingEmail, name, slug } = validationResult.data;
+    const { billingEmail, name, organizationType, slug } = validationResult.data;
     const { data: organization, error: organizationError } = await client
       .from("organizations")
       .insert({
         billing_email: billingEmail,
         name,
+        organization_type: organizationType,
         plan: "standard",
         slug,
       })
@@ -339,7 +195,47 @@ export async function provisionOrganization(
       throw membershipError;
     }
 
-    return { ok: true, orgId: organization.id };
+    const currentAppMetadata =
+      user.app_metadata && typeof user.app_metadata === "object"
+        ? (user.app_metadata as Record<string, unknown>)
+        : {};
+    const currentUserMetadata =
+      user.user_metadata && typeof user.user_metadata === "object"
+        ? (user.user_metadata as Record<string, unknown>)
+        : {};
+
+    const { error: metadataError } = await client.auth.admin.updateUserById(
+      user.id,
+      {
+        app_metadata: {
+          ...currentAppMetadata,
+          tenant_id: organization.id,
+          tenant_slug: slug,
+        },
+        user_metadata: {
+          ...currentUserMetadata,
+          tenant_id: organization.id,
+          tenant_slug: slug,
+        },
+      }
+    );
+
+    if (metadataError) {
+      throw metadataError;
+    }
+
+    const { data: refreshedSession, error: refreshError } =
+      await userClient.auth.refreshSession();
+
+    if (refreshError || !refreshedSession.session || !refreshedSession.user) {
+      throw refreshError ?? new Error("Unable to refresh the current session.");
+    }
+
+    return {
+      ok: true,
+      orgId: organization.id,
+      redirectUrl: await getTenantAppUrl(slug),
+    };
   } catch (error) {
     if (organizationId) {
       await deleteOrganizationSilently(organizationId);
