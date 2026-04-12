@@ -33,7 +33,7 @@ Salina is a multi-tenant platform that gives every accredited organization its o
 
 Salina is not another form builder or membership tracker. It is designed as a **unified operating system** — a single platform that replaces the patchwork of tools organizations currently rely on for governance, recruitment, events, communications, and compliance.
 
-Every organization on Salina operates under its own subdomain (e.g. `acme.salina.com`) with **complete namespace isolation**. One organization can never see, query, or modify another organization's data. This isolation is enforced at the database level through Row Level Security, not just at the application layer.
+Every organization on Salina operates under its own subdomain (e.g. `acme.salina.software`) with **complete namespace isolation**. One organization can never see, query, or modify another organization's data. This isolation is enforced at the database level through Row Level Security, not just at the application layer.
 
 ---
 
@@ -157,12 +157,13 @@ Open **<http://system-admin.localhost:3000>** — you should see the tenant runt
 
 ### Seeded Demo Tenants
 
-The `supabase/seed.sql` file pre-populates two tenants for local development:
+The `supabase/seed.sql` file pre-populates three tenants for local development:
 
 | Tenant | Slug | Local URL | Email | Password |
 | --- | --- | --- | --- | --- |
 | System Admin | `system-admin` | <http://system-admin.localhost:3000> | `system-admin@salina.dev` | `SalinaPreview123!` |
 | Acme | `acme` | <http://acme.localhost:3000> | `acme-admin@salina.dev` | `SalinaPreview123!` |
+| ICPEP.SE - CIT University | `icpep-se` | <http://icpep-se.localhost:3000> | `icpep-se-admin@salina.dev` | `SalinaPreview123!` |
 
 > These credentials are **local/preview only**. They are committed to the repo intentionally for development convenience.
 
