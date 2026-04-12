@@ -110,6 +110,12 @@ export default async function Home() {
                     </dd>
                   </div>
                   <div>
+                    <dt className="text-stone-500">Organization type</dt>
+                    <dd className="mt-1 font-mono text-stone-100">
+                      {tenantContext.tenant.organizationType ?? "Not set"}
+                    </dd>
+                  </div>
+                  <div>
                     <dt className="text-stone-500">Billing email</dt>
                     <dd className="mt-1 font-mono text-stone-100">
                       {tenantContext.tenant.billingEmail ?? "Not set"}

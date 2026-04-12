@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { signIn } from "@/lib/actions/auth";
+
+const LOCAL_AUTH_HOST = "salina.localhost";
 
 const labelStyle: React.CSSProperties = {
   display: "block",
@@ -38,6 +40,20 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const { hash, hostname, pathname, port, protocol, search } = window.location;
+
+    if (hostname !== "localhost" && hostname !== "127.0.0.1") {
+      return;
+    }
+
+    const resolvedPort = port ? `:${port}` : "";
+
+    window.location.replace(
+      `${protocol}//${LOCAL_AUTH_HOST}${resolvedPort}${pathname}${search}${hash}`
+    );
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
+import { provisionOrganization } from '@/lib/actions/provisioning';
+
 const ORG_TYPES = [
   'Business / Corporation',
   'Non-Profit Organization',
@@ -99,7 +101,6 @@ export default function AccreditationPage() {
   const [fields, setFields] = useState<Fields>({ orgName: '', orgSlug: '', contactEmail: '', orgType: '' });
   const [errors, setErrors] = useState<Errors>({});
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [serverError, setServerError] = useState('');
 
   function set<K extends keyof Fields>(key: K, value: Fields[K]) {
@@ -114,8 +115,19 @@ export default function AccreditationPage() {
     setErrors({});
     setLoading(true);
     try {
-      await new Promise((r) => setTimeout(r, 1000));
-      setSuccess(true);
+      const result = await provisionOrganization({
+        billingEmail: fields.contactEmail,
+        name: fields.orgName,
+        organizationType: fields.orgType,
+        slug: fields.orgSlug,
+      });
+
+      if (!result.ok) {
+        setServerError(result.error);
+        return;
+      }
+
+      window.location.assign(result.redirectUrl);
     } catch {
       setServerError('Something went wrong. Please try again.');
     } finally {
@@ -123,49 +135,24 @@ export default function AccreditationPage() {
     }
   }
 
-  if (success) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '16px', padding: '16px 0' }}>
-        <div style={{ width: '52px', height: '52px', borderRadius: '50%', backgroundColor: 'color-mix(in srgb, var(--success) 12%, white)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        </div>
-        <div>
-          <h2 style={{ margin: '0 0 8px', fontFamily: 'var(--font-heading)', fontSize: '22px', fontWeight: 700, color: 'var(--foreground)' }}>
-            Application submitted
-          </h2>
-          <p style={{ margin: 0, fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--muted)', lineHeight: 1.6, maxWidth: '320px' }}>
-            We&apos;ll review your application and contact{' '}
-            <strong style={{ color: 'var(--foreground)' }}>{fields.contactEmail}</strong>{' '}
-            within 2 business days.
-          </p>
-        </div>
-        <Link href="/login" className="font-semibold hover:underline transition-colors duration-200" style={{ marginTop: '4px', fontSize: '13px', color: 'var(--primary)', textDecoration: 'none', fontFamily: 'var(--font-body)' }}>
-          Back to sign in
-        </Link>
-      </div>
-    );
-  }
-
   return (
     <div>
       {/* Pre-title */}
       <p style={{ margin: '0 0 8px', fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', fontFamily: 'var(--font-body)' }}>
-        Accreditation Request
+        Organization Provisioning
       </p>
 
       {/* Title */}
       <h1 style={{ margin: '0 0 6px', fontFamily: 'var(--font-heading)', fontSize: '36px', fontWeight: 700, color: 'var(--foreground)', letterSpacing: '-0.5px', lineHeight: 1.15 }}>
-        Apply to Salina
+        Create organization
       </h1>
       <p style={{ margin: '0 0 32px', fontFamily: 'var(--font-body)', fontSize: '15px', color: 'var(--muted)', lineHeight: 1.6 }}>
-        Tell us about your organization. We&apos;ll review and respond within 2 business days.
+        Provision a new organization workspace, assign yourself as its owner, and continue in that tenant immediately.
       </p>
 
       {/* Server error */}
       {serverError && (
-        <div role="alert" style={{
+        <div role="alert" aria-live="polite" style={{
           marginBottom: '20px', padding: '12px 16px',
           backgroundColor: 'color-mix(in srgb, var(--destructive) 8%, white)',
           border: '1px solid color-mix(in srgb, var(--destructive) 25%, white)',
@@ -177,12 +164,13 @@ export default function AccreditationPage() {
       )}
 
       {/* Form */}
-      <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <form onSubmit={handleSubmit} noValidate aria-busy={loading} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
         <div>
           <label htmlFor="orgName" style={labelStyle}>Organization Name</label>
           <input id="orgName" type="text" aria-label="Organization name" placeholder="e.g. Apex Consulting"
             value={fields.orgName} onChange={(e) => set('orgName', e.target.value)}
+            disabled={loading}
             style={inputStyle(!!errors.orgName)} {...focusHandlers(!!errors.orgName)} />
           {errors.orgName && <p style={errorMsgStyle}>{errors.orgName}</p>}
         </div>
@@ -191,11 +179,12 @@ export default function AccreditationPage() {
           <label htmlFor="orgSlug" style={labelStyle}>Organization Slug</label>
           <input id="orgSlug" type="text" aria-label="Organization slug" placeholder="your-slug"
             value={fields.orgSlug} onChange={(e) => set('orgSlug', toSlug(e.target.value))}
+            disabled={loading}
             style={inputStyle(!!errors.orgSlug)} {...focusHandlers(!!errors.orgSlug)} />
           {errors.orgSlug ? (
             <p style={errorMsgStyle}>{errors.orgSlug}</p>
           ) : (
-            <p style={helperMsgStyle}>salina.app/<strong>{fields.orgSlug || 'your-slug'}</strong></p>
+            <p style={helperMsgStyle}>Subdomain: <strong>{fields.orgSlug || 'your-slug'}</strong></p>
           )}
         </div>
 
@@ -203,6 +192,7 @@ export default function AccreditationPage() {
           <label htmlFor="contactEmail" style={labelStyle}>Contact Email</label>
           <input id="contactEmail" type="email" aria-label="Contact email" placeholder="admin@organization.com"
             value={fields.contactEmail} onChange={(e) => set('contactEmail', e.target.value)}
+            disabled={loading}
             style={inputStyle(!!errors.contactEmail)} {...focusHandlers(!!errors.contactEmail)} />
           {errors.contactEmail && <p style={errorMsgStyle}>{errors.contactEmail}</p>}
         </div>
@@ -212,6 +202,7 @@ export default function AccreditationPage() {
           <div style={{ position: 'relative' }}>
             <select id="orgType" aria-label="Type of organization" value={fields.orgType}
               onChange={(e) => set('orgType', e.target.value)}
+              disabled={loading}
               style={{ ...inputStyle(!!errors.orgType), paddingRight: '36px', cursor: 'pointer' }}
               {...focusHandlers(!!errors.orgType)}
             >
@@ -237,7 +228,7 @@ export default function AccreditationPage() {
           }}
           className="hover:opacity-80 transition-opacity duration-200"
         >
-          {loading ? 'Submitting...' : 'Submit application'}
+          {loading ? 'Creating organization...' : 'Create organization'}
         </button>
       </form>
 

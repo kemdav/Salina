@@ -2,13 +2,14 @@
 -- email: system-admin@salina.dev
 -- password: SalinaPreview123!
 
-insert into public.organizations (id, slug, name, plan, billing_email)
+insert into public.organizations (id, slug, name, plan, billing_email, organization_type)
 values (
   '11111111-1111-1111-1111-111111111111',
   'system-admin',
   'System Admin',
   'system',
-  'system-admin@salina.dev'
+  'system-admin@salina.dev',
+  null
 )
 on conflict (id) do update
 set
@@ -16,6 +17,7 @@ set
   name = excluded.name,
   plan = excluded.plan,
   billing_email = excluded.billing_email,
+  organization_type = excluded.organization_type,
   updated_at = timezone('utc', now());
 
 insert into auth.users (
@@ -171,13 +173,14 @@ on conflict (id) do nothing;
 -- email: acme-admin@salina.dev
 -- password: SalinaPreview123!
 
-insert into public.organizations (id, slug, name, plan, billing_email)
+insert into public.organizations (id, slug, name, plan, billing_email, organization_type)
 values (
   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
   'acme',
   'Acme',
   'starter',
-  'acme-admin@salina.dev'
+  'acme-admin@salina.dev',
+  'Business / Corporation'
 )
 on conflict (id) do update
 set
@@ -185,6 +188,7 @@ set
   name = excluded.name,
   plan = excluded.plan,
   billing_email = excluded.billing_email,
+  organization_type = excluded.organization_type,
   updated_at = timezone('utc', now());
 
 insert into auth.users (
@@ -339,13 +343,14 @@ on conflict (id) do nothing;
 -- email: icpep-se-admin@salina.dev
 -- password: SalinaPreview123!
 
-insert into public.organizations (id, slug, name, plan, billing_email)
+insert into public.organizations (id, slug, name, plan, billing_email, organization_type)
 values (
   '13131313-1313-1313-1313-131313131313',
   'icpep-se',
   'ICPEP.SE - CIT University',
   'starter',
-  'icpep-se-admin@salina.dev'
+  'icpep-se-admin@salina.dev',
+  'Academic Institution'
 )
 on conflict (id) do update
 set
@@ -353,6 +358,7 @@ set
   name = excluded.name,
   plan = excluded.plan,
   billing_email = excluded.billing_email,
+  organization_type = excluded.organization_type,
   updated_at = timezone('utc', now());
 
 insert into auth.users (
