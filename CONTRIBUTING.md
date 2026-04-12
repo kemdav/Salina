@@ -83,7 +83,7 @@ Organisms → Molecules → Atoms
 The proxy is the first code that runs on every inbound request. It performs **one job**: extract the tenant slug from the hostname and set it as a request header. This establishes the **namespace isolation boundary** — every downstream layer (Server Components, Server Actions, RLS policies) reads `x-tenant-slug` to scope its behavior.
 
 ```text
-Request: https://acme.salina.com/dashboard
+Request: https://acme.salina.software/dashboard
                  ^^^^
                  subdomain parsed by proxy
 

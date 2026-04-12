@@ -33,7 +33,7 @@ Salina is a multi-tenant platform that gives every accredited organization its o
 
 Salina is not another form builder or membership tracker. It is designed as a **unified operating system** — a single platform that replaces the patchwork of tools organizations currently rely on for governance, recruitment, events, communications, and compliance.
 
-Every organization on Salina operates under its own subdomain (e.g. `acme.salina.com`) with **complete namespace isolation**. One organization can never see, query, or modify another organization's data. This isolation is enforced at the database level through Row Level Security, not just at the application layer.
+Every organization on Salina operates under its own subdomain (e.g. `acme.salina.software`) with **complete namespace isolation**. One organization can never see, query, or modify another organization's data. This isolation is enforced at the database level through Row Level Security, not just at the application layer.
 
 ---
 

@@ -5,7 +5,7 @@
 
 ## Repository Overview
 
-Salina is a **multi-tenant SaaS platform** ("The Operating System for Organizations"). Every accredited organization gets its own subdomain (e.g. `acme.salina.com`), complete namespace isolation via Supabase Row Level Security, and the full feature set — no paywalled tiers.
+Salina is a **multi-tenant SaaS platform** ("The Operating System for Organizations"). Every accredited organization gets its own subdomain (e.g. `acme.salina.software`), complete namespace isolation via Supabase Row Level Security, and the full feature set — no paywalled tiers.
 
 The codebase is **early-stage** — the tenant routing foundation, database security layer, and CI pipeline are in place but most product modules (Policy Engine, Applicant Kanban Board, Digital QR ID) are not yet built.
 
@@ -199,7 +199,7 @@ Copy `.env.example` to `.env.local` and fill in keys from `supabase start` outpu
 | `NEXT_PUBLIC_SUPABASE_URL` | Local: `http://127.0.0.1:54321` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | From `supabase start` output |
 | `SUPABASE_SERVICE_ROLE_KEY` | From `supabase start` output |
-| `ROOT_DOMAIN` | `salina.com` (production) or omit for local |
+| `ROOT_DOMAIN` | `salina.software` (production) or omit for local |
 
 ---
 
