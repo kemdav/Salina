@@ -157,12 +157,13 @@ Open **<http://system-admin.localhost:3000>** — you should see the tenant runt
 
 ### Seeded Demo Tenants
 
-The `supabase/seed.sql` file pre-populates two tenants for local development:
+The `supabase/seed.sql` file pre-populates three tenants for local development:
 
 | Tenant | Slug | Local URL | Email | Password |
 | --- | --- | --- | --- | --- |
 | System Admin | `system-admin` | <http://system-admin.localhost:3000> | `system-admin@salina.dev` | `SalinaPreview123!` |
 | Acme | `acme` | <http://acme.localhost:3000> | `acme-admin@salina.dev` | `SalinaPreview123!` |
+| ICPEP.SE - CIT University | `icpep-se` | <http://icpep-se.localhost:3000> | `icpep-se-admin@salina.dev` | `SalinaPreview123!` |
 
 > These credentials are **local/preview only**. They are committed to the repo intentionally for development convenience.
 
