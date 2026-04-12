@@ -28,7 +28,16 @@ insert into auth.users (
   raw_app_meta_data,
   raw_user_meta_data,
   created_at,
-  updated_at
+  updated_at,
+  instance_id,
+  confirmation_token,
+  recovery_token,
+  email_change_token_new,
+  email_change,
+  phone_change,
+  phone_change_token,
+  email_change_token_current,
+  reauthentication_token
 )
 values (
   '22222222-2222-2222-2222-222222222222',
@@ -46,7 +55,9 @@ values (
     'tenant_slug', 'system-admin'
   ),
   timezone('utc', now()),
-  timezone('utc', now())
+  timezone('utc', now()),
+  '00000000-0000-0000-0000-000000000000',
+  '', '', '', '', '', '', '', ''
 )
 on conflict (id) do update
 set
@@ -177,7 +188,16 @@ insert into auth.users (
   raw_app_meta_data,
   raw_user_meta_data,
   created_at,
-  updated_at
+  updated_at,
+  instance_id,
+  confirmation_token,
+  recovery_token,
+  email_change_token_new,
+  email_change,
+  phone_change,
+  phone_change_token,
+  email_change_token_current,
+  reauthentication_token
 )
 values (
   'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
@@ -194,7 +214,9 @@ values (
     'tenant_slug', 'acme'
   ),
   timezone('utc', now()),
-  timezone('utc', now())
+  timezone('utc', now()),
+  '00000000-0000-0000-0000-000000000000',
+  '', '', '', '', '', '', '', ''
 )
 on conflict (id) do update
 set
