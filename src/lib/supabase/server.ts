@@ -1,6 +1,8 @@
 import "server-only";
 
 import { cache } from "react";
+import { cookies } from "next/headers";
+import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 
 import { getTenantRequestContext } from "@/lib/tenant";
@@ -11,6 +13,14 @@ type OrganizationRecord = {
   name: string;
   plan: string;
   slug: string;
+};
+
+export type ViewerContext = {
+  email: string | null;
+  id: string;
+  isPlatformAdmin: boolean;
+  tenantId: string | null;
+  tenantSlug: string | null;
 };
 
 export type TenantContext = {
@@ -46,6 +56,44 @@ function createSupabaseAdminClient() {
       },
     },
   });
+}
+
+async function createSupabaseUserClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!url || !anonKey) {
+    return null;
+  }
+
+  const cookieStore = await cookies();
+
+  return createServerClient(url, anonKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
+        } catch {
+          // Ignore cookie writes when Next.js disallows mutation in the current render path.
+        }
+      },
+    },
+  });
+}
+
+function getViewerRoles(appMetadata: Record<string, unknown> | undefined) {
+  const rawRoles = appMetadata?.roles;
+
+  if (!Array.isArray(rawRoles)) {
+    return [];
+  }
+
+  return rawRoles.filter((role): role is string => typeof role === "string");
 }
 
 async function getOrganizationById(tenantId: string): Promise<OrganizationRecord | null> {
@@ -111,6 +159,46 @@ async function getOrganizationByHost(host: string): Promise<OrganizationRecord |
 
   return getOrganizationById(data.tenant_id);
 }
+
+export const getCurrentViewer = cache(async (): Promise<ViewerContext | null> => {
+  const client = await createSupabaseUserClient();
+
+  if (!client) {
+    return null;
+  }
+
+  const {
+    data: { user },
+    error,
+  } = await client.auth.getUser();
+
+  if (error || !user) {
+    return null;
+  }
+
+  const roles = getViewerRoles(user.app_metadata);
+  const userMetadata =
+    user.user_metadata && typeof user.user_metadata === "object"
+      ? (user.user_metadata as Record<string, unknown>)
+      : undefined;
+
+  return {
+    email: user.email ?? null,
+    id: user.id,
+    isPlatformAdmin:
+      roles.includes("system_admin") || user.app_metadata?.role === "system_admin",
+    tenantId:
+      typeof user.app_metadata?.tenant_id === "string"
+        ? user.app_metadata.tenant_id
+        : null,
+    tenantSlug:
+      typeof userMetadata?.tenant_slug === "string"
+        ? userMetadata.tenant_slug
+        : typeof user.app_metadata?.tenant_slug === "string"
+          ? user.app_metadata.tenant_slug
+          : null,
+  };
+});
 
 export const resolveCurrentTenant = cache(async (): Promise<TenantContext> => {
   const { host, tenantSlug } = await getTenantRequestContext();

@@ -15,8 +15,8 @@ select policies_are(
 
 insert into public.organizations (id, slug, name)
 values
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'tenant-one', 'Tenant One'),
-  ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'tenant-two', 'Tenant Two');
+  ('90000000-0000-0000-0000-000000000001', 'tenant-one', 'Tenant One'),
+  ('90000000-0000-0000-0000-000000000002', 'tenant-two', 'Tenant Two');
 
 insert into auth.users (
   id,
@@ -32,25 +32,25 @@ insert into auth.users (
 )
 values
   (
-    'aaaaaaaa-1111-1111-1111-111111111111',
+    '90000000-0000-0000-0000-000000000011',
     'authenticated',
     'authenticated',
     'tenant-one@test.salina.dev',
     extensions.crypt('password123', extensions.gen_salt('bf')),
     timezone('utc', now()),
-    jsonb_build_object('tenant_id', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
+    jsonb_build_object('tenant_id', '90000000-0000-0000-0000-000000000001'),
     '{}'::jsonb,
     timezone('utc', now()),
     timezone('utc', now())
   ),
   (
-    'bbbbbbbb-2222-2222-2222-222222222222',
+    '90000000-0000-0000-0000-000000000022',
     'authenticated',
     'authenticated',
     'tenant-two@test.salina.dev',
     extensions.crypt('password123', extensions.gen_salt('bf')),
     timezone('utc', now()),
-    jsonb_build_object('tenant_id', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
+    jsonb_build_object('tenant_id', '90000000-0000-0000-0000-000000000002'),
     '{}'::jsonb,
     timezone('utc', now()),
     timezone('utc', now())
@@ -59,24 +59,24 @@ values
 insert into public.projects (id, tenant_id, slug, name, environment, created_by)
 values
   (
-    'aaaaaaaa-3333-3333-3333-333333333333',
-    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+    '90000000-0000-0000-0000-000000000033',
+    '90000000-0000-0000-0000-000000000001',
     'tenant-one-app',
     'Tenant One App',
     'preview',
-    'aaaaaaaa-1111-1111-1111-111111111111'
+    '90000000-0000-0000-0000-000000000011'
   ),
   (
-    'bbbbbbbb-4444-4444-4444-444444444444',
-    'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+    '90000000-0000-0000-0000-000000000044',
+    '90000000-0000-0000-0000-000000000002',
     'tenant-two-app',
     'Tenant Two App',
     'preview',
-    'bbbbbbbb-2222-2222-2222-222222222222'
+    '90000000-0000-0000-0000-000000000022'
   );
 
 set local role authenticated;
-set local "request.jwt.claims" = '{"role":"authenticated","sub":"aaaaaaaa-1111-1111-1111-111111111111","app_metadata":{"tenant_id":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"}}';
+set local "request.jwt.claims" = '{"role":"authenticated","sub":"90000000-0000-0000-0000-000000000011","app_metadata":{"tenant_id":"90000000-0000-0000-0000-000000000001"}}';
 
 select results_eq(
   'select count(*)::bigint from public.projects',
@@ -92,7 +92,7 @@ select lives_ok(
   'tenant-scoped insert succeeds without manually passing tenant_id'
 );
 
-set local "request.jwt.claims" = '{"role":"authenticated","sub":"bbbbbbbb-2222-2222-2222-222222222222","app_metadata":{"tenant_id":"bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"}}';
+set local "request.jwt.claims" = '{"role":"authenticated","sub":"90000000-0000-0000-0000-000000000022","app_metadata":{"tenant_id":"90000000-0000-0000-0000-000000000002"}}';
 
 select results_eq(
   $$

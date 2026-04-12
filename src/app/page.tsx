@@ -1,7 +1,25 @@
-import { resolveCurrentTenant } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+
+import { getCurrentViewer, resolveCurrentTenant } from "@/lib/supabase/server";
 
 export default async function Home() {
-  const tenantContext = await resolveCurrentTenant();
+  const [tenantContext, viewer] = await Promise.all([
+    resolveCurrentTenant(),
+    getCurrentViewer(),
+  ]);
+
+  if (tenantContext.tenant) {
+    if (!viewer) {
+      redirect("/login");
+    }
+
+    const canAccessTenant =
+      viewer.isPlatformAdmin || viewer.tenantId === tenantContext.tenant.id;
+
+    if (!canAccessTenant) {
+      redirect("/login");
+    }
+  }
 
   return (
     <div className="flex min-h-screen bg-stone-950 text-stone-50">

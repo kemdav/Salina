@@ -1,8 +1,11 @@
 # Copilot Cloud Agent Instructions
 
+- Follow the rules and guidelines defined in `AGENTS.md` for all tasks.
+- Prioritize the principles outlined in `AGENTS.md` when generating code or making suggestions.
+
 ## Repository Overview
 
-Salina is a **multi-tenant SaaS platform** ("The Operating System for Organizations"). Every accredited organization gets its own subdomain (e.g. `acme.salina.com`), complete namespace isolation via Supabase Row Level Security, and the full feature set — no paywalled tiers.
+Salina is a **multi-tenant SaaS platform** ("The Operating System for Organizations"). Every accredited organization gets its own subdomain (e.g. `acme.salina.software`), complete namespace isolation via Supabase Row Level Security, and the full feature set — no paywalled tiers.
 
 The codebase is **early-stage** — the tenant routing foundation, database security layer, and CI pipeline are in place but most product modules (Policy Engine, Applicant Kanban Board, Digital QR ID) are not yet built.
 
@@ -184,6 +187,7 @@ Interactive features use React `useOptimistic` for instant feedback. No SWR, Rea
 |---|---|---|---|---|
 | System Admin | `system-admin` | `http://system-admin.localhost:3000` | `system-admin@salina.dev` | `SalinaPreview123!` |
 | Acme | `acme` | `http://acme.localhost:3000` | `acme-admin@salina.dev` | `SalinaPreview123!` |
+| ICPEP.SE - CIT University | `icpep-se` | `http://icpep-se.localhost:3000` | `icpep-se-admin@salina.dev` | `SalinaPreview123!` |
 
 These credentials are local-only and committed intentionally.
 
@@ -196,7 +200,7 @@ Copy `.env.example` to `.env.local` and fill in keys from `supabase start` outpu
 | `NEXT_PUBLIC_SUPABASE_URL` | Local: `http://127.0.0.1:54321` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | From `supabase start` output |
 | `SUPABASE_SERVICE_ROLE_KEY` | From `supabase start` output |
-| `ROOT_DOMAIN` | `salina.com` (production) or omit for local |
+| `ROOT_DOMAIN` | `salina.software` (production) or omit for local |
 
 ---
 
