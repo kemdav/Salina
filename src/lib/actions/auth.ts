@@ -82,6 +82,7 @@ export async function signIn(email: string, password: string) {
     .from("organization_memberships")
     .select("role, tenant_id")
     .eq("tenant_id", tenantId)
+    .eq("user_id", data.user.id)
     .single();
 
   if (membershipError || !membership) {
