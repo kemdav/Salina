@@ -46,7 +46,7 @@ const provisionOrganizationSchema = z
       .min(1, "Organization slug is required.")
       .regex(
         ORGANIZATION_SLUG_PATTERN,
-        "Slug must contain only lowercase letters, numbers, and hyphens."
+        "Slug must use only lowercase letters, numbers, and single hyphens, and cannot start or end with a hyphen."
       )
       .refine(
         (slug) => !RESERVED_SUBDOMAINS.has(slug),
