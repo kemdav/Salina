@@ -237,10 +237,13 @@ export async function provisionOrganization(
       redirectUrl: await getTenantAppUrl(slug),
     };
   } catch (error) {
-    if (organizationId) {
-      await deleteOrganizationSilently(organizationId);
-    }
+    const errorMessage = getProvisioningErrorMessage(error);
 
-    return { error: getProvisioningErrorMessage(error), ok: false };
+    return {
+      error: organizationId
+        ? `${errorMessage} If your organization was created, please sign out and sign back in before retrying.`
+        : errorMessage,
+      ok: false,
+    };
   }
 }
