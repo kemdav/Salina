@@ -1,1 +1,1 @@
-export const RESERVED_SUBDOMAINS = new Set(["www", "app", "admin", "api"]);
+export const RESERVED_SUBDOMAINS = new Set(["www", "app", "admin", "api", "salina"]);
