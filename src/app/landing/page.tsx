@@ -40,8 +40,8 @@ export default function LandingPage() {
                         From recruitment pipelines to governance modules — everything your organization needs to thrive, in one unified platform.
                     </p>
                     <div className="mt-10 flex flex-wrap gap-4">
-                        <Button className="h-12 px-8 text-base">Request Demo</Button>
-                        <Button variant="secondary" className="h-12 px-8 text-base">Explore Features</Button>
+                        <Button className="h-12 px-8 text-base">Get Started</Button>
+                        <Button variant="secondary" className="h-12 px-8 text-base">Documentation</Button>
                     </div>
                 </div>
 
@@ -55,11 +55,11 @@ export default function LandingPage() {
             <section className="border-y border-[var(--border)] bg-slate-50/50">
                 <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 sm:grid-cols-3 gap-8">
                     <div className="text-center sm:text-left">
-                        <p className="text-3xl font-bold text-[var(--primary)]" style={{ fontFamily: 'var(--font-heading)' }}>99.9%</p>
+                        <p className="text-3xl font-bold text-[var(--primary)]" style={{ fontFamily: 'var(--font-heading)' }}>67.7%</p>
                         <p className="text-sm text-[var(--muted)] uppercase tracking-wider mt-1">Uptime SLA</p>
                     </div>
                     <div className="text-center sm:text-left">
-                        <p className="text-3xl font-bold text-[var(--primary)]" style={{ fontFamily: 'var(--font-heading)' }}>200+</p>
+                        <p className="text-3xl font-bold text-[var(--primary)]" style={{ fontFamily: 'var(--font-heading)' }}>67+</p>
                         <p className="text-sm text-[var(--muted)] uppercase tracking-wider mt-1">Organizations</p>
                     </div>
                     <div className="text-center sm:text-left">
