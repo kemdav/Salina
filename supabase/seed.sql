@@ -128,7 +128,7 @@ insert into public.tenant_domains (id, tenant_id, host, is_primary, verified_at)
 values (
   '55555555-5555-5555-5555-555555555555',
   '11111111-1111-1111-1111-111111111111',
-  'system-admin.localhost',
+  'system-admin.salina.localhost',
   true,
   timezone('utc', now())
 )
@@ -298,7 +298,7 @@ insert into public.tenant_domains (id, tenant_id, host, is_primary, verified_at)
 values (
   'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-  'acme.localhost',
+  'acme.salina.localhost',
   true,
   timezone('utc', now())
 )
@@ -468,7 +468,7 @@ insert into public.tenant_domains (id, tenant_id, host, is_primary, verified_at)
 values (
   '17171717-1717-1717-1717-171717171717',
   '13131313-1313-1313-1313-131313131313',
-  'icpep-se.localhost',
+  'icpep-se.salina.localhost',
   true,
   timezone('utc', now())
 )

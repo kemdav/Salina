@@ -97,7 +97,7 @@ Request: https://acme.salina.software/dashboard
 
 2. **Reserved subdomains** — `www`, `app`, `admin`, and `api` are reserved. They do *not* produce a tenant slug and are intended for platform-level routes.
 
-3. **Local development** — Subdomains like `acme.localhost` work out of the box in Chrome and Edge without `/etc/hosts` changes.
+3. **Local development** — Subdomains like `acme.salina.localhost` are the supported tenant shape. If your browser does not resolve the wildcard automatically, map `salina.localhost` and the tenant host you need in `/etc/hosts` or the Windows hosts file.
 
 4. **Matcher** — The proxy only runs on page routes. Static assets, API routes, and Next.js internals are excluded:
 
