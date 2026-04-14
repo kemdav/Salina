@@ -51,11 +51,12 @@ file_size_limit = "50MiB"
 
 [auth]
 enabled = true
-site_url = "http://127.0.0.1:3000"
+site_url = "http://salina.localhost:3000/login"
 additional_redirect_urls = [
-  "http://localhost:3000/auth/callback",
-  "http://127.0.0.1:3000/auth/callback",
-  "http://admin.localhost:3000/auth/callback",
+  "http://localhost:3000/login",
+  "http://127.0.0.1:3000/login",
+  "http://salina.localhost:3000/login",
+  "http://system-admin.salina.localhost:3000/login",
 ]
 jwt_expiry = 3600
 enable_refresh_token_rotation = true

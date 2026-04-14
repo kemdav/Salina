@@ -153,7 +153,7 @@ cp .env.example .env.local
 # Then paste the anon key, service role key, and URL from the supabase start output
 ```
 
-Open **<http://salina.localhost:3000/login>** to sign in with a shared local auth host. After login, tenant redirects land on `*.salina.localhost` so the auth cookie stays scoped to local development.
+Open **<http://salina.localhost:3000/login>** to sign in with the shared local auth host. After login, tenant redirects land on `*.salina.localhost` so the auth cookie stays scoped to local development. If your browser does not resolve the wildcard automatically, add `salina.localhost` and the tenant hosts you need to your local hosts file.
 
 ### Seeded Demo Tenants
 

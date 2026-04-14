@@ -121,7 +121,7 @@ insert into public.tenant_domains (id, tenant_id, host, is_primary, verified_at)
 values (
   '17171717-1717-1717-1717-171717171717',
   '13131313-1313-1313-1313-131313131313',
-  'icpep-se.localhost',
+  'icpep-se.salina.localhost',
   true,
   timezone('utc', now())
 )

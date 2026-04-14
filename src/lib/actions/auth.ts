@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { LOCAL_COOKIE_DOMAIN } from "@/lib/host-routing";
 import { getTenantAppUrl } from "@/lib/root-domain";
 import { createUserClient } from "@/lib/supabase/user-server";
 
@@ -60,7 +61,7 @@ export async function signIn(email: string, password: string) {
   }
 
   // 2. The Supabase client used for auth is the user-scoped client
-  const supabase = await createUserClient();
+  const supabase = await createUserClient(LOCAL_COOKIE_DOMAIN); // Keep local auth cookies shared across salina.localhost subdomains.
 
   if (!supabase) {
     return { error: "Supabase auth environment is not configured." };
@@ -177,7 +178,7 @@ export async function signUpAction(
 }
 
 export async function signOut() {
-  const supabase = await createUserClient();
+  const supabase = await createUserClient(LOCAL_COOKIE_DOMAIN); // Keep local auth cookies shared across salina.localhost subdomains.
 
   if (!supabase) {
     throw new Error("Supabase auth environment is not configured.");

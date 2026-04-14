@@ -8,9 +8,9 @@ import { AuthLinkRow } from "@/components/molecules/auth-link-row";
 import { PasswordField } from "@/components/molecules/password-field";
 import { StatusBanner } from "@/components/molecules/status-banner";
 import { TextField } from "@/components/molecules/text-field";
+import { getCanonicalLocalAuthUrl } from "@/lib/host-routing";
 import { signInAction, type LoginActionState } from "@/lib/actions/auth";
 
-const LOCAL_AUTH_HOST = "salina.localhost";
 const INITIAL_LOGIN_ACTION_STATE: LoginActionState = {
   email: "",
   error: "",
@@ -23,17 +23,11 @@ export function LoginForm() {
   );
 
   useEffect(() => {
-    const { hash, hostname, pathname, port, protocol, search } = window.location;
+    const redirectUrl = getCanonicalLocalAuthUrl(window.location);
 
-    if (hostname !== "localhost" && hostname !== "127.0.0.1") {
-      return;
+    if (redirectUrl) {
+      window.location.replace(redirectUrl);
     }
-
-    const resolvedPort = port ? `:${port}` : "";
-
-    window.location.replace(
-      `${protocol}//${LOCAL_AUTH_HOST}${resolvedPort}${pathname}${search}${hash}`
-    );
   }, []);
 
   return (
