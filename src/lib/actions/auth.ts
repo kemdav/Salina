@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { LOCAL_COOKIE_DOMAIN } from "@/lib/host-routing";
 import { getTenantAppUrl } from "@/lib/root-domain";
 import { createUserClient } from "@/lib/supabase/user-server";
 
@@ -11,6 +12,43 @@ const loginSchema = z.object({
   email: z.string().email("Invalid email format"),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
+
+const signUpSchema = z
+  .object({
+    confirmPassword: z.string().min(1, "Please confirm your password."),
+    email: z.string().trim().email("Enter a valid email address."),
+    fullName: z.string().trim().min(1, "Full name is required."),
+    password: z.string().min(8, "Minimum 8 characters."),
+  })
+  .superRefine((value, ctx) => {
+    if (value.confirmPassword !== value.password) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Passwords do not match.",
+        path: ["confirmPassword"],
+      });
+    }
+  });
+
+export type LoginActionState = {
+  email: string;
+  error: string;
+};
+
+export type SignUpActionState = {
+  errors: {
+    confirmPassword?: string;
+    email?: string;
+    fullName?: string;
+    password?: string;
+  };
+  fields: {
+    email: string;
+    fullName: string;
+  };
+};
+
+const INITIAL_LOGIN_ERROR = "";
 
 export async function signIn(email: string, password: string) {
   const parsed = loginSchema.safeParse({
@@ -23,7 +61,7 @@ export async function signIn(email: string, password: string) {
   }
 
   // 2. The Supabase client used for auth is the user-scoped client
-  const supabase = await createUserClient();
+  const supabase = await createUserClient(LOCAL_COOKIE_DOMAIN); // Keep local auth cookies shared across salina.localhost subdomains.
 
   if (!supabase) {
     return { error: "Supabase auth environment is not configured." };
@@ -85,8 +123,62 @@ export async function signIn(email: string, password: string) {
   redirect(await getTenantAppUrl(orgData.slug));
 }
 
+export async function signInAction(
+  _previousState: LoginActionState,
+  formData: FormData
+): Promise<LoginActionState> {
+  const email = String(formData.get("email") ?? "").trim();
+  const password = String(formData.get("password") ?? "");
+  const result = await signIn(email, password);
+
+  return {
+    email,
+    error: result?.error ?? INITIAL_LOGIN_ERROR,
+  };
+}
+
+export async function signUpAction(
+  _previousState: SignUpActionState,
+  formData: FormData
+): Promise<SignUpActionState> {
+  const values = {
+    confirmPassword: String(formData.get("confirmPassword") ?? ""),
+    email: String(formData.get("email") ?? "").trim(),
+    fullName: String(formData.get("fullName") ?? "").trim(),
+    password: String(formData.get("password") ?? ""),
+  };
+  const parsed = signUpSchema.safeParse(values);
+
+  if (!parsed.success) {
+    const fieldErrors = parsed.error.flatten().fieldErrors;
+
+    return {
+      errors: {
+        confirmPassword: fieldErrors.confirmPassword?.[0],
+        email: fieldErrors.email?.[0],
+        fullName: fieldErrors.fullName?.[0],
+        password: fieldErrors.password?.[0],
+      },
+      fields: {
+        email: values.email,
+        fullName: values.fullName,
+      },
+    };
+  }
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  return {
+    errors: {},
+    fields: {
+      email: values.email,
+      fullName: values.fullName,
+    },
+  };
+}
+
 export async function signOut() {
-  const supabase = await createUserClient();
+  const supabase = await createUserClient(LOCAL_COOKIE_DOMAIN); // Keep local auth cookies shared across salina.localhost subdomains.
 
   if (!supabase) {
     throw new Error("Supabase auth environment is not configured.");

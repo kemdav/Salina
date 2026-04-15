@@ -1,7 +1,9 @@
-import type { ReactNode } from 'react';
-import { SalinaLogo } from '@/components/ui/salina-logo';
+import type { ReactNode } from "react";
+
+import { AuthShell } from "@/components/organisms/auth-shell";
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
+  return <AuthShell>{children}</AuthShell>;
   return (
     <div className="min-h-screen flex" style={{ fontFamily: 'var(--font-body)' }}>
 
