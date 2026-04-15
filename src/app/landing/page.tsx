@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { SalinaLogo } from '@/components/ui/salina-logo';
 
 export default function LandingPage() {
@@ -48,24 +48,6 @@ export default function LandingPage() {
                 {/* Hero Image Placeholder */}
                 <div className="aspect-video lg:aspect-square bg-[#f8fafc] border-2 border-dashed border-border rounded-[var(--radius)] flex items-center justify-center text-[var(--muted)] font-medium italic shadow-sm">
                     Product Preview Placeholder
-                </div>
-            </section>
-
-            {/* ── Stats Section ── */}
-            <section className="border-y border-border bg-[#fbf5f2]/50">
-                <div className="max-w-[var(--grid-max-width)] mx-auto px-6 py-12 grid grid-cols-1 sm:grid-cols-3 gap-8">
-                    <div className="text-center sm:text-left">
-                        <p className="text-4xl font-bold text-primary font-[family:var(--font-heading)]">67.7%</p>
-                        <p className="text-sm text-[var(--muted)] uppercase tracking-wider mt-2 font-semibold">Uptime SLA</p>
-                    </div>
-                    <div className="text-center sm:text-left">
-                        <p className="text-4xl font-bold text-primary font-[family:var(--font-heading)]">67+</p>
-                        <p className="text-sm text-[var(--muted)] uppercase tracking-wider mt-2 font-semibold">Organizations</p>
-                    </div>
-                    <div className="text-center sm:text-left">
-                        <p className="text-4xl font-bold text-primary font-[family:var(--font-heading)]">50k+</p>
-                        <p className="text-sm text-[var(--muted)] uppercase tracking-wider mt-2 font-semibold">Daily Users</p>
-                    </div>
                 </div>
             </section>
 

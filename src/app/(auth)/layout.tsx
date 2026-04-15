@@ -85,7 +85,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         }}>
           <span>© 2026 KIRK LTD. ALL RIGHTS RESERVED.</span>
           <nav style={{ display: 'flex', alignItems: 'center' }}>
-              {[
+            {[
               { label: 'Privacy Policy', href: '/privacy-policy' },
               { label: 'Terms of Service', href: '/terms-of-service' },
               { label: 'Security', href: '/security' },
