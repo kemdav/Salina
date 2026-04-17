@@ -2,10 +2,19 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 import { RESERVED_SUBDOMAINS } from "@/lib/reserved-subdomains";
-import { getTenantSlugFromHost } from "@/lib/host-routing";
+import { getTenantSlugFromHost, isLandingHost } from "@/lib/host-routing";
 
 export function proxy(request: NextRequest) {
   const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+
+  if (request.nextUrl.pathname === "/" && isLandingHost(host)) {
+    const landingUrl = request.nextUrl.clone();
+
+    landingUrl.pathname = "/landing";
+
+    return NextResponse.rewrite(landingUrl);
+  }
+
   const tenantSlug = getTenantSlugFromHost(host);
   const requestHeaders = new Headers(request.headers);
 

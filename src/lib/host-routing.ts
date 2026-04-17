@@ -38,6 +38,26 @@ function getConfiguredRootDomainHost() {
   return process.env.ROOT_DOMAIN?.trim().toLowerCase().replace(/:\d+$/, "") ?? null;
 }
 
+export function isLandingHost(rawHost: string | null) {
+  const { hostname } = splitHost(rawHost);
+
+  if (!hostname) {
+    return false;
+  }
+
+  if (hostname === "localhost" || hostname === "127.0.0.1") {
+    return true;
+  }
+
+  if (hostname === LOCAL_ROOT_HOST) {
+    return true;
+  }
+
+  const configuredRootDomain = getConfiguredRootDomainHost();
+
+  return configuredRootDomain ? hostname === configuredRootDomain : false;
+}
+
 export function deriveRootDomainFromHost(rawHost: string | null) {
   const { hostname, portSuffix } = splitHost(rawHost);
 
