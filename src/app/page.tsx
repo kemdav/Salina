@@ -39,6 +39,14 @@ export default async function Home() {
             resolutionError={tenantContext.resolutionError}
             tenant={tenantContext.tenant}
           />
+          {tenantContext.tenant ? (
+            <section className="rounded-3xl border border-white/10 bg-stone-900/80 p-6 md:col-span-2">
+              <h2 className="text-sm font-semibold uppercase tracking-[0.22em] text-stone-400">
+                Tenant theme config
+              </h2>
+              <pre className="mt-5 overflow-x-auto rounded-2xl border border-white/5 bg-stone-950/70 p-4 text-xs leading-6 text-stone-200">{JSON.stringify(tenantContext.tenant.themeConfig, null, 2)}</pre>
+            </section>
+          ) : null}
         </section>
       </main>
     </div>
