@@ -6,8 +6,20 @@ import {
   getCanonicalLocalAuthUrl,
   getCookieDomain,
   getTenantSlugFromHost,
+  PRODUCTION_ROOT_DOMAIN,
   isLandingHost,
 } from "./host-routing";
+
+function setEnv(name: string, value: string | undefined) {
+  const env = process.env as Record<string, string | undefined>;
+
+  if (value === undefined) {
+    delete env[name];
+    return;
+  }
+
+  env[name] = value;
+}
 
 test("local hosts resolve to the shared salina.localhost root", () => {
   assert.equal(deriveRootDomainFromHost("localhost:3000"), "salina.localhost:3000");
@@ -36,6 +48,7 @@ test("landing hosts are exact shared roots, not tenant subdomains", () => {
   try {
     assert.equal(isLandingHost("localhost:3000"), true);
     assert.equal(isLandingHost("salina.localhost:3000"), true);
+    assert.equal(isLandingHost("www.salina.software"), true);
     assert.equal(isLandingHost("acme.localhost:3000"), false);
     assert.equal(isLandingHost("acme.salina.localhost:3000"), false);
     assert.equal(isLandingHost("salina.software"), true);
@@ -46,6 +59,30 @@ test("landing hosts are exact shared roots, not tenant subdomains", () => {
     } else {
       process.env.ROOT_DOMAIN = originalRootDomain;
     }
+  }
+});
+
+test("production hosts still resolve when ROOT_DOMAIN is unset", () => {
+  const originalRootDomain = process.env.ROOT_DOMAIN;
+  const originalNodeEnv = process.env.NODE_ENV;
+
+  setEnv("ROOT_DOMAIN", undefined);
+  setEnv("NODE_ENV", "production");
+
+  try {
+    assert.equal(isLandingHost(PRODUCTION_ROOT_DOMAIN), true);
+    assert.equal(isLandingHost(`www.${PRODUCTION_ROOT_DOMAIN}`), true);
+    assert.equal(
+      deriveRootDomainFromHost(PRODUCTION_ROOT_DOMAIN),
+      PRODUCTION_ROOT_DOMAIN
+    );
+    assert.equal(
+      getTenantSlugFromHost(`acme.${PRODUCTION_ROOT_DOMAIN}`),
+      "acme"
+    );
+  } finally {
+    setEnv("ROOT_DOMAIN", originalRootDomain);
+    setEnv("NODE_ENV", originalNodeEnv);
   }
 });
 

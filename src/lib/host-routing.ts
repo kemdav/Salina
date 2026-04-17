@@ -1,6 +1,7 @@
 export const LOCAL_ROOT_DOMAIN = "salina.localhost:3000";
 export const LOCAL_ROOT_HOST = LOCAL_ROOT_DOMAIN.replace(/:\d+$/, "");
 export const LOCAL_COOKIE_DOMAIN = `.${LOCAL_ROOT_HOST}`;
+export const PRODUCTION_ROOT_DOMAIN = "salina.software";
 
 export interface LocationLike {
   hash: string;
@@ -35,7 +36,16 @@ function isLocalhostFamily(hostname: string) {
 }
 
 function getConfiguredRootDomainHost() {
-  return process.env.ROOT_DOMAIN?.trim().toLowerCase().replace(/:\d+$/, "") ?? null;
+  const configuredRootDomain = process.env.ROOT_DOMAIN
+    ?.trim()
+    .toLowerCase()
+    .replace(/:\d+$/, "");
+
+  if (configuredRootDomain) {
+    return configuredRootDomain;
+  }
+
+  return process.env.NODE_ENV === "production" ? PRODUCTION_ROOT_DOMAIN : null;
 }
 
 export function isLandingHost(rawHost: string | null) {
@@ -55,7 +65,14 @@ export function isLandingHost(rawHost: string | null) {
 
   const configuredRootDomain = getConfiguredRootDomainHost();
 
-  return configuredRootDomain ? hostname === configuredRootDomain : false;
+  if (!configuredRootDomain) {
+    return false;
+  }
+
+  return (
+    hostname === configuredRootDomain ||
+    hostname === `www.${configuredRootDomain}`
+  );
 }
 
 export function deriveRootDomainFromHost(rawHost: string | null) {

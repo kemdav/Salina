@@ -5,10 +5,19 @@ import { headers } from "next/headers";
 import {
   deriveRootDomainFromHost,
   LOCAL_ROOT_DOMAIN,
+  PRODUCTION_ROOT_DOMAIN,
 } from "@/lib/host-routing";
 
 export function getRootDomain() {
-  return process.env.ROOT_DOMAIN?.trim() || LOCAL_ROOT_DOMAIN;
+  const configuredRootDomain = process.env.ROOT_DOMAIN?.trim();
+
+  if (configuredRootDomain) {
+    return configuredRootDomain;
+  }
+
+  return process.env.NODE_ENV === "production"
+    ? PRODUCTION_ROOT_DOMAIN
+    : LOCAL_ROOT_DOMAIN;
 }
 
 export async function getRequestAwareRootDomain() {
