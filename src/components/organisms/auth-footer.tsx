@@ -23,7 +23,7 @@ export function AuthFooter({ bordered = false, className }: AuthFooterProps) {
         className
       )}
     >
-      <span>&copy; 2026 KIRK LTD. ALL RIGHTS RESERVED.</span>
+      <span>Salina</span>
       <nav className="flex flex-wrap items-center">
         {FOOTER_LINKS.map(({ href, label }, index) => (
           <span className="flex items-center" key={label}>

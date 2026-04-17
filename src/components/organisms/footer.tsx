@@ -1,7 +1,3 @@
-'use client';
-
-import Link from 'next/link';
-
 export function SiteFooter() {
     return (
         <footer className="mt-auto border-t border-border py-10 px-8 bg-background">
@@ -10,33 +6,21 @@ export function SiteFooter() {
                 {/* Left Side: Copyright */}
                 <div className="flex flex-col items-center md:items-start gap-4">
                     <p className="text-xs text-[var(--muted)] font-medium">
-                        © 2026 KIRK LTD. ALL RIGHTS RESERVED.
+                        Salina
                     </p>
                 </div>
 
                 {/* Right Side: Links (Non-functional) */}
                 <div className="flex gap-8 text-xs font-semibold uppercase tracking-widest text-[var(--muted)]">
-                    <Link
-                        href="#"
-                        className="pointer-events-none text-[var(--muted)]"
-                        onClick={(e) => e.preventDefault()}
-                    >
+                    <button type="button" className="text-[var(--muted)]">
                         Privacy
-                    </Link>
-                    <Link
-                        href="#"
-                        className="pointer-events-none text-[var(--muted)]"
-                        onClick={(e) => e.preventDefault()}
-                    >
+                    </button>
+                    <button type="button" className="text-[var(--muted)]">
                         Terms
-                    </Link>
-                    <Link
-                        href="#"
-                        className="pointer-events-none text-[var(--muted)]"
-                        onClick={(e) => e.preventDefault()}
-                    >
+                    </button>
+                    <button type="button" className="text-[var(--muted)]">
                         Support
-                    </Link>
+                    </button>
                 </div>
 
             </div>
