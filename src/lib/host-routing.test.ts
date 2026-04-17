@@ -6,6 +6,7 @@ import {
   getCanonicalLocalAuthUrl,
   getCookieDomain,
   getTenantSlugFromHost,
+  isLandingHost,
 } from "./host-routing";
 
 test("local hosts resolve to the shared salina.localhost root", () => {
@@ -25,6 +26,27 @@ test("only salina.localhost tenant subdomains produce a tenant slug", () => {
     getTenantSlugFromHost("system-admin.salina.localhost:3000"),
     "system-admin"
   );
+});
+
+test("landing hosts are exact shared roots, not tenant subdomains", () => {
+  const originalRootDomain = process.env.ROOT_DOMAIN;
+
+  process.env.ROOT_DOMAIN = "salina.software";
+
+  try {
+    assert.equal(isLandingHost("localhost:3000"), true);
+    assert.equal(isLandingHost("salina.localhost:3000"), true);
+    assert.equal(isLandingHost("acme.localhost:3000"), false);
+    assert.equal(isLandingHost("acme.salina.localhost:3000"), false);
+    assert.equal(isLandingHost("salina.software"), true);
+    assert.equal(isLandingHost("acme.salina.software"), false);
+  } finally {
+    if (originalRootDomain === undefined) {
+      delete process.env.ROOT_DOMAIN;
+    } else {
+      process.env.ROOT_DOMAIN = originalRootDomain;
+    }
+  }
 });
 
 test("local auth cookies are pinned to the shared salina.localhost domain", () => {

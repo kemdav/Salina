@@ -60,6 +60,19 @@ function createSupabaseAdminClient() {
   });
 }
 
+function isInvalidRefreshTokenError(error: unknown) {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const message = error.message.toLowerCase();
+
+  return (
+    message.includes("invalid refresh token") ||
+    message.includes("refresh token not found")
+  );
+}
+
 async function createSupabaseUserClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -169,37 +182,44 @@ export const getCurrentViewer = cache(async (): Promise<ViewerContext | null> =>
     return null;
   }
 
-  const {
-    data: { user },
-    error,
-  } = await client.auth.getUser();
+  try {
+    const {
+      data: { user },
+    } = await client.auth.getUser();
 
-  if (error || !user) {
-    return null;
-  }
+    if (!user) {
+      return null;
+    }
 
-  const roles = getViewerRoles(user.app_metadata);
-  const userMetadata =
-    user.user_metadata && typeof user.user_metadata === "object"
-      ? (user.user_metadata as Record<string, unknown>)
-      : undefined;
+    const roles = getViewerRoles(user.app_metadata);
+    const userMetadata =
+      user.user_metadata && typeof user.user_metadata === "object"
+        ? (user.user_metadata as Record<string, unknown>)
+        : undefined;
 
-  return {
-    email: user.email ?? null,
-    id: user.id,
-    isPlatformAdmin:
-      roles.includes("system_admin") || user.app_metadata?.role === "system_admin",
-    tenantId:
-      typeof user.app_metadata?.tenant_id === "string"
-        ? user.app_metadata.tenant_id
-        : null,
-    tenantSlug:
-      typeof userMetadata?.tenant_slug === "string"
-        ? userMetadata.tenant_slug
-        : typeof user.app_metadata?.tenant_slug === "string"
-          ? user.app_metadata.tenant_slug
+    return {
+      email: user.email ?? null,
+      id: user.id,
+      isPlatformAdmin:
+        roles.includes("system_admin") || user.app_metadata?.role === "system_admin",
+      tenantId:
+        typeof user.app_metadata?.tenant_id === "string"
+          ? user.app_metadata.tenant_id
           : null,
-  };
+      tenantSlug:
+        typeof userMetadata?.tenant_slug === "string"
+          ? userMetadata.tenant_slug
+          : typeof user.app_metadata?.tenant_slug === "string"
+            ? user.app_metadata.tenant_slug
+            : null,
+    };
+  } catch (error) {
+    if (isInvalidRefreshTokenError(error)) {
+      return null;
+    }
+
+    throw error;
+  }
 });
 
 export const resolveCurrentTenant = cache(async (): Promise<TenantContext> => {

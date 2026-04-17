@@ -7,10 +7,8 @@ import { TenantRuntimeHero } from "@/components/organisms/tenant-runtime-hero";
 import { getCurrentViewer, resolveCurrentTenant } from "@/lib/supabase/server";
 
 export default async function Home() {
-  const [tenantContext, viewer] = await Promise.all([
-    resolveCurrentTenant(),
-    getCurrentViewer(),
-  ]);
+  const tenantContext = await resolveCurrentTenant();
+  const viewer = tenantContext.tenant ? await getCurrentViewer() : null;
 
   if (tenantContext.tenant) {
     if (!viewer) {
