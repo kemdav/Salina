@@ -3,13 +3,15 @@ returns boolean
 language sql
 immutable
 as $$
-  select
-    jsonb_typeof(theme_config) = 'object'
-    and not exists (
+  select case
+    when theme_config is null then false
+    when jsonb_typeof(theme_config) <> 'object' then false
+    else not exists (
       select 1
       from jsonb_object_keys(theme_config) as theme_config_key(key)
       where theme_config_key.key not in ('primaryColor', 'logoUrl', 'fontFamily')
-    );
+    )
+  end;
 $$;
 
 alter table public.organizations
