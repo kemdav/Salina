@@ -7,6 +7,12 @@ import { createClient } from "@supabase/supabase-js";
 
 import { getTenantRequestContext } from "@/lib/tenant";
 
+export type ThemeConfig = {
+  fontFamily?: string | null;
+  logoUrl?: string | null;
+  primaryColor?: string | null;
+};
+
 type OrganizationRecord = {
   billing_email: string | null;
   id: string;
@@ -14,6 +20,7 @@ type OrganizationRecord = {
   organization_type: string | null;
   plan: string;
   slug: string;
+  theme_config: ThemeConfig;
 };
 
 export type ViewerContext = {
@@ -35,6 +42,7 @@ export type TenantContext = {
     organizationType: string | null;
     plan: string;
     slug: string;
+    themeConfig: ThemeConfig;
   } | null;
   tenantSlug: string | null;
 };
@@ -120,7 +128,7 @@ async function getOrganizationById(tenantId: string): Promise<OrganizationRecord
 
   const { data, error } = await client
     .from("organizations")
-    .select("id, slug, name, plan, billing_email, organization_type")
+    .select("id, slug, name, plan, billing_email, organization_type, theme_config")
     .eq("id", tenantId)
     .maybeSingle<OrganizationRecord>();
 
@@ -140,7 +148,7 @@ async function getOrganizationBySlug(tenantSlug: string): Promise<OrganizationRe
 
   const { data, error } = await client
     .from("organizations")
-    .select("id, slug, name, plan, billing_email, organization_type")
+    .select("id, slug, name, plan, billing_email, organization_type, theme_config")
     .eq("slug", tenantSlug)
     .maybeSingle<OrganizationRecord>();
 
@@ -254,6 +262,7 @@ export const resolveCurrentTenant = cache(async (): Promise<TenantContext> => {
             organizationType: tenant.organization_type,
             plan: tenant.plan,
             slug: tenant.slug,
+            themeConfig: tenant.theme_config,
           },
           tenantSlug,
         };
@@ -275,6 +284,7 @@ export const resolveCurrentTenant = cache(async (): Promise<TenantContext> => {
             organizationType: tenant.organization_type,
             plan: tenant.plan,
             slug: tenant.slug,
+            themeConfig: tenant.theme_config,
           },
           tenantSlug,
         };
