@@ -1,4 +1,4 @@
-import { OnboardingTemplate } from '@/components/templates/onboarding-1-template';
+import { OnboardingTemplate } from '@/components/templates/onboarding-template';
 
 export default function OnboardingPage() {
     return <OnboardingTemplate />;
