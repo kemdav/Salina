@@ -21,7 +21,7 @@ export function StepIndicator({ currentStep = 1 }: { currentStep?: number }) {
                         {/* Step Circle & Label */}
                         <div className="flex flex-col items-center gap-2 relative z-10">
                             <div className={cn(
-                                "flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold transition-colors duration-200 border-2",
+                                "flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold transition-all duration-200 border-2",
                                 isActive ? "border-foreground bg-foreground text-background" :
                                     isCompleted ? "border-foreground bg-foreground text-background" :
                                         "border-border bg-background text-[var(--muted)]"
@@ -29,19 +29,22 @@ export function StepIndicator({ currentStep = 1 }: { currentStep?: number }) {
                                 {isCompleted ? '✓' : step.id}
                             </div>
                             <span className={cn(
-                                "absolute -bottom-6 text-xs font-medium whitespace-nowrap",
+                                "absolute -bottom-6 text-xs font-medium whitespace-nowrap transition-colors duration-200",
                                 isActive || isCompleted ? "text-foreground" : "text-[var(--muted)]"
                             )}>
                                 {step.label}
                             </span>
                         </div>
 
-                        {/* Connecting Line */}
+                        {/* Connecting Line - Updated for Dotted Style */}
                         {index < STEPS.length - 1 && (
-                            <div className={cn(
-                                "h-[2px] flex-1 mx-4 transition-colors duration-200",
-                                isCompleted ? "bg-foreground" : "bg-border"
-                            )} />
+                            <div className="flex-1 mx-4 transition-all duration-200 flex items-center justify-center">
+                                {/* This is the line itself, styled based on state */}
+                                <div className={cn(
+                                    "w-full h-[2px]",
+                                    isCompleted ? "bg-foreground" : "border-t-2 border-dotted border-border"
+                                )} />
+                            </div>
                         )}
                     </div>
                 );
