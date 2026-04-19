@@ -36,8 +36,7 @@ export function OrgSpaceSetupForm() {
                         placeholder="e.g. Acme Corp"
                     />
                 </div>
-
-                {/* 2. Organization Type using the new Select Atom! */}
+                {/* Organization Type */}
                 <div className="flex flex-col gap-2">
                     <Label htmlFor="orgType">
                         Organization Type

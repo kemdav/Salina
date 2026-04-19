@@ -5,7 +5,7 @@ import { ColorPicker } from "@/components/molecules/color-picker";
 import { FontPicker } from "@/components/molecules/font-picker";
 import { ThemePresetCard } from "@/components/molecules/theme-preset-card";
 
-// --- Theme Presets ---
+{/* Theme Presets */ }
 const PRESETS = [
     {
         name: 'Modern',
@@ -31,7 +31,6 @@ const PRESETS = [
 
 export function BrandingSetupForm() {
 
-    // Theme State
     const [primaryColor, setPrimaryColor] = useState(PRESETS[0].colors.primary);
     const [accentColor, setAccentColor] = useState(PRESETS[0].colors.accent);
     const [secondaryColor, setSecondaryColor] = useState(PRESETS[0].colors.secondary);
