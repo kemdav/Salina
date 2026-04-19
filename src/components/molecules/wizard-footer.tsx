@@ -14,13 +14,13 @@ export function WizardFooter({
     onNext,
     onBack,
     disableNext = false,
-    disableBack = true,
+    disableBack = false,
     nextLabel = "Continue"
 }: WizardFooterProps) {
     return (
         <div className="flex items-center justify-between w-full pt-6 mt-8 border-t border-border">
             <Button
-                variant="ghost"
+                variant="secondary-2"
                 onClick={onBack}
                 disabled={disableBack}
             >

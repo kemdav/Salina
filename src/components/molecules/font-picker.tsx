@@ -18,7 +18,6 @@ export function FontPicker({ id, label, value, onChange }: FontPickerProps) {
                     id={id}
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
-                    // We apply the selected font to the dropdown box itself so the user sees their choice!
                     style={{ fontFamily: value }}
                     className="flex h-[46px] w-full appearance-none rounded-[var(--radius)] border-[1.5px] border-[#E5E7EB] bg-[#F9FAFB] px-3.5 pr-10 text-sm text-foreground outline-none transition duration-200 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10"
                 >
@@ -35,7 +34,6 @@ export function FontPicker({ id, label, value, onChange }: FontPickerProps) {
                     <option style={{ fontFamily: "'Lucida Console', Monaco, monospace" }} value="'Lucida Console', Monaco, monospace">Lucida Console</option>
                 </select>
 
-                {/* Custom SVG Chevron */}
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-slate-400">
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />

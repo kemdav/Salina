@@ -35,11 +35,8 @@ export function StepIndicator({ currentStep = 1 }: { currentStep?: number }) {
                                 {step.label}
                             </span>
                         </div>
-
-                        {/* Connecting Line - Updated for Dotted Style */}
                         {index < STEPS.length - 1 && (
                             <div className="flex-1 mx-4 transition-all duration-200 flex items-center justify-center">
-                                {/* This is the line itself, styled based on state */}
                                 <div className={cn(
                                     "w-full h-[2px]",
                                     isCompleted ? "bg-foreground" : "border-t-2 border-dotted border-border"
