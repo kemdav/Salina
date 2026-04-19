@@ -20,7 +20,7 @@ export function WizardFooter({
     return (
         <div className="flex items-center justify-between w-full pt-6 mt-8 border-t border-border">
             <Button
-                variant="secondary-2"
+                variant="secondary"
                 onClick={onBack}
                 disabled={disableBack}
             >
@@ -28,7 +28,7 @@ export function WizardFooter({
             </Button>
 
             <Button
-                variant="primary-2"
+                variant="primary"
                 onClick={onNext}
                 disabled={disableNext}
             >

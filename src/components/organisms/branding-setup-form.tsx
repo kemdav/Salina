@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ColorPicker } from "@/components/molecules/color-picker";
 import { FontPicker } from "@/components/molecules/font-picker";
 import { ThemePresetCard } from "@/components/molecules/theme-preset-card";
@@ -29,7 +29,16 @@ const PRESETS = [
     }
 ];
 
-export function BrandingSetupForm() {
+export interface BrandingThemeConfig {
+    primaryColor: string;
+    fontFamily: string;
+}
+
+interface BrandingSetupFormProps {
+    onThemeConfigChange?: (themeConfig: BrandingThemeConfig) => void;
+}
+
+export function BrandingSetupForm({ onThemeConfigChange }: BrandingSetupFormProps) {
 
     const [primaryColor, setPrimaryColor] = useState(PRESETS[0].colors.primary);
     const [accentColor, setAccentColor] = useState(PRESETS[0].colors.accent);
@@ -43,6 +52,13 @@ export function BrandingSetupForm() {
 
     const [activePresetName, setActivePresetName] = useState<string | null>(PRESETS[0].name);
 
+    useEffect(() => {
+        onThemeConfigChange?.({
+            primaryColor,
+            fontFamily: headingFont,
+        });
+    }, [headingFont, onThemeConfigChange, primaryColor]);
+
     const handleApplyPreset = (preset: typeof PRESETS[0]) => {
         setPrimaryColor(preset.colors.primary);
         setAccentColor(preset.colors.accent);
@@ -54,6 +70,11 @@ export function BrandingSetupForm() {
         setTitleFont(preset.fonts.title);
         setBodyFont(preset.fonts.body);
 
+        onThemeConfigChange?.({
+            primaryColor: preset.colors.primary,
+            fontFamily: preset.fonts.heading,
+        });
+
         setActivePresetName(preset.name);
     };
 
@@ -63,16 +84,19 @@ export function BrandingSetupForm() {
         <div className="flex flex-col lg:flex-row gap-10 lg:gap-16 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full items-start">
 
             {/* Left Column: Form Controls */}
-            <div className="flex-1 flex flex-col w-full lg:max-w-md lg:max-h-[720px] overflow-y-auto overscroll-contain -ml-2 pl-2 pr-2 sm:pr-4 pb-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-300 transition-colors">
+            <div className="flex-1 flex flex-col w-full lg:max-w-md lg:max-h-180 overflow-y-auto overscroll-contain -ml-2 pl-2 pr-2 sm:pr-4 pb-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-300 transition-colors">
                 <div className="flex flex-col gap-8">
                     <div>
-                        <h1 className="text-sm font-light text-[var(--muted)] uppercase tracking-wide mb-2">
+                        <h1 className="text-sm font-light text-(--muted) uppercase tracking-wide mb-2">
                             ONBOARDING &nbsp;/&nbsp; <span className="text-foreground font-medium">BRANDING CONFIGURATION</span>
                         </h1>
-                        <h2 className="text-4xl sm:text-5xl font-bold font-[family:var(--font-heading)] text-foreground leading-none tracking-tight">
+                        <h2
+                            className="text-4xl sm:text-5xl font-bold text-foreground leading-none tracking-tight"
+                            style={{ fontFamily: "var(--font-heading)" }}
+                        >
                             Visual Language.
                         </h2>
-                        <p className="text-sm text-[var(--muted)] mt-3">
+                        <p className="text-sm text-(--muted) mt-3">
                             Define the visual identity. Show everyone who you are.
                         </p>
                     </div>
@@ -124,13 +148,13 @@ export function BrandingSetupForm() {
                     <div className="flex items-center justify-between mb-4 sm:mb-6">
                         <div className="flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                            <span className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">Live Preview</span>
+                            <span className="text-xs font-semibold text-(--muted) uppercase tracking-wider">Live Preview</span>
                         </div>
                     </div>
 
                     {/* THE MINI DASHBOARD CANVAS (Now uses bgColor!) */}
                     <div
-                        className="w-full h-auto sm:h-[280px] rounded-xl shadow-sm flex flex-col sm:flex-row overflow-hidden transition-all duration-300"
+                        className="w-full h-auto sm:h-70 rounded-xl shadow-sm flex flex-col sm:flex-row overflow-hidden transition-all duration-300"
                         style={{
                             border: `1px solid ${secondaryColor}`,
                             backgroundColor: bgColor, // Maps the physical background
@@ -203,7 +227,7 @@ export function BrandingSetupForm() {
 
                     {/* TYPOGRAPHY PREVIEWER */}
                     <div className="mt-6 sm:mt-8 pt-5 sm:pt-6 border-t border-[#E5E7EB] flex flex-col gap-3 sm:gap-4">
-                        <span className="text-[10px] sm:text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">
+                        <span className="text-[10px] sm:text-xs font-semibold text-(--muted) uppercase tracking-wider">
                             Typography & Color Preview
                         </span>
 

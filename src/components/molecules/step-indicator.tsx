@@ -5,8 +5,7 @@ import { cn } from "@/lib/utils";
 const STEPS = [
     { id: 1, label: 'Details' },
     { id: 2, label: 'Branding' },
-    { id: 3, label: 'Pipeline' },
-    { id: 4, label: 'Launch' }
+    { id: 3, label: 'Launch' }
 ];
 
 export function StepIndicator({ currentStep = 1 }: { currentStep?: number }) {
@@ -24,23 +23,23 @@ export function StepIndicator({ currentStep = 1 }: { currentStep?: number }) {
                                 "flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold transition-all duration-200 border-2",
                                 isActive ? "border-foreground bg-foreground text-background" :
                                     isCompleted ? "border-foreground bg-foreground text-background" :
-                                        "border-border bg-background text-[var(--muted)]"
-                            )}>
+                                        "border-border bg-background"
+                            )} style={isActive || isCompleted ? undefined : { color: "var(--muted)" }}>
                                 {isCompleted ? '✓' : step.id}
                             </div>
                             <span className={cn(
                                 "absolute -bottom-6 text-xs font-medium whitespace-nowrap transition-colors duration-200",
-                                isActive || isCompleted ? "text-foreground" : "text-[var(--muted)]"
-                            )}>
+                                isActive || isCompleted ? "text-foreground" : ""
+                            )} style={isActive || isCompleted ? undefined : { color: "var(--muted)" }}>
                                 {step.label}
                             </span>
                         </div>
                         {index < STEPS.length - 1 && (
                             <div className="flex-1 mx-4 transition-all duration-200 flex items-center justify-center">
                                 <div className={cn(
-                                    "w-full h-[2px]",
+                                    "w-full",
                                     isCompleted ? "bg-foreground" : "border-t-2 border-dotted border-border"
-                                )} />
+                                )} style={{ height: "2px" }} />
                             </div>
                         )}
                     </div>
