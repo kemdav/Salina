@@ -1,10 +1,43 @@
 'use client';
 
+import { useState } from "react";
 import { Label } from "@/components/atoms/label";
 import { Input } from "@/components/atoms/input";
 import { Select } from "@/components/atoms/drop-down";
 
 export function OrgSpaceSetupForm() {
+
+    const [logoFileName, setLogoFileName] = useState<string | null>(null);
+    const [isDragging, setIsDragging] = useState(false);
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            setLogoFileName(e.target.files[0].name);
+        }
+    };
+
+    const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e: React.DragEvent<HTMLLabelElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            setLogoFileName(e.dataTransfer.files[0].name);
+        }
+    };
+
     return (
         <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
@@ -81,22 +114,54 @@ export function OrgSpaceSetupForm() {
                     </div>
                 </div>
 
-                {/* Organization Logo Upload Placeholder */}
+                {/* Organization Logo Upload */}
                 <div className="flex flex-col gap-2">
                     <Label>
                         Organization Logo
                     </Label>
-                    <div className="border-[1.5px] border-dashed border-[#E5E7EB] rounded-[var(--radius)] p-8 flex flex-col items-center justify-center text-center gap-2 bg-[#F9FAFB] hover:bg-slate-50 transition-colors cursor-pointer">
-                        <div className="w-12 h-12 bg-white border border-[#E5E7EB] shadow-sm rounded-full flex items-center justify-center text-[var(--muted)]">
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                            </svg>
+
+                    <input
+                        type="file"
+                        id="logo-upload"
+                        accept="image/png, image/jpeg, image/svg+xml"
+                        className="hidden"
+                        onChange={handleFileChange}
+                    />
+
+                    <label
+                        htmlFor="logo-upload"
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
+                        className={`border-[1.5px] border-dashed rounded-[var(--radius)] p-8 flex flex-col items-center justify-center text-center gap-2 transition-all duration-200 cursor-pointer ${isDragging
+                            ? 'border-primary bg-primary/5 scale-[1.01]'
+                            : 'border-[#E5E7EB] bg-[#F9FAFB] hover:bg-slate-50 hover:border-slate-300'
+                            }`}
+                    >
+                        {/* The icon circle changes color when dragging too! */}
+                        <div className={`w-12 h-12 border shadow-sm rounded-full flex items-center justify-center overflow-hidden transition-colors ${isDragging ? 'bg-white border-primary text-primary' : 'bg-white border-[#E5E7EB] text-[var(--muted)]'
+                            }`}>
+                            {logoFileName ? (
+                                <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                            ) : (
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                </svg>
+                            )}
                         </div>
-                        <div className="text-sm mt-2">
-                            <span className="font-semibold text-primary">Click to upload</span> or drag and drop
+                        <div className="text-sm mt-2 pointer-events-none">
+                            {logoFileName ? (
+                                <span className="font-semibold text-foreground">{logoFileName}</span>
+                            ) : (
+                                <><span className="font-semibold text-primary">Click to upload</span> or drag and drop</>
+                            )}
                         </div>
-                        <p className="text-xs text-[var(--muted)]">SVG, PNG, or JPG (max. 2MB)</p>
-                    </div>
+                        <p className="text-xs text-[var(--muted)] pointer-events-none">
+                            {logoFileName ? "Logo prepared for staging" : "SVG, PNG, or JPG (max. 2MB)"}
+                        </p>
+                    </label>
                 </div>
 
                 {/* Info Reminder Banner */}
