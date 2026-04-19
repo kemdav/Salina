@@ -8,22 +8,22 @@ import { ThemePresetCard } from "@/components/molecules/theme-preset-card";
 // --- Theme Presets ---
 const PRESETS = [
     {
-        name: 'Modern (Light)',
+        name: 'Modern',
         colors: { primary: '#c6623e', accent: '#8a6ed4', secondary: '#fbf5f2', background: '#ffffff', text: '#1E293B' },
         fonts: { heading: 'var(--font-heading), sans-serif', title: 'var(--font-heading), sans-serif', body: 'var(--font-body), sans-serif' }
     },
     {
-        name: 'Nature (Light)',
+        name: 'Nature',
         colors: { primary: '#166534', accent: '#22c55e', secondary: '#f0fdf4', background: '#ffffff', text: '#14532d' },
         fonts: { heading: 'Georgia, serif', title: 'Georgia, serif', body: 'var(--font-body), sans-serif' }
     },
     {
-        name: 'Midnight (Dark)',
+        name: 'Midnight',
         colors: { primary: '#3b82f6', accent: '#8b5cf6', secondary: '#334155', background: '#0f172a', text: '#f8fafc' },
         fonts: { heading: "'Courier New', Courier, monospace", title: "var(--font-heading), sans-serif", body: "'Courier New', Courier, monospace" }
     },
     {
-        name: 'Sunset (Warm)',
+        name: 'Sunset',
         colors: { primary: '#7c2d12', accent: '#f97316', secondary: '#ffedd5', background: '#fffcf7', text: '#431407' },
         fonts: { heading: "'Trebuchet MS', sans-serif", title: "'Trebuchet MS', sans-serif", body: "var(--font-body), sans-serif" }
     }
@@ -195,14 +195,14 @@ export function BrandingSetupForm() {
                                         </div>
                                     </div>
                                     <div className="px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] text-white font-medium tracking-wide transition-colors duration-300" style={{ backgroundColor: "var(--preview-primary)" }}>
-                                        Active
+                                        Edit
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* DEDICATED TYPOGRAPHY PREVIEWER */}
+                    {/* TYPOGRAPHY PREVIEWER */}
                     <div className="mt-6 sm:mt-8 pt-5 sm:pt-6 border-t border-[#E5E7EB] flex flex-col gap-3 sm:gap-4">
                         <span className="text-[10px] sm:text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">
                             Typography & Color Preview
