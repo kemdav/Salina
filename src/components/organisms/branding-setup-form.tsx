@@ -216,11 +216,14 @@ export function BrandingSetupForm() {
                                 color: textColor
                             }}
                         >
-                            <h3 className="text-2xl sm:text-3xl font-bold tracking-tight leading-tight sm:leading-none transition-all duration-300" style={{ fontFamily: headingFont }}>
+                            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight leading-tight sm:leading-none transition-all duration-300" style={{ fontFamily: headingFont }}>
                                 The quick brown fox.
+                            </h2>
+                            <h3 className="text-xl sm:text-2xl font-semibold tracking-tight leading-tight sm:leading-none transition-all duration-300" style={{ fontFamily: titleFont }}>
+                                Jumps over the lazy dog.
                             </h3>
                             <p className="text-xs sm:text-sm leading-relaxed opacity-80 transition-all duration-300" style={{ fontFamily: bodyFont }}>
-                                Jumps over the lazy dog. 0123456789. Global typography will inherit these properties across all tenant interfaces.
+                                0123456789. Global typography will inherit these properties across all tenant interfaces.
                             </p>
                         </div>
                     </div>
