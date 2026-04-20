@@ -28,7 +28,6 @@ export default function SandboxPage() {
                 </p>
                 
                 <div className="flex flex-col gap-8">
-                    {/* Role Switcher */}
                     <div>
                         <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
                             Switch Active Role
@@ -50,7 +49,6 @@ export default function SandboxPage() {
                         </div>
                     </div>
 
-                    {/* Branding Switcher */}
                     <div className="pt-6 border-t border-slate-100">
                         <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
                             Tenant Branding Status

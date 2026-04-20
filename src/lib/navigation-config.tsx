@@ -8,7 +8,7 @@ export interface NavRoute {
     icon: React.ReactNode;
 }
 
-// Helper for generic SVG icons (Using standard geometric representations for now)
+// Helper for generic SVG icons (Using standard representations for now)
 const IconWrapper = ({ children }: { children: React.ReactNode }) => (
     <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         {children}
