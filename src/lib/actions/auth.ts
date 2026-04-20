@@ -46,6 +46,7 @@ export type SignUpActionState = {
     email: string;
     fullName: string;
   };
+  formError?: string;
 };
 
 const INITIAL_LOGIN_ERROR = "";
@@ -163,10 +164,47 @@ export async function signUpAction(
         email: values.email,
         fullName: values.fullName,
       },
+      formError: undefined,
     };
   }
 
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  const supabase = await createUserClient(LOCAL_COOKIE_DOMAIN); // Keep local auth cookies shared across salina.localhost subdomains.
+
+  if (!supabase) {
+    return {
+      errors: {
+      },
+      fields: {
+        email: values.email,
+        fullName: values.fullName,
+      },
+      formError: "Supabase auth environment is not configured.",
+    };
+  }
+
+  const { data, error } = await supabase.auth.signUp({
+    email: parsed.data.email,
+    password: parsed.data.password,
+    options: {
+      data: {
+        full_name: parsed.data.fullName,
+      },
+    },
+  });
+
+  if (error || !data.user) {
+    return {
+      errors: {
+      },
+      fields: {
+        email: values.email,
+        fullName: values.fullName,
+      },
+      formError: error?.message ?? "Unable to create your account.",
+    };
+  }
+
+  redirect("/onboarding");
 
   return {
     errors: {},
@@ -174,6 +212,7 @@ export async function signUpAction(
       email: values.email,
       fullName: values.fullName,
     },
+    formError: undefined,
   };
 }
 

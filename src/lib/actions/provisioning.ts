@@ -30,6 +30,13 @@ const provisionOrganizationSchema = z
       .trim()
       .toLowerCase()
       .email("Enter a valid billing email address."),
+    themeConfig: z
+      .object({
+        fontFamily: z.string().trim().min(1).optional(),
+        primaryColor: z.string().trim().min(1).optional(),
+      })
+      .strict()
+      .optional(),
     name: z.string().trim().min(1, "Organization name is required."),
     organizationType: z
       .string()
@@ -164,7 +171,7 @@ export async function provisionOrganization(
       };
     }
 
-    const { billingEmail, name, organizationType, slug } = validationResult.data;
+    const { billingEmail, name, organizationType, slug, themeConfig } = validationResult.data;
     const { data: organization, error: organizationError } = await client
       .from("organizations")
       .insert({
@@ -173,6 +180,7 @@ export async function provisionOrganization(
         organization_type: organizationType,
         plan: "standard",
         slug,
+        theme_config: themeConfig ?? {},
       })
       .select("id")
       .single<OrganizationInsertResult>();
