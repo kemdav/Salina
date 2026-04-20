@@ -29,9 +29,15 @@ function SidebarPlaceholder() {
   );
 }
 
+interface ThemeConfig {
+  primary?: string;
+  background?: string;
+  text?: string;
+  [key: string]: string | undefined;
+}
+
 export default async function TenantLayout({
   children,
-  params,
 }: {
   children: React.ReactNode;
   params: Promise<{ tenantSlug: string }>;
@@ -43,13 +49,12 @@ export default async function TenantLayout({
   }
 
   // Extract theme config, providing fallbacks if none exist
-  const themeConfig = tenantContext.tenant.themeConfig || {};
+  const themeConfig = (tenantContext.tenant.themeConfig || {}) as ThemeConfig;
 
-  // Create a style object with inline CSS custom properties
   const themeStyles = {
-    "--primary": (themeConfig as any)["primary"] || "#C6623E",
-    "--background": (themeConfig as any)["background"] || "#0c0a09",
-    "--foreground": (themeConfig as any)["text"] || "#fafaf9",
+    "--primary": themeConfig.primary || "#C6623E",
+    "--background": themeConfig.background || "#0c0a09",
+    "--foreground": themeConfig.text || "#fafaf9",
   } as React.CSSProperties;
 
   return (
