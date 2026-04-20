@@ -10,17 +10,17 @@ export function TopNavigation() {
 
     return (
         <nav className="border-b border-border px-8 h-20 flex items-center justify-between sticky top-0 bg-background z-50">
-            {/* Left: Logo Atom */}
+            {/* Logo Atom */}
             <div className="flex items-center">
                 <SalinaLogo variant="light" width={110} />
             </div>
 
-            {/* Center: Navigation Links Molecule */}
+            {/* Navigation Links Molecule */}
             <NavLinks />
 
-            {/* Right: Auth Actions */}
+            {/* Auth Actions */}
             <div className="flex items-center gap-4">
-                {/* Secondary action: Log In */}
+                {/* Log In */}
                 <Button
                     variant="secondary"
                     onClick={() => router.push('/login')}
@@ -28,7 +28,7 @@ export function TopNavigation() {
                     Log In
                 </Button>
 
-                {/* Primary action: Sign Up */}
+                {/* Sign Up */}
                 <Button
                     variant="primary"
                     onClick={() => router.push('/sign-up')}
