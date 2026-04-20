@@ -55,7 +55,7 @@ export default async function TenantLayout({
   return (
     <div
       style={themeStyles}
-      className="flex min-h-screen w-full bg-[var(--background,theme(colors.stone.950))] text-[var(--foreground,theme(colors.stone.50))]"
+      className="flex min-h-screen w-full bg-(--background,var(--color-stone-950)) text-(--foreground,var(--color-stone-50))"
     >
       <SidebarPlaceholder />
       <main className="flex-1 overflow-y-auto p-6 md:p-8 lg:p-10">
