@@ -20,18 +20,15 @@ interface SidebarNavProps {
 
 export function SidebarNav({ role, tenant }: SidebarNavProps) {
     const [isCollapsed, setIsCollapsed] = useState(false);
-    const pathname = usePathname(); // Used to highlight the active route
+    const pathname = usePathname(); 
     const isSuperAdmin = role === 'SuperAdmin';
 
-    // --- Dynamic Styling Logic ---
-    // SuperAdmin gets a default dark slate theme. 
-    // Everyone else gets the physical Primary Color background and Text Color of their Org.
     const sidebarStyles = isSuperAdmin ? {
-        backgroundColor: '#0f172a', // Slate 900
+        backgroundColor: '#0f172a', 
         color: '#f8fafc',
         '--sidebar-active-bg': 'rgba(255,255,255,0.1)',
         '--sidebar-active-text': '#ffffff',
-        '--sidebar-text': '#94a3b8', // Slate 400
+        '--sidebar-text': '#94a3b8', 
         '--sidebar-hover-bg': 'rgba(255,255,255,0.05)',
         '--sidebar-hover-text': '#f8fafc',
     } as React.CSSProperties : {
@@ -44,7 +41,6 @@ export function SidebarNav({ role, tenant }: SidebarNavProps) {
         '--sidebar-hover-text': tenant?.textColor || '#ffffff',
     } as React.CSSProperties;
 
-    // Fallback Initial for Logo
     const orgInitial = isSuperAdmin ? 'S' : (tenant?.name.charAt(0) || 'O');
     const orgName = isSuperAdmin ? 'Salina Super Admin' : (tenant?.name || 'Organization');
 
