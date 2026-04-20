@@ -34,7 +34,7 @@ export default async function TenantLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: { tenantSlug: string };
+  params: Promise<{ tenantSlug: string }>;
 }) {
   const tenantContext = await resolveCurrentTenant();
 
@@ -47,9 +47,9 @@ export default async function TenantLayout({
 
   // Create a style object with inline CSS custom properties
   const themeStyles = {
-    "--primary": themeConfig.primary || "#C6623E",
-    "--background": themeConfig.background || "#0c0a09",
-    "--foreground": themeConfig.text || "#fafaf9",
+    "--primary": (themeConfig as any)["primary"] || "#C6623E",
+    "--background": (themeConfig as any)["background"] || "#0c0a09",
+    "--foreground": (themeConfig as any)["text"] || "#fafaf9",
   } as React.CSSProperties;
 
   return (
