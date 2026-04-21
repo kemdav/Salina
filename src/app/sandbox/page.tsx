@@ -1,57 +1,76 @@
 'use client';
 
 import { useState } from 'react';
-import { provisionOrganization } from '@/lib/actions/provisioning';
-import type { ProvisionOrganizationResult } from '@/lib/actions/provisioning';
+import { AuthenticatedShell } from '@/components/templates/authenticated-shell';
+import { UserRole } from '@/lib/navigation-config';
 
 export default function SandboxPage() {
-  const [result, setResult] = useState<ProvisionOrganizationResult | null>(null);
+    // State to control what the shell displays
+    const [role, setRole] = useState<UserRole>('Admin');
+    const [useBranding, setUseBranding] = useState(true);
 
-  async function handleTestSubmit(formData: FormData) {
-  try {
-    const res = await provisionOrganization({
-      name: formData.get('name') as string,
-      slug: formData.get('slug') as string,
-      billingEmail: formData.get('email') as string,
-      organizationType: formData.get('organizationType') as string,
-    });
-    setResult(res);
-  } catch (error) {
-    setResult({
-      error: error instanceof Error ? error.message : 'An unexpected error occurred',
-      ok: false,
-    });
-  }
-}
+    // Dummy tenant data mimicking what the Onboarding Wizard saves
+    const dummyTenant = {
+        name: "Cebu Institute of Technology",
+        primaryColor: "#c6623e", // Salina/CIT-U primary color
+        textColor: "#ffffff"
+    };
 
-  return (
-    <div className="p-10 max-w-md mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Test Provisioning</h1>
-      
-      <form action={handleTestSubmit} className="flex flex-col gap-4">
-        <input name="name" placeholder="Organization Name (e.g., Tech Club)" className="border p-2 rounded" required />
-        <input name="slug" placeholder="Slug (e.g., tech-club)" className="border p-2 rounded" required />
-        <input name="email" type="email" placeholder="Billing Email" className="border p-2 rounded" required />
-        <select name="organizationType" className="border p-2 rounded" defaultValue="Other" required>
-          <option value="Business / Corporation">Business / Corporation</option>
-          <option value="Non-Profit Organization">Non-Profit Organization</option>
-          <option value="Association / Society">Association / Society</option>
-          <option value="Academic Institution">Academic Institution</option>
-          <option value="Government Agency">Government Agency</option>
-          <option value="Other">Other</option>
-        </select>
-        
-        <button type="submit" className="bg-[#C6623E] text-white p-2 rounded font-bold">
-          Run Server Action
-        </button>
-      </form>
+    return (
+        <AuthenticatedShell 
+            role={role} 
+            tenantBranding={useBranding ? dummyTenant : undefined}
+        >
+            <div className="max-w-2xl bg-white p-8 rounded-2xl shadow-sm border border-slate-200 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <h1 className="text-2xl font-bold text-slate-800 mb-2">Sidebar Testing Sandbox</h1>
+                <p className="text-sm text-slate-500 mb-8">
+                    Use the controls below to change the application state and watch the layout shell react.
+                </p>
+                
+                <div className="flex flex-col gap-8">
+                    <div>
+                        <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                            Switch Active Role
+                        </h3>
+                        <div className="flex flex-wrap gap-3">
+                            {(['SuperAdmin', 'Admin', 'Officer', 'Member'] as UserRole[]).map((r) => (
+                                <button
+                                    key={r}
+                                    onClick={() => setRole(r)}
+                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                        role === r 
+                                        ? 'bg-slate-800 text-white shadow-sm' 
+                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                    }`}
+                                >
+                                    {r}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
 
-      {result && (
-        <div className="mt-6 p-4 bg-gray-100 rounded">
-          <h3 className="font-bold">Result:</h3>
-          <pre className="text-sm mt-2">{JSON.stringify(result, null, 2)}</pre>
-        </div>
-      )}
-    </div>
-  );
+                    <div className="pt-6 border-t border-slate-100">
+                        <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                            Tenant Branding Status
+                        </h3>
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={() => setUseBranding(!useBranding)}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                    useBranding 
+                                    ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                }`}
+                            >
+                                {useBranding ? 'Branding: ON (Custom Tenant)' : 'Branding: OFF (No Branding)'}
+                            </button>
+                            <p className="text-xs text-slate-400 max-w-xs">
+                                Note: SuperAdmin strictly ignores this setting and forces the default dark theme.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </AuthenticatedShell>
+    );
 }
