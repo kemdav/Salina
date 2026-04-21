@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
 
-export default function OnboardingReviewPage() {
+export default function SuperAdminHomePage() {
     redirect('/superadmin/review');
 }
