@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import { FieldMessage } from "@/components/atoms/field-message";
 import { Input, type InputProps } from "@/components/atoms/input";
@@ -10,6 +11,7 @@ import { cn } from "@/lib/utils";
 
 interface PasswordFieldProps extends Omit<InputProps, "error" | "type"> {
   error?: string;
+  helperText?: ReactNode;
   label: string;
   linkHref?: string;
   linkLabel?: string;
@@ -50,6 +52,7 @@ function EyeIcon({ crossed }: { crossed: boolean }) {
 
 export function PasswordField({
   error,
+  helperText,
   id,
   label,
   linkHref,
@@ -92,6 +95,8 @@ export function PasswordField({
         <FieldMessage role="alert" variant="error">
           {error}
         </FieldMessage>
+      ) : helperText ? (
+        <FieldMessage>{helperText}</FieldMessage>
       ) : null}
     </div>
   );
