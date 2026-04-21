@@ -19,18 +19,18 @@ export function NavItem({ href, icon, label, isActive = false, isCollapsed = fal
             title={isCollapsed ? label : undefined}
             onMouseEnter={onMouseEnter}
             className={cn(
-                "relative z-10 flex items-center gap-3 pl-4 pr-3 h-[42px] rounded-lg transition-all duration-300 ease-out group overflow-hidden",
+                "relative z-10 flex h-10.5 items-center gap-3 overflow-hidden rounded-lg pl-4 pr-3 transition-all duration-300 ease-out group",
                 isActive 
-                    ? "bg-[var(--sidebar-active-bg,rgba(255,255,255,0.08))] text-[var(--sidebar-active-text,#ffffff)] font-medium" 
-                    : "text-[var(--sidebar-text,#94a3b8)] hover:text-[var(--sidebar-hover-text,#f8fafc)]"
+                    ? "bg-(--sidebar-active-bg,rgba(255,255,255,0.08)) text-(--sidebar-active-text,#ffffff) font-medium" 
+                    : "text-(--sidebar-text,#94a3b8) hover:text-(--sidebar-hover-text,#f8fafc)"
             )}
         >
             {isActive && (
-                <div className="absolute left-0 top-[15%] bottom-[15%] w-1 rounded-r-md bg-[var(--sidebar-active-text,#ffffff)] animate-in slide-in-from-left-2 duration-300" />
+                <div className="absolute left-0 top-[15%] bottom-[15%] w-1 rounded-r-md bg-(--sidebar-active-text,#ffffff) animate-in slide-in-from-left-2 duration-300" />
             )}
 
             <div className={cn(
-                "flex-shrink-0 transition-all duration-300 ease-out", 
+                "shrink-0 transition-all duration-300 ease-out", 
                 isActive ? "scale-110" : "group-hover:scale-110 group-hover:-translate-y-0.5 text-opacity-80 group-hover:text-opacity-100"
             )}>
                 {icon}

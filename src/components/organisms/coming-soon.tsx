@@ -11,7 +11,7 @@ export function ComingSoon({ moduleName = "This Module" }: { moduleName?: string
                 </svg>
             </div>
 
-            <h2 className="text-3xl font-bold text-slate-800 tracking-tight mb-3 font-[family:var(--font-heading)] text-center">
+            <h2 className="mb-3 text-center text-3xl font-bold tracking-tight text-slate-800" style={{ fontFamily: 'var(--font-heading)' }}>
                 {moduleName} <br/> is coming soon.
             </h2>
             

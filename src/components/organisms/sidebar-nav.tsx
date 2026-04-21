@@ -1,31 +1,37 @@
 'use client';
 
 import { useState } from "react";
-import { UserRole, ROLE_ROUTES } from "@/lib/navigation-config";
+import { UserRole, getSidebarRoutes } from "@/lib/navigation-config";
 import { NavItem } from "@/components/atoms/nav-item";
+import { SalinaLogo } from "@/components/atoms/salina-logo";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
-
-interface TenantBranding {
-    name: string;
-    logo?: string;
-    primaryColor: string;
-    textColor: string;
-}
+import type { AuthenticatedTenantBranding } from "@/components/molecules/authenticated-top-bar";
 
 interface SidebarNavProps {
     role: UserRole;
-    tenant?: TenantBranding;
+    tenant?: AuthenticatedTenantBranding;
+    userName?: string;
 }
 
-export function SidebarNav({ role, tenant }: SidebarNavProps) {
+function getInitials(name: string) {
+    return name
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0]?.toUpperCase() ?? '')
+        .join('') || 'U';
+}
+
+export function SidebarNav({ role, tenant, userName = 'Jane Doe' }: SidebarNavProps) {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-    const pathname = usePathname(); 
+    const pathname = usePathname();
     const isSuperAdmin = role === 'SuperAdmin';
+    const navItems = getSidebarRoutes(role);
 
     const sidebarStyles = isSuperAdmin ? {
-        backgroundColor: '#020817', 
+        backgroundColor: '#020817',
         color: '#f8fafc',
         '--sidebar-active-bg': 'rgba(255,255,255,0.06)',
         '--sidebar-active-text': '#ffffff',
@@ -64,17 +70,19 @@ export function SidebarNav({ role, tenant }: SidebarNavProps) {
             <div className="h-20 flex items-center px-6 border-b border-white/10 shrink-0">
                 {isSuperAdmin ? (
                     <div className={cn("flex items-center transition-all duration-300", isCollapsed ? "w-8 overflow-hidden" : "w-32")}>
-                        <img 
-                            src="/salina-logo-white.png" 
-                            alt="Salina" 
-                            className="h-7 w-auto object-contain" 
-                        />
+                        <SalinaLogo variant="dark" width={104} className="w-24" />
                     </div>
                 ) : (
                     <div className="flex items-center gap-3 overflow-hidden w-full">
-                        <div className="w-10 h-10 shrink-0 rounded-lg bg-white/10 flex items-center justify-center font-bold text-lg shadow-inner overflow-hidden border border-white/5">
+                        <div
+                            className="w-10 h-10 shrink-0 rounded-lg bg-white/10 flex items-center justify-center font-bold text-lg shadow-inner overflow-hidden border border-white/5"
+                            style={tenant?.logo ? { backgroundColor: tenant.primaryColor } : undefined}
+                        >
                             {tenant?.logo ? (
-                                <img src={tenant.logo} alt="Tenant Logo" className="w-full h-full object-contain p-1" />
+                                <div
+                                    className="h-full w-full bg-center bg-cover bg-no-repeat"
+                                    style={{ backgroundImage: `url(${tenant.logo})` }}
+                                />
                             ) : (
                                 orgInitial
                             )}
@@ -93,7 +101,7 @@ export function SidebarNav({ role, tenant }: SidebarNavProps) {
                 onMouseLeave={() => setHoveredIndex(null)}
             >
                 <div 
-                    className="absolute left-3 right-3 h-[42px] rounded-lg pointer-events-none transition-all duration-300 ease-out bg-[var(--sidebar-hover-bg,rgba(255,255,255,0.05))] z-0"
+                    className="absolute left-3 right-3 h-10.5 rounded-lg pointer-events-none transition-all duration-300 ease-out bg-(--sidebar-hover-bg,rgba(255,255,255,0.05)) z-0"
                     style={{
                         top: '24px', 
                         transform: `translateY(${hoveredIndex !== null ? hoveredIndex * 48 : 0}px)`, // 42px height + 6px gap = 48px jump
@@ -101,8 +109,8 @@ export function SidebarNav({ role, tenant }: SidebarNavProps) {
                     }}
                 />
 
-                {ROLE_ROUTES[role].map((route, index) => {
-                    const isActive = pathname?.includes(route.href); 
+                {navItems.map((route, index) => {
+                    const isActive = pathname === route.href || pathname?.startsWith(`${route.href}/`);
                     return (
                         <NavItem
                             key={route.label}
@@ -119,11 +127,11 @@ export function SidebarNav({ role, tenant }: SidebarNavProps) {
 
             <div className="p-4 border-t border-white/10 shrink-0">
                 <div className="flex items-center gap-3 overflow-hidden p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer">
-                    <div className="w-8 h-8 shrink-0 rounded-full bg-slate-300 flex items-center justify-center overflow-hidden">
-                        <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${role}`} alt="Avatar" className="w-full h-full object-cover" />
+                    <div className="w-8 h-8 shrink-0 rounded-full bg-slate-300 flex items-center justify-center overflow-hidden text-[11px] font-semibold text-slate-900">
+                        {getInitials(userName)}
                     </div>
                     <div className={cn("flex flex-col transition-all duration-300 whitespace-nowrap", isCollapsed ? "opacity-0 w-0" : "opacity-100")}>
-                        <span className="text-sm font-medium leading-none text-[var(--sidebar-active-text,#ffffff)]">Jane Doe</span>
+                        <span className="text-sm font-medium leading-none text-[var(--sidebar-active-text,#ffffff)]">{userName}</span>
                         <span className="text-[10px] uppercase tracking-wider text-[var(--sidebar-text,#94a3b8)] mt-1">{role}</span>
                     </div>
                 </div>

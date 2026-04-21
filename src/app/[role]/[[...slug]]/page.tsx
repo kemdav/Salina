@@ -33,10 +33,8 @@ export default function UniversalComingSoonPage() {
         <AuthenticatedShell 
             role={formattedRole as UserRole} 
             tenantBranding={dummyTenant}
+            emptyState={<ComingSoon moduleName={viewTitle} />}
         >
-            <div className="w-full h-full flex items-center justify-center animate-in fade-in duration-500">
-                <ComingSoon moduleName={viewTitle} />
-            </div>
         </AuthenticatedShell>
     );
 }
