@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { Button } from "@/components/atoms/button";
-import { resolveCurrentTenant } from "@/lib/supabase/server";
+import { getCurrentViewer, resolveCurrentTenant } from "@/lib/supabase/server";
 
 function SidebarPlaceholder() {
   return (
@@ -30,21 +30,40 @@ function SidebarPlaceholder() {
 }
 
 interface ThemeConfig {
-  primary?: string;
-  background?: string;
-  text?: string;
+  primaryColor?: string;
+  logoUrl?: string;
+  fontFamily?: string;
   [key: string]: string | undefined;
 }
 
 export default async function TenantLayout({
   children,
+  params,
 }: {
   children: React.ReactNode;
   params: Promise<{ tenantSlug: string }>;
 }) {
+  const { tenantSlug } = await params;
   const tenantContext = await resolveCurrentTenant();
 
   if (!tenantContext.tenant) {
+    redirect("/login");
+  }
+
+  if (tenantContext.tenant.slug !== tenantSlug) {
+    redirect(`/${tenantContext.tenant.slug}`);
+  }
+
+  const viewer = await getCurrentViewer();
+
+  if (!viewer) {
+    redirect("/login");
+  }
+
+  const canAccessTenant =
+    viewer.isPlatformAdmin || viewer.tenantId === tenantContext.tenant.id;
+
+  if (!canAccessTenant) {
     redirect("/login");
   }
 
@@ -52,15 +71,15 @@ export default async function TenantLayout({
   const themeConfig = (tenantContext.tenant.themeConfig || {}) as ThemeConfig;
 
   const themeStyles = {
-    "--primary": themeConfig.primary || "#C6623E",
-    "--background": themeConfig.background || "#0c0a09",
-    "--foreground": themeConfig.text || "#fafaf9",
+    "--primary": themeConfig.primaryColor || "#C6623E",
+    "--background": "#0c0a09",
+    "--foreground": "#fafaf9",
   } as React.CSSProperties;
 
   return (
     <div
       style={themeStyles}
-      className="flex min-h-screen w-full bg-(--background,var(--color-stone-950)) text-(--foreground,var(--color-stone-50))"
+      className="flex min-h-screen w-full bg-[var(--background,var(--color-stone-950))] text-[var(--foreground,var(--color-stone-50))]"
     >
       <SidebarPlaceholder />
       <main className="flex-1 overflow-y-auto p-6 md:p-8 lg:p-10">
