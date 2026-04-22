@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { Button } from "@/components/atoms/button";
-import { getCurrentViewer, resolveCurrentTenant } from "@/lib/supabase/server";
+import { getCurrentViewer, getOrganizationBySlug } from "@/lib/supabase/server";
 
 function SidebarPlaceholder() {
   return (
@@ -44,14 +44,10 @@ export default async function TenantLayout({
   params: Promise<{ tenantSlug: string }>;
 }) {
   const { tenantSlug } = await params;
-  const tenantContext = await resolveCurrentTenant();
+  const tenant = await getOrganizationBySlug(tenantSlug);
 
-  if (!tenantContext.tenant) {
+  if (!tenant) {
     redirect("/login");
-  }
-
-  if (tenantContext.tenant.slug !== tenantSlug) {
-    redirect(`/${tenantContext.tenant.slug}`);
   }
 
   const viewer = await getCurrentViewer();
@@ -61,14 +57,14 @@ export default async function TenantLayout({
   }
 
   const canAccessTenant =
-    viewer.isPlatformAdmin || viewer.tenantId === tenantContext.tenant.id;
+    viewer.isPlatformAdmin || viewer.tenantId === tenant.id;
 
   if (!canAccessTenant) {
     redirect("/login");
   }
 
   // Extract theme config, providing fallbacks if none exist
-  const themeConfig = (tenantContext.tenant.themeConfig || {}) as ThemeConfig;
+  const themeConfig = (tenant.theme_config || {}) as ThemeConfig;
 
   const themeStyles = {
     "--primary": themeConfig.primaryColor || "#C6623E",
