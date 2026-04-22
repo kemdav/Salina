@@ -201,7 +201,7 @@ export function BrandingSetupForm({ onThemeConfigChange }: BrandingSetupFormProp
                                         Manage your resources.
                                     </p>
                                 </div>
-                                <button className="px-3 py-1.5 text-[10px] sm:text-[11px] text-white rounded-md shadow-sm font-medium hover:opacity-90 transition-all duration-300 whitespace-nowrap" style={{ backgroundColor: "var(--preview-accent)", fontFamily: "var(--preview-title)" }}>
+                                <button type="button" className="px-3 py-1.5 text-[10px] sm:text-[11px] text-white rounded-md shadow-sm font-medium hover:opacity-90 transition-all duration-300 whitespace-nowrap" style={{ backgroundColor: "var(--preview-accent)", fontFamily: "var(--preview-title)" }}>
                                     + Add New
                                 </button>
                             </div>

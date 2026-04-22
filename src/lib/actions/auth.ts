@@ -3,14 +3,20 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import {
+  AUTH_PASSWORD_HELP_TEXT,
+  AUTH_PASSWORD_MIN_LENGTH,
+  AUTH_PASSWORD_REQUIREMENTS_PATTERN,
+  getAuthSessionClaims,
+} from "@/lib/auth-policy";
 import { LOCAL_COOKIE_DOMAIN } from "@/lib/host-routing";
 import { getTenantAppUrl } from "@/lib/root-domain";
 import { createUserClient } from "@/lib/supabase/user-server";
 
-// 1. Zod schema validates email format and minimum password length at the server boundary
+// 1. Zod schema validates email format and a non-empty password at the server boundary
 const loginSchema = z.object({
   email: z.string().email("Invalid email format"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: z.string().min(1, "Password is required"),
 });
 
 const signUpSchema = z
@@ -18,7 +24,13 @@ const signUpSchema = z
     confirmPassword: z.string().min(1, "Please confirm your password."),
     email: z.string().trim().email("Enter a valid email address."),
     fullName: z.string().trim().min(1, "Full name is required."),
-    password: z.string().min(8, "Minimum 8 characters."),
+    password: z
+      .string()
+      .min(
+        AUTH_PASSWORD_MIN_LENGTH,
+        `Minimum ${AUTH_PASSWORD_MIN_LENGTH} characters.`
+      )
+      .regex(AUTH_PASSWORD_REQUIREMENTS_PATTERN, AUTH_PASSWORD_HELP_TEXT),
   })
   .superRefine((value, ctx) => {
     if (value.confirmPassword !== value.password) {
@@ -47,6 +59,7 @@ export type SignUpActionState = {
     fullName: string;
   };
   formError?: string;
+  formNotice?: string;
 };
 
 const INITIAL_LOGIN_ERROR = "";
@@ -78,13 +91,15 @@ export async function signIn(email: string, password: string) {
     return { error: error?.message || "Invalid credentials" };
   }
 
-  // 4. Validate the returned JWT contains app_metadata.tenant_id
-  const tenantId = data.user.app_metadata?.tenant_id;
+  // 4. Inspect the signed-in claims to determine the landing path.
+  const { isPlatformAdmin, tenantId } = getAuthSessionClaims(data.user);
+
+  if (isPlatformAdmin) {
+    redirect("/superadmin");
+  }
+
   if (!tenantId) {
-    await supabase.auth.signOut();
-    return {
-      error: "Security exception: User has no mapped tenant ID in JWT.",
-    };
+    redirect("/onboarding");
   }
 
   // 5. Query organization_memberships table to confirm active membership
@@ -201,6 +216,18 @@ export async function signUpAction(
         fullName: values.fullName,
       },
       formError: error?.message ?? "Unable to create your account.",
+    };
+  }
+
+  if (!data.session) {
+    return {
+      errors: {},
+      fields: {
+        email: values.email,
+        fullName: values.fullName,
+      },
+      formNotice:
+        "Check your email to confirm your account, then sign in to continue onboarding.",
     };
   }
 
