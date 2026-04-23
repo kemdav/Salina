@@ -19,9 +19,9 @@ export default function MemberDigitalIdPage() {
         idNumber: "CIT-2026-0042",
         issuedOn: "April 15, 2026",
         expiryDate: "April 15, 2027",
-        securityLevel: "Tier 2 - Officer",
-        accessPermissions: ["Main Campus", "CPE Labs", "Org Room"],
-        avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Wilfred"
+        roleLevel: "Member",
+        accessPermissions: ["Event Check-In", "Venue Access", "Member Portal"],
+        avatarUrl: ""
     };
 
     return (

@@ -15,9 +15,9 @@ interface UserDetails {
     idNumber: string;
     issuedOn: string;
     expiryDate: string;
-    securityLevel: string;
+    roleLevel: string;
     accessPermissions: string[];
-    avatarUrl?: string;
+    avatarUrl?: string; // This is optional btw this only for the sake of the avatar fallback logic, if no URL is provided it will just show the gray background instead of trying to load an image.
 }
 
 interface DigitalIdCardProps {
@@ -26,14 +26,10 @@ interface DigitalIdCardProps {
 }
 
 export function DigitalIdCard({ tenant, user }: DigitalIdCardProps) {
-    const orgInitial = tenant.name.charAt(0).toUpperCase();
-    const userInitials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2);
-
     return (
-        // Reverted from sleek dark background to clean light background, landscape orientation
         <div className="w-full max-w-[640px] mx-auto bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-200 flex flex-col sm:flex-row relative group">
 
-            {/* LEFT COLUMN: Branding & Avatar (Acts as the solid lanyard edge) */}
+            {/* LEFT COLUMN: Branding & Avatar */}
             <div
                 className="sm:w-[40%] flex flex-col items-center justify-center p-8 relative border-b sm:border-b-0 sm:border-r border-black/10"
                 style={{ backgroundColor: tenant.primaryColor, color: tenant.textColor }}
@@ -41,17 +37,19 @@ export function DigitalIdCard({ tenant, user }: DigitalIdCardProps) {
                 {/* Subtle pattern overlay */}
                 <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent pointer-events-none" />
 
-                {/* 2. Avatar Area (Editable) */}
+                {/* Avatar Area  */}
                 <div className="relative group/avatar cursor-pointer z-10 mb-6">
                     <div className="w-28 h-28 rounded-full border-4 border-white bg-slate-100 flex items-center justify-center overflow-hidden shadow-xl">
                         {user.avatarUrl ? (
                             <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
                         ) : (
-                            <span className="text-3xl font-bold text-slate-400">{userInitials}</span>
+                            // THE NEW SOLID SILHOUETTE DEFAULT ICON
+                            <svg className="w-20 h-20 text-slate-300 mt-6" viewBox="0 0 24 24" fill="currentColor">
+                                <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clipRule="evenodd" />
+                            </svg>
                         )}
                     </div>
 
-                    {/* Edit Overlay (visible on hover) */}
                     <div className="absolute inset-0 bg-slate-900/60 rounded-full flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity">
                         <svg width="24" height="24" fill="none" stroke="white" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -102,8 +100,8 @@ export function DigitalIdCard({ tenant, user }: DigitalIdCardProps) {
                         <span className="font-mono font-medium text-slate-700">{user.idNumber}</span>
                     </div>
                     <div className="flex flex-col">
-                        <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500 mb-0.5">Security Lvl</span>
-                        <span className="font-medium text-slate-700">{user.securityLevel}</span>
+                        <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500 mb-0.5">Role Lvl</span>
+                        <span className="font-medium text-slate-700">{user.roleLevel}</span>
                     </div>
                     <div className="flex flex-col">
                         <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500 mb-0.5">Issued On</span>

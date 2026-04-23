@@ -63,7 +63,7 @@ export function BrandingSetupForm({ onThemeConfigChange }: BrandingSetupFormProp
         setPrimaryColor(preset.colors.primary);
         setAccentColor(preset.colors.accent);
         setSecondaryColor(preset.colors.secondary);
-        setBgColor(preset.colors.background); // NEW
+        setBgColor(preset.colors.background);
         setTextColor(preset.colors.text);
 
         setHeadingFont(preset.fonts.heading);
@@ -152,7 +152,7 @@ export function BrandingSetupForm({ onThemeConfigChange }: BrandingSetupFormProp
                         </div>
                     </div>
 
-                    {/* THE MINI DASHBOARD CANVAS (Now uses bgColor!) */}
+                    {/* THE MINI DASHBOARD CANVAS */}
                     <div
                         className="w-full h-auto sm:h-70 rounded-xl shadow-sm flex flex-col sm:flex-row overflow-hidden transition-all duration-300"
                         style={{
