@@ -14,7 +14,7 @@ export default function MemberDigitalIdPage() {
 
     // --- 2. Dummy Member Data ---
     const dummyUser = {
-        name: "Wilfred Justin Peteros",
+        name: "Josuke Higashikata",
         role: "Vice President - External",
         idNumber: "CIT-2026-0042",
         issuedOn: "April 15, 2026",
