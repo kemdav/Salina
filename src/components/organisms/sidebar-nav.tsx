@@ -28,7 +28,7 @@ export function SidebarNav({ role, tenant, userName = 'Jane Doe' }: SidebarNavPr
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
     const pathname = usePathname();
     const isSuperAdmin = role === 'SuperAdmin';
-    const navItems = getSidebarRoutes(role);
+    const navItems = getSidebarRoutes(role) ?? [];
 
     const sidebarStyles = isSuperAdmin ? {
         backgroundColor: '#020817',
