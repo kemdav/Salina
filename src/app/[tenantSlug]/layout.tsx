@@ -1,7 +1,11 @@
 import { redirect } from "next/navigation";
 
 import { Button } from "@/components/atoms/button";
-import { getCurrentViewer, getOrganizationBySlug } from "@/lib/supabase/server";
+import {
+  getCurrentViewer,
+  resolveCurrentTenant,
+  type ThemeConfig,
+} from "@/lib/supabase/server";
 
 function SidebarPlaceholder() {
   return (
@@ -29,24 +33,32 @@ function SidebarPlaceholder() {
   );
 }
 
-interface ThemeConfig {
-  primaryColor?: string;
-  logoUrl?: string;
-  fontFamily?: string;
-  [key: string]: string | undefined;
+function buildThemeStyles(themeConfig: ThemeConfig | null | undefined) {
+  const primaryColor = themeConfig?.primaryColor ?? "#C6623E";
+
+  return {
+    "--primary": primaryColor,
+    "--color-primary": primaryColor,
+    "--primary-hover": `color-mix(in srgb, ${primaryColor} 85%, black)`,
+    "--background": "#0c0a09",
+    "--foreground": "#fafaf9",
+    ...(themeConfig?.fontFamily
+      ? {
+          "--font-heading": themeConfig.fontFamily,
+          "--font-body": themeConfig.fontFamily,
+        }
+      : {}),
+  } as React.CSSProperties;
 }
 
 export default async function TenantLayout({
   children,
-  params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ tenantSlug: string }>;
 }) {
-  const { tenantSlug } = await params;
-  const tenant = await getOrganizationBySlug(tenantSlug);
+  const tenantContext = await resolveCurrentTenant();
 
-  if (!tenant) {
+  if (!tenantContext.tenant) {
     redirect("/login");
   }
 
@@ -57,25 +69,18 @@ export default async function TenantLayout({
   }
 
   const canAccessTenant =
-    viewer.isPlatformAdmin || viewer.tenantId === tenant.id;
+    viewer.isPlatformAdmin || viewer.tenantId === tenantContext.tenant.id;
 
   if (!canAccessTenant) {
     redirect("/login");
   }
 
-  // Extract theme config, providing fallbacks if none exist
-  const themeConfig = (tenant.theme_config || {}) as ThemeConfig;
-
-  const themeStyles = {
-    "--primary": themeConfig.primaryColor || "#C6623E",
-    "--background": "#0c0a09",
-    "--foreground": "#fafaf9",
-  } as React.CSSProperties;
+  const themeStyles = buildThemeStyles(tenantContext.tenant.themeConfig);
 
   return (
     <div
       style={themeStyles}
-      className="flex min-h-screen w-full bg-[var(--background,var(--color-stone-950))] text-[var(--foreground,var(--color-stone-50))]"
+      className="flex min-h-screen w-full bg-(--background,var(--color-stone-950)) text-(--foreground,var(--color-stone-50))"
     >
       <SidebarPlaceholder />
       <main className="flex-1 overflow-y-auto p-6 md:p-8 lg:p-10">
