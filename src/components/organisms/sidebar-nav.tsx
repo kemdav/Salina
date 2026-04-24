@@ -54,14 +54,14 @@ export function SidebarNav({ role, tenant, userName = 'Jane Doe' }: SidebarNavPr
     return (
         <aside 
             className={cn(
-                "relative flex flex-col h-screen transition-all duration-300 shadow-xl z-20 shrink-0",
-                isCollapsed ? "w-[80px]" : "w-[260px]"
+                "sticky top-0 flex h-screen flex-col transition-all duration-300 shadow-xl z-20 shrink-0 self-start",
+                isCollapsed ? "w-20" : "w-65"
             )}
             style={sidebarStyles}
         >
             <button
                 onClick={() => setIsCollapsed(!isCollapsed)}
-                className="absolute -right-3 top-8 w-6 h-6 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-600 shadow-sm hover:bg-slate-50 transition-transform z-30"
+                className="absolute -right-3 top-20 z-40 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition-transform hover:bg-slate-50"
                 style={{ transform: isCollapsed ? "rotate(180deg)" : "rotate(0deg)" }}
             >
                 <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
@@ -88,7 +88,7 @@ export function SidebarNav({ role, tenant, userName = 'Jane Doe' }: SidebarNavPr
                             )}
                         </div>
                         <div className={cn("flex flex-col transition-all duration-300 whitespace-nowrap", isCollapsed ? "opacity-0 w-0" : "opacity-100")}>
-                            <span className="font-bold tracking-tight text-[15px] truncate w-[160px] leading-tight">{orgName}</span>
+                            <span className="font-bold tracking-tight text-[15px] truncate w-40 leading-tight">{orgName}</span>
                             <span className="text-[10px] uppercase tracking-wider opacity-70 font-semibold">{role}</span>
                         </div>
                     </div>
@@ -97,7 +97,7 @@ export function SidebarNav({ role, tenant, userName = 'Jane Doe' }: SidebarNavPr
 
             {/* NAVIGATION LINKS */}
             <nav 
-                className="flex-1 overflow-y-auto py-6 px-3 flex flex-col gap-1.5 relative [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20"
+                className="flex-1 min-h-0 overflow-y-auto py-6 px-3 flex flex-col gap-1.5 relative [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20"
                 onMouseLeave={() => setHoveredIndex(null)}
             >
                 <div 
@@ -131,8 +131,8 @@ export function SidebarNav({ role, tenant, userName = 'Jane Doe' }: SidebarNavPr
                         {getInitials(userName)}
                     </div>
                     <div className={cn("flex flex-col transition-all duration-300 whitespace-nowrap", isCollapsed ? "opacity-0 w-0" : "opacity-100")}>
-                        <span className="text-sm font-medium leading-none text-[var(--sidebar-active-text,#ffffff)]">{userName}</span>
-                        <span className="text-[10px] uppercase tracking-wider text-[var(--sidebar-text,#94a3b8)] mt-1">{role}</span>
+                        <span className="text-sm font-medium leading-none text-(--sidebar-active-text,#ffffff)">{userName}</span>
+                        <span className="text-[10px] uppercase tracking-wider text-(--sidebar-text,#94a3b8) mt-1">{role}</span>
                     </div>
                 </div>
             </div>
