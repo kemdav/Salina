@@ -37,13 +37,13 @@ export function AuthenticatedShell({
     userName,
 }: AuthenticatedShellProps) {
     return (
-        <div className="flex min-h-screen w-full overflow-hidden bg-slate-50" style={{ fontFamily: 'var(--font-body)' }}>
+        <div className="flex min-h-screen w-full items-start bg-slate-50" style={{ fontFamily: 'var(--font-body)' }}>
             <SidebarNav role={role} tenant={tenantBranding} userName={userName} />
 
-            <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+            <div className="flex min-h-screen min-w-0 flex-1 flex-col">
                 <AuthenticatedTopBar role={role} tenantBranding={tenantBranding} userName={userName} />
 
-                <main className="min-h-0 flex-1 overflow-y-auto p-6 sm:p-8">
+                <main className="flex-1 p-6 sm:p-8">
                     {children ?? emptyState ?? <ShellEmptyState role={role} />}
                 </main>
             </div>
