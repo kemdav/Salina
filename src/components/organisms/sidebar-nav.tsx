@@ -103,15 +103,17 @@ export function SidebarNav({
             <div
               className="w-10 h-10 shrink-0 rounded-lg bg-white/10 flex items-center justify-center font-bold text-lg shadow-inner overflow-hidden border border-white/5"
               style={
-                tenant?.logo
+                (tenant?.logoUrl ?? tenant?.logo)
                   ? { backgroundColor: tenant.primaryColor }
                   : undefined
               }
             >
-              {tenant?.logo ? (
+              {(tenant?.logoUrl ?? tenant?.logo) ? (
                 <div
                   className="h-full w-full bg-center bg-cover bg-no-repeat"
-                  style={{ backgroundImage: `url(${tenant.logo})` }}
+                  style={{
+                    backgroundImage: `url(${tenant.logoUrl ?? tenant.logo})`,
+                  }}
                 />
               ) : (
                 orgInitial
