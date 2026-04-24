@@ -139,7 +139,7 @@ async function getOrganizationById(tenantId: string): Promise<OrganizationRecord
   return data;
 }
 
-async function getOrganizationBySlug(tenantSlug: string): Promise<OrganizationRecord | null> {
+export async function getOrganizationBySlug(tenantSlug: string): Promise<OrganizationRecord | null> {
   const client = createSupabaseAdminClient();
 
   if (!client) {
