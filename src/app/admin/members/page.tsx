@@ -30,15 +30,15 @@ const MEMBERS: Member[] = [
 ];
 
 const STATUS_CLASS: Record<Status, string> = {
-    Active:    'rounded-full bg-success/10 text-success border-success/30',
-    Probation: 'rounded-full bg-warning/10 text-warning border-warning/30',
-    Alumni:    'rounded-full bg-slate-100 text-slate-500 border-slate-200',
-    Suspended: 'rounded-full bg-destructive/10 text-destructive border-destructive/30',
+    Active:    'rounded-full bg-success text-white border-success',
+    Probation: 'rounded-full bg-warning text-white border-warning',
+    Alumni:    'rounded-full bg-slate-700 text-white border-slate-700',
+    Suspended: 'rounded-full bg-destructive text-white border-destructive',
 };
 
 const DUES_CLASS: Record<Dues, string> = {
-    Paid:   'rounded-full bg-success/10 text-success border-transparent',
-    Unpaid: 'rounded-full bg-destructive/10 text-destructive border-transparent',
+    Paid:   'rounded-full bg-success text-white border-success',
+    Unpaid: 'rounded-full bg-destructive text-white border-destructive',
 };
 
 export default function MembersPage() {
@@ -85,7 +85,7 @@ export default function MembersPage() {
                 <select
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
-                    className="h-9 rounded-[var(--radius)] border border-border bg-white px-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+                    className="h-9 rounded-(--radius) border border-border bg-white px-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
                 >
                     <option>All Status</option>
                     <option>Active</option>
@@ -97,7 +97,7 @@ export default function MembersPage() {
                 <select
                     value={filterTag}
                     onChange={(e) => setFilterTag(e.target.value)}
-                    className="h-9 rounded-[var(--radius)] border border-border bg-white px-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+                    className="h-9 rounded-(--radius) border border-border bg-white px-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
                 >
                     <option>All Tags</option>
                     <option>Paid</option>
