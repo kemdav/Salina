@@ -33,6 +33,7 @@ const provisionOrganizationSchema = z
     themeConfig: z
       .object({
         fontFamily: z.string().trim().min(1).optional(),
+        logoUrl: z.string().trim().url().optional().or(z.literal("")),
         primaryColor: z.string().trim().min(1).optional(),
       })
       .strict()
