@@ -2,22 +2,43 @@
 
 import { usePathname } from 'next/navigation';
 
-// exampleeeee the URL is "/member/id", but we want the title to say "My Digital ID"
+export interface AuthenticatedTenantBranding {
+    name: string;
+    primaryColor: string;
+    textColor: string;
+    logo?: string;
+}
+
 const ROUTE_TITLES: Record<string, string> = {
-    'id': 'My Digital ID',
-    'feed': 'Home Feed',
-    // add more here later if needed!
+    dashboard: 'Dashboard',
+    feed: 'Announcements',
+    attendance: 'Attendance',
+    members: 'Members',
+    recruitment: 'Recruitment',
+    events: 'Events',
+    settings: 'Settings',
+    review: 'Review',
+    id: 'My Digital ID',
 };
+
+function formatTitle(segment: string) {
+    return segment
+        .split('-')
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ');
+}
 
 export function AuthenticatedTopBar() {
     const pathname = usePathname() || '';
 
-    // 1. Grabs the last part of the URL
     const segments = pathname.split('/').filter(Boolean);
+    const roleSegment = segments[0] || '';
     const lastSegment = segments[segments.length - 1] || 'dashboard';
 
-    // 2. Format it 
-    const rawTitle = ROUTE_TITLES[lastSegment] || lastSegment.split('-').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
+    const rawTitle =
+        roleSegment === 'officer' && lastSegment === 'members'
+            ? 'Roster'
+            : ROUTE_TITLES[lastSegment] || formatTitle(lastSegment);
 
     return (
         <header className="sticky top-0 z-20 flex items-center justify-between h-16 px-6 lg:px-8 bg-slate-50/80 backdrop-blur-md border-b border-slate-200 shrink-0">
