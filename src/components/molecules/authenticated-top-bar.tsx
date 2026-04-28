@@ -7,6 +7,7 @@ export interface AuthenticatedTenantBranding {
   primaryColor: string;
   textColor: string;
   logo?: string;
+  logoUrl?: string;
 }
 
 interface AuthenticatedTopBarProps {
@@ -35,6 +36,7 @@ export function AuthenticatedTopBar({
   const workspaceInitial =
     workspaceName.trim().slice(0, 1).toUpperCase() || "W";
   const userInitials = getInitials(userName);
+  const workspaceLogo = tenantBranding?.logoUrl ?? tenantBranding?.logo;
 
   return (
     <header className="sticky top-0 z-30 flex h-20 shrink-0 items-center justify-between gap-4 border-b border-slate-200 bg-white/95 px-6 shadow-sm backdrop-blur sm:px-8">
@@ -47,10 +49,10 @@ export function AuthenticatedTopBar({
               : undefined
           }
         >
-          {tenantBranding?.logo ? (
+          {workspaceLogo ? (
             <div
               className="h-full w-full bg-center bg-cover bg-no-repeat"
-              style={{ backgroundImage: `url(${tenantBranding.logo})` }}
+              style={{ backgroundImage: `url(${workspaceLogo})` }}
             />
           ) : tenantBranding ? (
             <span
