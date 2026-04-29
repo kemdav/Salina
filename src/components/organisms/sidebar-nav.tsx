@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { UserRole, getSidebarRoutes } from "@/lib/navigation-config";
 import { NavItem } from "@/components/atoms/nav-item";
 import { SalinaLogo } from "@/components/atoms/salina-logo";
@@ -38,7 +38,7 @@ export function SidebarNav({ role, tenant, userName = 'Jane Doe' }: SidebarNavPr
         '--sidebar-text': '#94a3b8',
         '--sidebar-hover-bg': 'rgba(255,255,255,0.04)',
         '--sidebar-hover-text': '#f8fafc',
-    } as React.CSSProperties : {
+    } as CSSProperties : {
         backgroundColor: tenant?.primaryColor || '#c6623e',
         color: tenant?.textColor || '#ffffff',
         '--sidebar-active-bg': 'rgba(255,255,255,0.15)',
@@ -46,7 +46,7 @@ export function SidebarNav({ role, tenant, userName = 'Jane Doe' }: SidebarNavPr
         '--sidebar-text': 'rgba(255,255,255,0.7)',
         '--sidebar-hover-bg': 'rgba(255,255,255,0.1)',
         '--sidebar-hover-text': tenant?.textColor || '#ffffff',
-    } as React.CSSProperties;
+    } as CSSProperties;
 
     const orgName = tenant?.name || 'Organization';
     const orgInitial = tenant?.name.charAt(0) || 'O';
@@ -55,7 +55,7 @@ export function SidebarNav({ role, tenant, userName = 'Jane Doe' }: SidebarNavPr
         <aside 
             className={cn(
                 "relative flex flex-col h-screen transition-all duration-300 shadow-xl z-20 shrink-0",
-                isCollapsed ? "w-[80px]" : "w-[260px]"
+                isCollapsed ? "w-20" : "w-65"
             )}
             style={sidebarStyles}
         >
@@ -88,7 +88,7 @@ export function SidebarNav({ role, tenant, userName = 'Jane Doe' }: SidebarNavPr
                             )}
                         </div>
                         <div className={cn("flex flex-col transition-all duration-300 whitespace-nowrap", isCollapsed ? "opacity-0 w-0" : "opacity-100")}>
-                            <span className="font-bold tracking-tight text-[15px] truncate w-[160px] leading-tight">{orgName}</span>
+                            <span className="font-bold tracking-tight text-[15px] truncate w-40 leading-tight">{orgName}</span>
                             <span className="text-[10px] uppercase tracking-wider opacity-70 font-semibold">{role}</span>
                         </div>
                     </div>
@@ -116,7 +116,7 @@ export function SidebarNav({ role, tenant, userName = 'Jane Doe' }: SidebarNavPr
                             key={route.label}
                             href={route.href}
                             icon={route.icon}
-                            label={route.label}
+                            label={role === 'Officer' && route.href.endsWith('/members') ? 'Roster' : route.label}
                             isActive={isActive}
                             isCollapsed={isCollapsed}
                             onMouseEnter={() => setHoveredIndex(index)}
@@ -131,8 +131,8 @@ export function SidebarNav({ role, tenant, userName = 'Jane Doe' }: SidebarNavPr
                         {getInitials(userName)}
                     </div>
                     <div className={cn("flex flex-col transition-all duration-300 whitespace-nowrap", isCollapsed ? "opacity-0 w-0" : "opacity-100")}>
-                        <span className="text-sm font-medium leading-none text-[var(--sidebar-active-text,#ffffff)]">{userName}</span>
-                        <span className="text-[10px] uppercase tracking-wider text-[var(--sidebar-text,#94a3b8)] mt-1">{role}</span>
+                        <span className="text-sm font-medium leading-none text-(--sidebar-active-text,#ffffff)">{userName}</span>
+                        <span className="text-[10px] uppercase tracking-wider text-(--sidebar-text,#94a3b8) mt-1">{role}</span>
                     </div>
                 </div>
             </div>

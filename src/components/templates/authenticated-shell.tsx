@@ -47,17 +47,21 @@ function ShellEmptyState({ role }: { role: UserRole }) {
 
 export function AuthenticatedShell({
   children,
+  emptyState,
   role,
   tenantBranding,
+  userName,
 }: AuthenticatedShellProps) {
   return (
-    <div className="flex w-full h-[100dvh] overflow-hidden bg-slate-50">
-      <SidebarNav role={role} tenant={tenantBranding} />
+    <div className="flex w-full h-dvh overflow-hidden bg-slate-50">
+      <SidebarNav role={role} tenant={tenantBranding} userName={userName} />
 
       <main className="flex-1 h-full overflow-y-auto relative flex flex-col">
         <AuthenticatedTopBar />
 
-        <div className="flex-1 p-6 lg:p-8">{children}</div>
+        <div className="flex-1 p-6 lg:p-8">
+          {children ?? emptyState ?? <ShellEmptyState role={role} />}
+        </div>
       </main>
     </div>
   );
