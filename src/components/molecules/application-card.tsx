@@ -1,4 +1,3 @@
-import { cn } from "@/lib/utils";
 import { StatusBadge } from "@/components/atoms/status-badge";
 
 export type ApplicationStatus = "Pending" | "In Review" | "Accepted" | "Rejected";
