@@ -1,6 +1,5 @@
 'use client';
 
-import { cn } from "@/lib/utils";
 import { useState, useRef } from "react";
 import QRCode from "react-qr-code";
 
@@ -40,11 +39,9 @@ export function DigitalIdCard({ tenant, user }: DigitalIdCardProps) {
     };
 
     return (
-        // 2. ADDED id="digital-id-badge" here so the download button can find it!
         <div id="digital-id-badge" className="w-full max-w-[640px] mx-auto bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-200 flex flex-col sm:flex-row relative group">
 
             {/* LEFT COLUMN: Branding & Avatar */}
-            {/* ... (Keep this entire left column exactly as it is!) ... */}
             <div
                 className="sm:w-[40%] flex flex-col items-center justify-center p-8 relative border-b sm:border-b-0 sm:border-r border-black/10"
                 style={{ backgroundColor: tenant.primaryColor, color: tenant.textColor }}
@@ -83,7 +80,7 @@ export function DigitalIdCard({ tenant, user }: DigitalIdCardProps) {
                         </span>
                     </div>
 
-                    {/* 3. THE NEW QR CODE */}
+                    {/* QR CODE */}
                     <div className="w-[60px] h-[60px] sm:w-[72px] sm:h-[72px] shrink-0 bg-white rounded-lg flex items-center justify-center p-1.5 shadow-md border border-slate-200">
                         {/* TODO: DUMMY QR CODE 
                             This is currently generating a fake verification link. 
@@ -98,7 +95,6 @@ export function DigitalIdCard({ tenant, user }: DigitalIdCardProps) {
                     </div>
                 </div>
 
-                {/* ... (Keep the rest of the Grid and Footer exactly as it is!) ... */}
                 <div className="py-6 grid grid-cols-2 gap-y-5 gap-x-4 text-sm flex-1">
                     <div className="flex flex-col"><span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500 mb-0.5">ID Number</span><span className="font-mono font-medium text-slate-700">{user.idNumber}</span></div>
                     <div className="flex flex-col"><span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500 mb-0.5">Role Lvl</span><span className="font-medium text-slate-700">{user.roleLevel}</span></div>
