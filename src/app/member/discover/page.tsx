@@ -6,7 +6,7 @@ import { DiscoverOrg } from "@/components/molecules/org-card";
 
 // --- DUMMY DATA FOR THE TENANT (The one the user is currently viewing from) ---
 const dummyTenant = {
-    name: "Cebu Institute of Technology - Universityy",
+    name: "Cebu Institute of Technology - University",
     primaryColor: "#c6623e",
     textColor: "#ffffff"
 };
