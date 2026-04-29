@@ -1,108 +1,109 @@
 'use client';
-
+import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { AuthenticatedShell } from "@/components/templates/authenticated-shell";
 import { EventMonthGrid } from "@/components/organisms/event-month-grid";
+import { EventList } from "@/components/organisms/event-list"; // <-- Import the new list
 import { EventDetailsModal } from "@/components/organisms/event-details-modal";
 import { EventFormModal } from "@/components/organisms/event-form-modal";
 import { Button } from "@/components/atoms/button";
-import { OFFICER_TENANT_BRANDING } from "@/lib/officer-demo-data"; // Make sure this matches your path!
+import { OFFICER_TENANT_BRANDING, upcomingEvents } from "@/lib/officer-demo-data";
 import { CalendarEvent, NewEventPayload } from "@/components/molecules/calendar-day";
-// --- DUMMY DATA ---
-const dummyEvents = [
-    {
-        id: 1,
-        title: "Arduino Workshop Series",
-        date: "2026-05-14", // Ensure this is in the current month you are viewing!
-        day: 14,
-        month: "MAY",
-        time: "8:00 AM - 5:00 PM",
-        location: "CPE Labs",
-        type: "Workshop",
-        status: "Registration Open",
-        description: "Hands-on workshop for members."
-    }
-];
 
 export default function OfficerEventsPage() {
-    // 1. Replace 'any' with 'CalendarEvent'
+    const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
     const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
 
-    // 2. Replace 'any' with 'CalendarEvent'
     const handleEventClick = (event: CalendarEvent) => {
         setSelectedEvent(event);
         setIsDetailsModalOpen(true);
     };
 
-    // 3. Replace 'any' with 'NewEventPayload'
     const handleCreateEvent = (data: NewEventPayload) => {
         console.log("Creating new event with payload:", data);
-        alert(`Dummy Event Created:\n${data.title}\nCheck console for full payload!`);
-        // Future: Send to Supabase here
+        alert(`Dummy Event Created:\n${data.title}`);
     };
 
-    // Replace with your actual permission logic later
     const hasEventCreationPowers = true;
 
     return (
         <AuthenticatedShell role="Officer" tenantBranding={OFFICER_TENANT_BRANDING}>
-            <div className="w-full max-w-7xl mx-auto py-8 flex flex-col gap-8">
+            <div className="w-full max-w-5xl mx-auto py-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
                 {/* Page Header */}
-                <section className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
                     <div>
-                        <h2 className="text-3xl font-bold text-slate-900 tracking-tight font-[family:var(--font-heading)]">
-                            Event Management
+                        <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight font-[family:var(--font-heading)]">
+                            Organization Events
                         </h2>
-                        <p className="text-sm text-slate-500 mt-2 max-w-2xl leading-relaxed">
-                            Schedule upcoming activities, manage RSVPs, and control the organization calendar.
+                        <p className="text-sm text-slate-500 mt-2 max-w-xl leading-relaxed">
+                            Manage the calendar, schedule new activities, and track upcoming events.
                         </p>
                     </div>
 
-                    {/* Only show the 'New Event' button if they have permission */}
-                    {hasEventCreationPowers && (
-                        <Button variant="dark" onClick={() => setIsFormModalOpen(true)}>
-                            + New Event
-                        </Button>
+                    <div className="flex items-center gap-4 w-full sm:w-auto">
+                        {/* View Toggle Control */}
+                        <div className="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200 shrink-0">
+                            <button
+                                onClick={() => setViewMode("list")}
+                                className={cn(
+                                    "px-4 py-1.5 text-sm font-medium rounded-md transition-all flex items-center gap-2",
+                                    viewMode === "list" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                                )}
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+                                List
+                            </button>
+                            <button
+                                onClick={() => setViewMode("grid")}
+                                className={cn(
+                                    "px-4 py-1.5 text-sm font-medium rounded-md transition-all flex items-center gap-2",
+                                    viewMode === "grid" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                                )}
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                Calendar
+                            </button>
+                        </div>
+
+                        {/* Create Button */}
+                        {hasEventCreationPowers && (
+                            <Button variant="dark" onClick={() => setIsFormModalOpen(true)} className="flex items-center gap-2 shadow-sm shrink-0">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                                Create
+                            </Button>
+                        )}
+                    </div>
+                </div>
+
+                {/* Conditional View Rendering */}
+                <div className="w-full">
+                    {viewMode === "grid" ? (
+                        <div className="bg-white border border-slate-200 rounded-xl p-4 sm:p-6 shadow-sm">
+                            <EventMonthGrid
+                                events={upcomingEvents}
+                                tenant={OFFICER_TENANT_BRANDING}
+                                canManageEvents={hasEventCreationPowers}
+                                onEventClick={handleEventClick}
+                            />
+                        </div>
+                    ) : (
+                        <div className="animate-in fade-in duration-300">
+                            <EventList
+                                events={upcomingEvents}
+                                tenant={OFFICER_TENANT_BRANDING}
+                                onEventClick={handleEventClick}
+                            />
+                        </div>
                     )}
-                </section>
+                </div>
 
-                <section className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)]">
-
-                    {/* The Calendar Grid */}
-                    <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                        <EventMonthGrid
-                            events={dummyEvents}
-                            tenant={OFFICER_TENANT_BRANDING}
-                            canManageEvents={hasEventCreationPowers}
-                            onEventClick={handleEventClick}
-                        />
-                    </article>
-
-                    {/* Officer Quick Stats / Side Panel */}
-                    <aside className="space-y-6">
-                        <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                            <h3 className="text-lg font-semibold text-slate-900">Calendar Overview</h3>
-                            <div className="mt-5 space-y-3">
-                                <div className="rounded-2xl bg-slate-50 p-4">
-                                    <p className="text-sm font-medium text-slate-500">Upcoming Events</p>
-                                    <p className="mt-2 text-2xl font-bold text-slate-900">3</p>
-                                </div>
-                                <div className="rounded-2xl bg-slate-50 p-4">
-                                    <p className="text-sm font-medium text-slate-500">Pending RSVPs</p>
-                                    <p className="mt-2 text-2xl font-bold text-slate-900">42</p>
-                                </div>
-                            </div>
-                        </article>
-                    </aside>
-
-                </section>
             </div>
 
-            {/* Hidden Modals */}
+            {/* Modals remain exactly the same */}
             <EventDetailsModal
                 event={selectedEvent}
                 tenant={OFFICER_TENANT_BRANDING}

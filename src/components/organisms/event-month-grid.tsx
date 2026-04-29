@@ -6,11 +6,11 @@ import { CalendarDayCell, CalendarEvent, TenantBranding } from "@/components/mol
 interface EventMonthGridProps {
     events: CalendarEvent[];
     tenant: TenantBranding;
-    canManageEvents?: boolean;
     onEventClick?: (event: CalendarEvent) => void;
+    canManageEvents?: boolean;
 }
 
-export function EventMonthGrid({ events, tenant, canManageEvents = false, onEventClick }: EventMonthGridProps) {
+export function EventMonthGrid({ events, tenant, onEventClick }: EventMonthGridProps) {
     const [currentDate, setCurrentDate] = useState(new Date(2026, 2, 1));
 
     const year = currentDate.getFullYear();
@@ -37,16 +37,6 @@ export function EventMonthGrid({ events, tenant, canManageEvents = false, onEven
                 </h3>
 
                 <div className="flex items-center gap-4">
-                    {/* Only show this if they are an Officer/Admin */}
-                    {canManageEvents && (
-                        <button
-                            className="px-3 py-1.5 rounded-md text-sm font-medium text-white transition-opacity hover:opacity-90 flex items-center gap-1.5 shadow-sm"
-                            style={{ backgroundColor: tenant.primaryColor }}
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                            New Event
-                        </button>
-                    )}
 
                     <div className="flex gap-2">
                         <button onClick={handlePrevMonth} className="p-1.5 sm:p-2 bg-white hover:bg-slate-50 rounded-md border border-slate-200 transition-colors shadow-sm">
