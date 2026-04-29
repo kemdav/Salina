@@ -1,6 +1,5 @@
 import { cn } from "@/lib/utils";
 
-// 1. Define exactly what an Event looks like
 export interface CalendarEvent {
     id: number | string;
     title: string;
@@ -14,14 +13,20 @@ export interface CalendarEvent {
     description: string;
 }
 
-// 2. Define exactly what the Tenant looks like
+export type NewEventPayload = Omit<CalendarEvent, "id" | "day" | "month" | "status">;
+
 export interface TenantBranding {
     name: string;
     primaryColor: string;
     textColor: string;
 }
 
-// 3. Replace 'any' with our new strict types!
+export interface TenantBranding {
+    name: string;
+    primaryColor: string;
+    textColor: string;
+}
+
 interface CalendarDayCellProps {
     day: number;
     events: CalendarEvent[];
