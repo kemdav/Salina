@@ -30,10 +30,11 @@ const INITIAL_ORGANIZATION_SETUP: OrganizationSetupState = {
 const INITIAL_BRANDING_THEME_CONFIG: BrandingThemeConfig = {
   fontFamily: "var(--font-heading), sans-serif",
   primaryColor: "#c6623e",
+  logoUrl: "",
 };
 
 function validateOrganizationSetup(
-  value: OrganizationSetupState
+  value: OrganizationSetupState,
 ): OrganizationSetupErrors {
   const errors: OrganizationSetupErrors = {};
 
@@ -74,7 +75,7 @@ export function OnboardingTemplate() {
 
   const updateOrganizationField = <K extends keyof OrganizationSetupState>(
     field: K,
-    nextValue: OrganizationSetupState[K]
+    nextValue: OrganizationSetupState[K],
   ) => {
     setOrganizationSetup((current) => ({
       ...current,
@@ -186,7 +187,10 @@ export function OnboardingTemplate() {
                 />
               </svg>
             </div>
-            <h3 className="text-2xl font-bold text-foreground mb-2" style={{ fontFamily: "var(--font-heading)" }}>
+            <h3
+              className="text-2xl font-bold text-foreground mb-2"
+              style={{ fontFamily: "var(--font-heading)" }}
+            >
               Ready to Launch
             </h3>
             <p className="text-(--muted)">
@@ -223,7 +227,10 @@ export function OnboardingTemplate() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col" style={{ fontFamily: "var(--font-body)" }}>
+    <div
+      className="min-h-screen bg-slate-50 flex flex-col"
+      style={{ fontFamily: "var(--font-body)" }}
+    >
       <OnboardingHeader />
 
       <div className="px-4 sm:px-6 lg:px-8 pt-8">
@@ -256,7 +263,13 @@ export function OnboardingTemplate() {
             onBack={handleBack}
             disableBack={isLaunching}
             disableNext={isLaunching}
-            nextLabel={isLaunching ? "Launching..." : isFinalStep ? "Launch Workspace" : "Continue"}
+            nextLabel={
+              isLaunching
+                ? "Launching..."
+                : isFinalStep
+                  ? "Launch Workspace"
+                  : "Continue"
+            }
           />
         </div>
       </div>

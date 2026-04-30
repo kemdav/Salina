@@ -97,7 +97,7 @@ export default function OfficerEventsPage() {
         alert(`Event Created: ${data.title}`);
     };
 
-    const handleDeleteEvent = (id: number) => {
+    const handleDeleteEvent = (id: string | number) => {
         const confirmDelete = window.confirm("Are you sure you want to remove this event?");
         if (confirmDelete) {
             console.log("Deleted event ID:", id);
@@ -112,7 +112,7 @@ export default function OfficerEventsPage() {
                 {/* Page Header & View Toggles */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                     <div>
-                        <h2 className="text-2xl font-bold text-slate-800 tracking-tight font-[family:var(--font-heading)]">Event Management</h2>
+                        <h2 className="text-2xl font-bold text-slate-800 tracking-tight" style={{ fontFamily: "var(--font-heading)" }}>Event Management</h2>
                         <p className="text-sm text-slate-500 mt-1">Manage the calendar, schedule new activities, and track upcoming events.</p>
                     </div>
 

@@ -6,7 +6,7 @@ import { OFFICER_TENANT_BRANDING } from "@/lib/officer-demo-data";
 const pipelineColumns = [
     {
         title: "Applied",
-        tone: "bg-slate-50 text-slate-700",
+        tone: "bg-slate-100 text-slate-900",
         cards: [
             { name: "Nina Flores", note: "Submitted onboarding wizard", tag: "Fresh applicant" },
             { name: "Jordan Lim", note: "Shared essay and leadership goals", tag: "Needs screening" },
@@ -14,7 +14,7 @@ const pipelineColumns = [
     },
     {
         title: "Screening",
-        tone: "bg-amber-50 text-amber-700",
+        tone: "bg-amber-100 text-amber-950",
         cards: [
             { name: "Cleo Ramos", note: "Reviewed by intake officers", tag: "For interview" },
             { name: "Rafael Medina", note: "Waiting on recommendation check", tag: "Reference pending" },
@@ -22,7 +22,7 @@ const pipelineColumns = [
     },
     {
         title: "Interview",
-        tone: "bg-blue-50 text-blue-700",
+        tone: "bg-blue-100 text-blue-950",
         cards: [
             { name: "Hazel Tan", note: "Panel scheduled for Thursday", tag: "Panel booked" },
             { name: "Avery Cruz", note: "Completed first-round discussion", tag: "Score pending" },
@@ -30,7 +30,7 @@ const pipelineColumns = [
     },
     {
         title: "Accepted",
-        tone: "bg-emerald-50 text-emerald-700",
+        tone: "bg-emerald-100 text-emerald-950",
         cards: [
             { name: "Mika Torres", note: "Ready for onboarding and roster sync", tag: "Offer sent" },
         ],
@@ -52,10 +52,10 @@ export default function OfficerRecruitmentPage() {
                         <div className="max-w-2xl space-y-4">
                             <Badge className="bg-[#c6623e] text-white">Recruitment</Badge>
                             <div>
-                                <h2 className="text-3xl font-bold tracking-tight text-slate-900 font-[family:var(--font-heading)]">
+                                <h2 className="text-3xl font-bold tracking-tight text-slate-900" style={{ fontFamily: "var(--font-heading)" }}>
                                     Officer recruitment pipeline
                                 </h2>
-                                <p className="mt-3 text-sm leading-6 text-slate-500">
+                                <p className="mt-3 text-sm leading-6 text-slate-600">
                                     Review applicants, move them through the pipeline, and keep interview progress visible at a glance.
                                 </p>
                             </div>
@@ -70,7 +70,7 @@ export default function OfficerRecruitmentPage() {
                     <div className="mt-6 grid gap-4 md:grid-cols-3">
                         {recruitmentStats.map((stat) => (
                             <article key={stat.label} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                <p className="text-sm font-medium text-slate-500">{stat.label}</p>
+                                <p className="text-sm font-medium text-slate-700">{stat.label}</p>
                                 <p className="mt-3 text-3xl font-bold text-slate-900">{stat.value}</p>
                             </article>
                         ))}
@@ -85,9 +85,9 @@ export default function OfficerRecruitmentPage() {
                             <div className="mt-4 space-y-3">
                                 {column.cards.map((card) => (
                                     <div key={card.name} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                        <Badge className="bg-white text-slate-700 border border-slate-200">{card.tag}</Badge>
+                                        <Badge className="border border-[#c6623e]/20 bg-[#c6623e]/12 text-[#7c2d12]">{card.tag}</Badge>
                                         <h3 className="mt-3 text-lg font-semibold text-slate-900">{card.name}</h3>
-                                        <p className="mt-2 text-sm leading-6 text-slate-600">{card.note}</p>
+                                        <p className="mt-2 text-sm leading-6 text-slate-700">{card.note}</p>
                                         <div className="mt-4 flex gap-3">
                                             <Button variant="secondary">Review</Button>
                                             <Button variant="secondary">Move</Button>
@@ -102,7 +102,7 @@ export default function OfficerRecruitmentPage() {
                 <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
                     <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                         <h3 className="text-lg font-semibold text-slate-900">Pipeline notes</h3>
-                        <div className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
+                        <div className="mt-4 space-y-3 text-sm leading-6 text-slate-700">
                             <p>• Use the screening stage to confirm completed onboarding responses.</p>
                             <p>• Keep interview scores visible before promoting applicants to accepted.</p>
                             <p>• Sync accepted applicants with the roster page after onboarding.</p>
@@ -111,7 +111,7 @@ export default function OfficerRecruitmentPage() {
 
                     <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                         <h3 className="text-lg font-semibold text-slate-900">Review cadence</h3>
-                        <div className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
+                        <div className="mt-4 space-y-3 text-sm leading-6 text-slate-700">
                             <div className="rounded-2xl bg-slate-50 p-4">Screening every Monday and Thursday</div>
                             <div className="rounded-2xl bg-slate-50 p-4">Interviews scheduled inside the event calendar</div>
                         </div>

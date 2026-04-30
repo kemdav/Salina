@@ -59,7 +59,7 @@ export default function OfficerAttendancePage() {
                     </div>
 
                     <div className="mt-6">
-                        <StatusBanner tone="info" className="border-slate-200 bg-slate-50 text-slate-600">
+                        <StatusBanner tone="info" className="border-slate-200 bg-slate-50">
                             The QR check-in line is live. Manual attendance can be added from the queue below.
                         </StatusBanner>
                     </div>
@@ -80,7 +80,7 @@ export default function OfficerAttendancePage() {
                                         <p className="mt-1 text-sm text-slate-500">{person.role}</p>
                                     </div>
                                     <div className="flex items-center gap-3">
-                                        <Badge className="bg-amber-50 text-amber-700">{person.status}</Badge>
+                                        <Badge className="border border-amber-200 bg-amber-100 text-amber-900">{person.status}</Badge>
                                         <Button variant="dark">Check in</Button>
                                     </div>
                                 </div>
@@ -109,10 +109,10 @@ export default function OfficerAttendancePage() {
                                                     <Badge
                                                         className={
                                                             row.status === "Present"
-                                                                ? "bg-emerald-50 text-emerald-700"
-                                                                : row.status === "Late"
-                                                                ? "bg-amber-50 text-amber-700"
-                                                                : "bg-slate-100 text-slate-600"
+                                                                ? "bg-emerald-100 text-emerald-900"
+                                                                    : row.status === "Late"
+                                                                    ? "bg-orange-100 text-orange-900"
+                                                                    : "bg-sky-100 text-sky-900"
                                                         }
                                                     >
                                                         {row.status}

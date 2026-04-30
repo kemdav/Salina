@@ -53,16 +53,23 @@ export function AuthenticatedShell({
   userName,
 }: AuthenticatedShellProps) {
   return (
-    <div className="flex w-full h-dvh overflow-hidden bg-slate-50">
+    <div
+      className="flex min-h-screen w-full items-start bg-slate-50"
+      style={{ fontFamily: "var(--font-body)" }}
+    >
       <SidebarNav role={role} tenant={tenantBranding} userName={userName} />
 
-      <main className="flex-1 h-full overflow-y-auto relative flex flex-col">
-        <AuthenticatedTopBar />
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+        <AuthenticatedTopBar
+          role={role}
+          tenantBranding={tenantBranding}
+          userName={userName}
+        />
 
-        <div className="flex-1 p-6 lg:p-8">
+        <main className="flex-1 p-6 sm:p-8">
           {children ?? emptyState ?? <ShellEmptyState role={role} />}
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

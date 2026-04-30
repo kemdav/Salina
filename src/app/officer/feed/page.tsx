@@ -68,14 +68,14 @@ export default function OfficerFeedPage() {
 
                         <div className="mt-5 flex flex-wrap gap-2">
                             {audienceTags.map((tag) => (
-                                <Badge key={tag} className="border border-slate-200 bg-slate-50 text-slate-700">
+                                <Badge key={tag} className="border border-[#c6623e]/20 bg-[#c6623e]/10 text-[#7c2d12]">
                                     {tag}
                                 </Badge>
                             ))}
                         </div>
 
                         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <StatusBanner tone="info" className="border-slate-200 bg-slate-50 text-slate-600">
+                            <StatusBanner tone="info" className="border-slate-200 bg-slate-50">
                                 Drafts stay private until you publish them to the officer feed.
                             </StatusBanner>
 

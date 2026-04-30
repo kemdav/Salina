@@ -57,7 +57,7 @@ export function OrganizationFeed({ posts, canPost = false, primaryColor = "#c662
                         </div>
 
                         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <StatusBanner tone="info" className="border-slate-200 bg-slate-50 text-slate-600">
+                            <StatusBanner tone="info" className="border-slate-200 bg-slate-50">
                                 Drafts stay private until you publish them to the officer feed.
                             </StatusBanner>
 
