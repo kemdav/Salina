@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 
 import { Button } from "@/components/atoms/button";
+import { TenantProvider } from "@/components/providers/tenant-provider";
+import { TenantNameBadge } from "@/components/molecules/tenant-name-badge";
 import {
   getCurrentViewer,
   resolveCurrentTenant,
@@ -25,6 +27,7 @@ function SidebarPlaceholder() {
             Settings
           </div>
         </nav>
+        <TenantNameBadge />
       </div>
       <div>
         <Button className="w-full justify-start">Logout</Button>
@@ -78,14 +81,16 @@ export default async function TenantLayout({
   const themeStyles = buildThemeStyles(tenantContext.tenant.themeConfig);
 
   return (
-    <div
-      style={themeStyles}
-      className="flex min-h-screen w-full bg-(--background,var(--color-stone-950)) text-(--foreground,var(--color-stone-50))"
-    >
-      <SidebarPlaceholder />
-      <main className="flex-1 overflow-y-auto p-6 md:p-8 lg:p-10">
-        {children}
-      </main>
-    </div>
+    <TenantProvider value={tenantContext}>
+      <div
+        style={themeStyles}
+        className="flex min-h-screen w-full bg-(--background,var(--color-stone-950)) text-(--foreground,var(--color-stone-50))"
+      >
+        <SidebarPlaceholder />
+        <main className="flex-1 overflow-y-auto p-6 md:p-8 lg:p-10">
+          {children}
+        </main>
+      </div>
+    </TenantProvider>
   );
 }
