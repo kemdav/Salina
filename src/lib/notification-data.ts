@@ -9,6 +9,25 @@ export interface NotificationData {
   isRead: boolean;
 }
 
+/**
+ * ============================================================================
+ * NOTE - NOTIFICATION TRIGGERS
+ * ============================================================================
+ *
+ * The arrays below contain DUMMY DATA for frontend UI testing.
+ *
+ * As backend features (Events, Applications, Announcements) are completed,
+ * replace these static arrays with real Supabase fetches or realtime subscriptions.
+ *
+ * Recommended future trigger mapping:
+ * - Super Admin: New Organization Registrations, System Alerts, Global Bans
+ * - Admin: New Member Signups, Officer Role Changes, Payment Receipts, Accreditation Status Updates
+ * - Officer: New RSVPs to Events, Attendance Thresholds, Document Approvals
+ * - Member: Upcoming Events, Announcement Posts, Application Status Changes
+ *
+ * ============================================================================
+ */
+
 export const superAdminNotifications: NotificationData[] = [
   {
     id: "sa1",

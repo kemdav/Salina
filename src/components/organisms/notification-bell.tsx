@@ -16,7 +16,6 @@ export function NotificationBell({ initialNotifications }: NotificationBellProps
     // Calculate how many unread notifications we have
     const unreadCount = notifications.filter(n => !n.isRead).length;
 
-    // Handle clicking outside the dropdown to close it
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
