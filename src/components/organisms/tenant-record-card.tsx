@@ -1,4 +1,4 @@
-import type { TenantContext } from "@/lib/supabase/server";
+import type { TenantContext } from "@/components/providers/tenant-provider";
 
 import { DetailList } from "@/components/molecules/detail-list";
 import { StatusBanner } from "@/components/molecules/status-banner";
