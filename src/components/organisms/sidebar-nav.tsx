@@ -75,7 +75,13 @@ export function SidebarNav({
         style={{ transform: isCollapsed ? "rotate(180deg)" : "rotate(0deg)" }}
         aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
-        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          width="12"
+          height="12"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -99,7 +105,11 @@ export function SidebarNav({
           <div className="flex w-full items-center gap-3 overflow-hidden">
             <div
               className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/5 bg-white/10 text-lg font-bold shadow-inner"
-              style={workspaceLogo ? { backgroundColor: tenant?.primaryColor } : undefined}
+              style={
+                workspaceLogo
+                  ? { backgroundColor: tenant?.primaryColor }
+                  : undefined
+              }
             >
               {workspaceLogo ? (
                 <div
@@ -144,16 +154,23 @@ export function SidebarNav({
           const isActive =
             pathname === route.href || pathname?.startsWith(`${route.href}/`);
 
+          const label =
+            role === "Officer" && route.href.endsWith("/members")
+              ? "Roster"
+              : role === "Member" && route.href.endsWith("/feed")
+                ? "Home Feed"
+                : role === "Member" && route.href.endsWith("/events")
+                  ? "Calendar"
+                  : role === "Member" && route.href.endsWith("/id")
+                    ? "My ID"
+                    : route.label;
+
           return (
             <NavItem
               key={route.label}
               href={route.href}
               icon={route.icon}
-              label={
-                role === "Officer" && route.href.endsWith("/members")
-                  ? "Roster"
-                  : route.label
-              }
+              label={label}
               isActive={isActive}
               isCollapsed={isCollapsed}
               onMouseEnter={() => setHoveredIndex(index)}

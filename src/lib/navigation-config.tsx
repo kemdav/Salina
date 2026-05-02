@@ -2,7 +2,12 @@ import React from "react";
 
 export type UserRole = "SuperAdmin" | "Admin" | "Officer" | "Member";
 
-export type VisibilityRole = "Owner" | "Admin" | "Officer" | "Member" | "Viewer";
+export type VisibilityRole =
+  | "Owner"
+  | "Admin"
+  | "Officer"
+  | "Member"
+  | "Viewer";
 
 export type RouteSlug =
   | "dashboard"
@@ -11,6 +16,9 @@ export type RouteSlug =
   | "attendance"
   | "recruitment"
   | "events"
+  | "applications"
+  | "discover"
+  | "id"
   | "roles"
   | "settings"
   | "review"
@@ -69,6 +77,69 @@ const NAV_ITEM_DEFINITIONS: Array<{
           strokeLinejoin="round"
           strokeWidth={2}
           d="M7 8h10M7 12h6m-6 4h8M5 5h14a2 2 0 012 2v10a2 2 0 01-2 2H9l-4 3v-3H5a2 2 0 01-2-2V7a2 2 0 012-2z"
+        />
+      </IconWrapper>
+    ),
+  },
+  {
+    label: "Applications",
+    slug: "applications",
+    visibleTo: ["Member"],
+    icon: (
+      <IconWrapper>
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M9 3h6l4 4v10a2 2 0 01-2 2H9a2 2 0 01-2-2V5a2 2 0 012-2z"
+        />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M9 12l2 2 4-4"
+        />
+      </IconWrapper>
+    ),
+  },
+  {
+    label: "Discover",
+    slug: "discover",
+    visibleTo: ["Member"],
+    icon: (
+      <IconWrapper>
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M12 3a9 9 0 100 18 9 9 0 000-18z"
+        />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M14.5 9.5l-1.5 4-4 1.5 1.5-4 4-1.5z"
+        />
+      </IconWrapper>
+    ),
+  },
+  {
+    label: "ID",
+    slug: "id",
+    visibleTo: ["Member"],
+    icon: (
+      <IconWrapper>
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M4 7a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V7z"
+        />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M8 11h3m-3 4h8M9.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"
         />
       </IconWrapper>
     ),
@@ -222,11 +293,26 @@ const NAV_ITEM_DEFINITIONS: Array<{
   },
 ];
 
-export const ROLE_VISIBILITY_TOKENS: Record<UserRole, VisibilityRole[]> = {
-  SuperAdmin: ["Owner", "Admin", "Member", "Viewer"],
-  Admin: ["Admin", "Member", "Viewer"],
-  Officer: ["Officer", "Member", "Viewer"],
-  Member: ["Member", "Viewer"],
+const ROLE_ROUTE_SLUGS: Record<UserRole, RouteSlug[]> = {
+  SuperAdmin: [
+    "dashboard",
+    "members",
+    "review",
+    "accreditations",
+    "advisers",
+    "settings",
+  ],
+  Admin: [
+    "dashboard",
+    "feed",
+    "members",
+    "recruitment",
+    "events",
+    "roles",
+    "settings",
+  ],
+  Officer: ["feed", "members", "attendance", "recruitment", "events"],
+  Member: ["feed", "applications", "events", "id", "discover"],
 };
 
 function getRolePath(role: UserRole) {
@@ -234,23 +320,24 @@ function getRolePath(role: UserRole) {
 }
 
 function buildRoutesForRole(role: UserRole) {
-  const allowedVisibility = ROLE_VISIBILITY_TOKENS[role];
+  const allowedSlugs = ROLE_ROUTE_SLUGS[role];
 
-  return NAV_ITEM_DEFINITIONS.filter((item) =>
-    item.visibleTo.some((visibilityRole) =>
-      allowedVisibility.includes(visibilityRole),
-    ),
-  ).map<NavRoute>((item) => {
-    const isSuperAdminOrganizations =
-      role === "SuperAdmin" && item.slug === "members";
+  return allowedSlugs
+    .map((slug) => NAV_ITEM_DEFINITIONS.find((item) => item.slug === slug))
+    .filter((item): item is (typeof NAV_ITEM_DEFINITIONS)[number] =>
+      Boolean(item),
+    )
+    .map<NavRoute>((item) => {
+      const isSuperAdminOrganizations =
+        role === "SuperAdmin" && item.slug === "members";
 
-    return {
-      label: isSuperAdminOrganizations ? "Organizations" : item.label,
-      href: `/${getRolePath(role)}/${isSuperAdminOrganizations ? "organizations" : item.slug}`,
-      icon: item.icon,
-      visibleTo: item.visibleTo,
-    };
-  });
+      return {
+        label: isSuperAdminOrganizations ? "Organizations" : item.label,
+        href: `/${getRolePath(role)}/${isSuperAdminOrganizations ? "organizations" : item.slug}`,
+        icon: item.icon,
+        visibleTo: item.visibleTo,
+      };
+    });
 }
 
 export const ROLE_ROUTES: Record<UserRole, NavRoute[]> = {
