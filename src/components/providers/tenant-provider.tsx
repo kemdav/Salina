@@ -1,7 +1,9 @@
 "use client";
 
 import { createContext, useContext, ReactNode } from "react";
-import type { TenantContext } from "@/lib/supabase/server";
+import type { TenantContext as ServerTenantContext } from "@/lib/supabase/server";
+
+export type TenantContext = ServerTenantContext;
 
 const TenantReactContext = createContext<TenantContext | undefined>(undefined);
 

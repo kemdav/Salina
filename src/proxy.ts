@@ -21,6 +21,18 @@ export function proxy(request: NextRequest) {
   // Keep proxy work header-only so tenant routing stays effectively free.
   if (tenantSlug && !RESERVED_SUBDOMAINS.has(tenantSlug)) {
     requestHeaders.set("x-tenant-slug", tenantSlug);
+
+    if (request.nextUrl.pathname === "/") {
+      const dashboardUrl = request.nextUrl.clone();
+
+      dashboardUrl.pathname = "/admin/dashboard";
+
+      return NextResponse.rewrite(dashboardUrl, {
+        request: {
+          headers: requestHeaders,
+        },
+      });
+    }
   } else {
     requestHeaders.delete("x-tenant-slug");
   }
