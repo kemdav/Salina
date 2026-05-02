@@ -15,7 +15,7 @@ export function StatusBanner({
 }: StatusBannerProps) {
   const toneClasses = {
     error: "border border-rose-500/30 bg-rose-500/10 text-rose-700",
-    info: "border border-white/10 bg-white/5 text-stone-100",
+    info: "border border-slate-200 bg-slate-50 text-slate-700",
     success: "border border-emerald-500/25 bg-emerald-500/10 text-emerald-700",
   }[tone];
 

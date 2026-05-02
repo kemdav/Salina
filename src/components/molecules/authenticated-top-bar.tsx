@@ -1,3 +1,6 @@
+"use client";
+
+import { usePathname } from "next/navigation";
 import { SalinaLogo } from "@/components/atoms/salina-logo";
 import { cn } from "@/lib/utils";
 import type { UserRole } from "@/lib/navigation-config";
@@ -32,22 +35,46 @@ export function AuthenticatedTopBar({
   tenantBranding,
   userName = "Jane Doe",
 }: AuthenticatedTopBarProps) {
+  const pathname = usePathname() || "";
+  const segments = pathname.split("/").filter(Boolean);
+  const roleSegment = segments[0] || "";
+  const lastSegment = segments[segments.length - 1] || "dashboard";
   const workspaceName = tenantBranding?.name ?? "Workspace";
-  const workspaceInitial =
-    workspaceName.trim().slice(0, 1).toUpperCase() || "W";
+  const workspaceLogo = tenantBranding?.logoUrl || tenantBranding?.logo;
+  const workspaceInitial = workspaceName.trim().slice(0, 1).toUpperCase() || "W";
   const userInitials = getInitials(userName);
-  const workspaceLogo = tenantBranding?.logoUrl ?? tenantBranding?.logo;
+
+  const ROUTE_TITLES: Record<string, string> = {
+    dashboard: "Dashboard",
+    feed: "Announcements",
+    attendance: "Attendance",
+    members: "Members",
+    organizations: "Organizations",
+    recruitment: "Recruitment",
+    events: "Events",
+    roles: "Roles",
+    settings: "Settings",
+    review: "Review",
+    accreditations: "Accreditations",
+    advisers: "Advisers",
+    id: "My Digital ID",
+  };
+
+  const routeLabel =
+    roleSegment === "officer" && lastSegment === "members"
+      ? "Roster"
+      : ROUTE_TITLES[lastSegment] ||
+        lastSegment
+          .split("-")
+          .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+          .join(" ");
 
   return (
     <header className="sticky top-0 z-30 flex h-20 shrink-0 items-center justify-between gap-4 border-b border-slate-200 bg-white/95 px-6 shadow-sm backdrop-blur sm:px-8">
       <div className="flex min-w-0 items-center gap-4">
         <div
           className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm"
-          style={
-            tenantBranding
-              ? { backgroundColor: tenantBranding.primaryColor }
-              : undefined
-          }
+          style={tenantBranding ? { backgroundColor: tenantBranding.primaryColor } : undefined}
         >
           {workspaceLogo ? (
             <div
@@ -78,6 +105,9 @@ export function AuthenticatedTopBar({
               {role}
             </span>
           </div>
+          <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.22em] text-slate-500">
+            {routeLabel}
+          </p>
         </div>
       </div>
 
@@ -90,13 +120,7 @@ export function AuthenticatedTopBar({
           )}
           aria-label="Notifications"
         >
-          <svg
-            width="18"
-            height="18"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"

@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
+import { usePathname } from "next/navigation";
 import { UserRole, getSidebarRoutes } from "@/lib/navigation-config";
 import { NavItem } from "@/components/atoms/nav-item";
 import { SalinaLogo } from "@/components/atoms/salina-logo";
-import { cn } from "@/lib/utils";
-import { usePathname } from "next/navigation";
 import type { AuthenticatedTenantBranding } from "@/components/molecules/authenticated-top-bar";
+import { cn } from "@/lib/utils";
 
 interface SidebarNavProps {
   role: UserRole;
@@ -35,6 +35,7 @@ export function SidebarNav({
   const pathname = usePathname();
   const isSuperAdmin = role === "SuperAdmin";
   const navItems = getSidebarRoutes(role) ?? [];
+  const workspaceLogo = tenant?.logoUrl || tenant?.logo;
 
   const sidebarStyles = isSuperAdmin
     ? ({
@@ -45,7 +46,7 @@ export function SidebarNav({
         "--sidebar-text": "#94a3b8",
         "--sidebar-hover-bg": "rgba(255,255,255,0.04)",
         "--sidebar-hover-text": "#f8fafc",
-      } as React.CSSProperties)
+      } as CSSProperties)
     : ({
         backgroundColor: tenant?.primaryColor || "#c6623e",
         color: tenant?.textColor || "#ffffff",
@@ -54,7 +55,7 @@ export function SidebarNav({
         "--sidebar-text": "rgba(255,255,255,0.7)",
         "--sidebar-hover-bg": "rgba(255,255,255,0.1)",
         "--sidebar-hover-text": tenant?.textColor || "#ffffff",
-      } as React.CSSProperties);
+      } as CSSProperties);
 
   const orgName = tenant?.name || "Organization";
   const orgInitial = tenant?.name.charAt(0) || "O";
@@ -62,15 +63,17 @@ export function SidebarNav({
   return (
     <aside
       className={cn(
-        "sticky top-0 flex h-screen flex-col transition-all duration-300 shadow-xl z-20 shrink-0 self-start",
+        "sticky top-0 z-20 flex h-screen shrink-0 flex-col self-start shadow-xl transition-all duration-300",
         isCollapsed ? "w-20" : "w-65",
       )}
       style={sidebarStyles}
     >
       <button
-        onClick={() => setIsCollapsed(!isCollapsed)}
+        type="button"
+        onClick={() => setIsCollapsed((value) => !value)}
         className="absolute -right-3 top-20 z-40 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition-transform hover:bg-slate-50"
         style={{ transform: isCollapsed ? "rotate(180deg)" : "rotate(0deg)" }}
+        aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
         <svg
           width="12"
@@ -88,7 +91,7 @@ export function SidebarNav({
         </svg>
       </button>
 
-      <div className="h-20 flex items-center px-6 border-b border-white/10 shrink-0">
+      <div className="flex h-20 shrink-0 items-center border-b border-white/10 px-6">
         {isSuperAdmin ? (
           <div
             className={cn(
@@ -99,21 +102,19 @@ export function SidebarNav({
             <SalinaLogo variant="dark" width={104} className="w-24" />
           </div>
         ) : (
-          <div className="flex items-center gap-3 overflow-hidden w-full">
+          <div className="flex w-full items-center gap-3 overflow-hidden">
             <div
-              className="w-10 h-10 shrink-0 rounded-lg bg-white/10 flex items-center justify-center font-bold text-lg shadow-inner overflow-hidden border border-white/5"
+              className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/5 bg-white/10 text-lg font-bold shadow-inner"
               style={
-                (tenant?.logoUrl ?? tenant?.logo)
-                  ? { backgroundColor: tenant.primaryColor }
+                workspaceLogo
+                  ? { backgroundColor: tenant?.primaryColor }
                   : undefined
               }
             >
-              {(tenant?.logoUrl ?? tenant?.logo) ? (
+              {workspaceLogo ? (
                 <div
                   className="h-full w-full bg-center bg-cover bg-no-repeat"
-                  style={{
-                    backgroundImage: `url(${tenant.logoUrl ?? tenant.logo})`,
-                  }}
+                  style={{ backgroundImage: `url(${workspaceLogo})` }}
                 />
               ) : (
                 orgInitial
@@ -121,14 +122,14 @@ export function SidebarNav({
             </div>
             <div
               className={cn(
-                "flex flex-col transition-all duration-300 whitespace-nowrap",
-                isCollapsed ? "opacity-0 w-0" : "opacity-100",
+                "flex flex-col whitespace-nowrap transition-all duration-300",
+                isCollapsed ? "w-0 opacity-0" : "opacity-100",
               )}
             >
-              <span className="font-bold tracking-tight text-[15px] truncate w-40 leading-tight">
+              <span className="w-40 truncate text-[15px] font-bold leading-tight tracking-tight">
                 {orgName}
               </span>
-              <span className="text-[10px] uppercase tracking-wider opacity-70 font-semibold">
+              <span className="text-[10px] font-semibold uppercase tracking-wider opacity-70">
                 {role}
               </span>
             </div>
@@ -136,16 +137,15 @@ export function SidebarNav({
         )}
       </div>
 
-      {/* NAVIGATION LINKS */}
       <nav
-        className="flex-1 min-h-0 overflow-y-auto py-6 px-3 flex flex-col gap-1.5 relative [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20"
+        className="relative flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto px-3 py-6 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20"
         onMouseLeave={() => setHoveredIndex(null)}
       >
         <div
-          className="absolute left-3 right-3 h-10.5 rounded-lg pointer-events-none transition-all duration-300 ease-out bg-(--sidebar-hover-bg,rgba(255,255,255,0.05)) z-0"
+          className="pointer-events-none absolute left-3 right-3 z-0 h-10.5 rounded-lg bg-(--sidebar-hover-bg,rgba(255,255,255,0.05)) transition-all duration-300 ease-out"
           style={{
             top: "24px",
-            transform: `translateY(${hoveredIndex !== null ? hoveredIndex * 48 : 0}px)`, // 42px height + 6px gap = 48px jump
+            transform: `translateY(${hoveredIndex !== null ? hoveredIndex * 48 : 0}px)`,
             opacity: hoveredIndex !== null ? 1 : 0,
           }}
         />
@@ -153,12 +153,24 @@ export function SidebarNav({
         {navItems.map((route, index) => {
           const isActive =
             pathname === route.href || pathname?.startsWith(`${route.href}/`);
+
+          const label =
+            role === "Officer" && route.href.endsWith("/members")
+              ? "Roster"
+              : role === "Member" && route.href.endsWith("/feed")
+                ? "Home Feed"
+                : role === "Member" && route.href.endsWith("/events")
+                  ? "Calendar"
+                  : role === "Member" && route.href.endsWith("/id")
+                    ? "My ID"
+                    : route.label;
+
           return (
             <NavItem
               key={route.label}
               href={route.href}
               icon={route.icon}
-              label={route.label}
+              label={label}
               isActive={isActive}
               isCollapsed={isCollapsed}
               onMouseEnter={() => setHoveredIndex(index)}
@@ -167,21 +179,21 @@ export function SidebarNav({
         })}
       </nav>
 
-      <div className="p-4 border-t border-white/10 shrink-0">
-        <div className="flex items-center gap-3 overflow-hidden p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer">
-          <div className="w-8 h-8 shrink-0 rounded-full bg-slate-300 flex items-center justify-center overflow-hidden text-[11px] font-semibold text-slate-900">
+      <div className="shrink-0 border-t border-white/10 p-4">
+        <div className="flex cursor-pointer items-center gap-3 overflow-hidden rounded-lg bg-white/5 p-2 transition-colors hover:bg-white/10">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-300 text-[11px] font-semibold text-slate-900">
             {getInitials(userName)}
           </div>
           <div
             className={cn(
-              "flex flex-col transition-all duration-300 whitespace-nowrap",
-              isCollapsed ? "opacity-0 w-0" : "opacity-100",
+              "flex flex-col whitespace-nowrap transition-all duration-300",
+              isCollapsed ? "w-0 opacity-0" : "opacity-100",
             )}
           >
             <span className="text-sm font-medium leading-none text-(--sidebar-active-text,#ffffff)">
               {userName}
             </span>
-            <span className="text-[10px] uppercase tracking-wider text-(--sidebar-text,#94a3b8) mt-1">
+            <span className="mt-1 text-[10px] uppercase tracking-wider text-(--sidebar-text,#94a3b8)">
               {role}
             </span>
           </div>
