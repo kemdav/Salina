@@ -17,7 +17,6 @@ export type RouteSlug =
   | "recruitment"
   | "events"
   | "applications"
-  | "discover"
   | "id"
   | "roles"
   | "settings"
@@ -98,27 +97,6 @@ const NAV_ITEM_DEFINITIONS: Array<{
           strokeLinejoin="round"
           strokeWidth={2}
           d="M9 12l2 2 4-4"
-        />
-      </IconWrapper>
-    ),
-  },
-  {
-    label: "Discover",
-    slug: "discover",
-    visibleTo: ["Member"],
-    icon: (
-      <IconWrapper>
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M12 3a9 9 0 100 18 9 9 0 000-18z"
-        />
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M14.5 9.5l-1.5 4-4 1.5 1.5-4 4-1.5z"
         />
       </IconWrapper>
     ),
@@ -312,7 +290,7 @@ const ROLE_ROUTE_SLUGS: Record<UserRole, RouteSlug[]> = {
     "settings",
   ],
   Officer: ["feed", "members", "attendance", "recruitment", "events"],
-  Member: ["feed", "applications", "events", "id", "discover"],
+  Member: ["feed", "applications", "events", "id"],
 };
 
 function getRolePath(role: UserRole) {
