@@ -2,7 +2,11 @@
 
 import { useState, type CSSProperties } from "react";
 import { usePathname } from "next/navigation";
-import { UserRole, getSidebarRoutes } from "@/lib/navigation-config";
+import {
+  UserRole,
+  getSidebarRoutes,
+  type SidebarRouteOptions,
+} from "@/lib/navigation-config";
 import { NavItem } from "@/components/atoms/nav-item";
 import { SalinaLogo } from "@/components/atoms/salina-logo";
 import type { AuthenticatedTenantBranding } from "@/components/molecules/authenticated-top-bar";
@@ -12,6 +16,7 @@ interface SidebarNavProps {
   role: UserRole;
   tenant?: AuthenticatedTenantBranding;
   userName?: string;
+  isTemporaryApplicant?: boolean;
 }
 
 function getInitials(name: string) {
@@ -29,12 +34,16 @@ export function SidebarNav({
   role,
   tenant,
   userName = "Jane Doe",
+  isTemporaryApplicant = false,
 }: SidebarNavProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const pathname = usePathname();
   const isSuperAdmin = role === "SuperAdmin";
-  const navItems = getSidebarRoutes(role) ?? [];
+  const routeOptions: SidebarRouteOptions = isTemporaryApplicant
+    ? { temporaryApplicant: true }
+    : {};
+  const navItems = getSidebarRoutes(role, routeOptions) ?? [];
   const workspaceLogo = tenant?.logoUrl || tenant?.logo;
 
   const sidebarStyles = isSuperAdmin
@@ -163,6 +172,10 @@ export function SidebarNav({
                   ? "Calendar"
                   : role === "Member" && route.href.endsWith("/id")
                     ? "My ID"
+                    : role === "Member" && route.href.endsWith("/applications")
+                      ? isTemporaryApplicant
+                        ? "Application"
+                        : route.label
                     : route.label;
 
           return (

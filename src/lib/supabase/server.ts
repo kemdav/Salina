@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 
+import { getAuthSessionClaims } from "@/lib/auth-policy";
 import { getTenantRequestContext } from "@/lib/tenant";
 
 export type ThemeConfig = {
@@ -27,6 +28,7 @@ export type ViewerContext = {
   email: string | null;
   id: string;
   isPlatformAdmin: boolean;
+  isTemporaryApplicant: boolean;
   tenantId: string | null;
   tenantSlug: string | null;
 };
@@ -109,16 +111,6 @@ async function createSupabaseUserClient() {
   });
 }
 
-function getViewerRoles(appMetadata: Record<string, unknown> | undefined) {
-  const rawRoles = appMetadata?.roles;
-
-  if (!Array.isArray(rawRoles)) {
-    return [];
-  }
-
-  return rawRoles.filter((role): role is string => typeof role === "string");
-}
-
 async function getOrganizationById(tenantId: string): Promise<OrganizationRecord | null> {
   const client = createSupabaseAdminClient();
 
@@ -199,7 +191,7 @@ export const getCurrentViewer = cache(async (): Promise<ViewerContext | null> =>
       return null;
     }
 
-    const roles = getViewerRoles(user.app_metadata);
+    const claims = getAuthSessionClaims(user);
     const userMetadata =
       user.user_metadata && typeof user.user_metadata === "object"
         ? (user.user_metadata as Record<string, unknown>)
@@ -208,12 +200,9 @@ export const getCurrentViewer = cache(async (): Promise<ViewerContext | null> =>
     return {
       email: user.email ?? null,
       id: user.id,
-      isPlatformAdmin:
-        roles.includes("system_admin") || user.app_metadata?.role === "system_admin",
-      tenantId:
-        typeof user.app_metadata?.tenant_id === "string"
-          ? user.app_metadata.tenant_id
-          : null,
+      isPlatformAdmin: claims.isPlatformAdmin,
+      isTemporaryApplicant: claims.isTemporaryApplicant,
+      tenantId: claims.tenantId,
       tenantSlug:
         typeof userMetadata?.tenant_slug === "string"
           ? userMetadata.tenant_slug

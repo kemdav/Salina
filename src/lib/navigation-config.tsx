@@ -31,6 +31,10 @@ export interface NavRoute {
   visibleTo: VisibilityRole[];
 }
 
+export interface SidebarRouteOptions {
+  temporaryApplicant?: boolean;
+}
+
 const IconWrapper = ({ children }: { children: React.ReactNode }) => (
   <svg
     width="20"
@@ -325,6 +329,15 @@ export const ROLE_ROUTES: Record<UserRole, NavRoute[]> = {
   Member: buildRoutesForRole("Member"),
 };
 
-export function getSidebarRoutes(role: UserRole) {
-  return ROLE_ROUTES[role];
+export function getSidebarRoutes(
+  role: UserRole,
+  options: SidebarRouteOptions = {},
+) {
+  const routes = ROLE_ROUTES[role];
+
+  if (role === "Member" && options.temporaryApplicant) {
+    return routes.filter((route) => route.href.endsWith("/applications"));
+  }
+
+  return routes;
 }

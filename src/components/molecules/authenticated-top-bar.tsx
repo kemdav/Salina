@@ -21,6 +21,7 @@ export interface AuthenticatedTenantBranding {
 
 interface AuthenticatedTopBarProps {
   role: UserRole;
+  isTemporaryApplicant?: boolean;
   tenantBranding?: AuthenticatedTenantBranding;
   userName?: string;
 }
@@ -36,7 +37,7 @@ function getInitials(name: string) {
   );
 }
 
-export function AuthenticatedTopBar({ role, tenantBranding,
+export function AuthenticatedTopBar({ role, isTemporaryApplicant = false, tenantBranding,
   userName = "Jane Doe",
 }: AuthenticatedTopBarProps) {
   const pathname = usePathname() || "";
@@ -108,6 +109,11 @@ export function AuthenticatedTopBar({ role, tenantBranding,
             <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">
               {role}
             </span>
+            {isTemporaryApplicant ? (
+              <span className="rounded-full border border-amber-500/30 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-amber-800">
+                Temporary UI
+              </span>
+            ) : null}
           </div>
           <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.22em] text-slate-500">
             {routeLabel}
