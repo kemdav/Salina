@@ -73,3 +73,19 @@ test("temporary applicant claims are detected from auth metadata", () => {
     }
   );
 });
+
+test("auth session claims preserve tenant and temporary flags together", () => {
+  assert.deepEqual(
+    getAuthSessionClaims({
+      app_metadata: {
+        tenant_id: "cccccccc-cccc-cccc-cccc-cccccccccccc",
+        temporary_applicant: true,
+      },
+    }),
+    {
+      isPlatformAdmin: false,
+      isTemporaryApplicant: true,
+      tenantId: "cccccccc-cccc-cccc-cccc-cccccccccccc",
+    }
+  );
+});

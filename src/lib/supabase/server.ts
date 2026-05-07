@@ -29,6 +29,7 @@ export type ViewerContext = {
   id: string;
   isPlatformAdmin: boolean;
   isTemporaryApplicant: boolean;
+  tenantRole: string | null;
   tenantId: string | null;
   tenantSlug: string | null;
 };
@@ -71,11 +72,13 @@ function createSupabaseAdminClient() {
 }
 
 function isInvalidRefreshTokenError(error: unknown) {
-  if (!(error instanceof Error)) {
-    return false;
-  }
-
-  const message = error.message.toLowerCase();
+  const message =
+    typeof error === "string"
+      ? error.toLowerCase()
+      : error && typeof error === "object" && "message" in error &&
+          typeof (error as { message?: unknown }).message === "string"
+        ? (error as { message: string }).message.toLowerCase()
+        : "";
 
   return (
     message.includes("invalid refresh token") ||
@@ -196,12 +199,25 @@ export const getCurrentViewer = cache(async (): Promise<ViewerContext | null> =>
       user.user_metadata && typeof user.user_metadata === "object"
         ? (user.user_metadata as Record<string, unknown>)
         : undefined;
+    let tenantRole: string | null = null;
+
+    if (claims.tenantId) {
+      const { data: membership } = await client
+        .from("organization_memberships")
+        .select("role")
+        .eq("tenant_id", claims.tenantId)
+        .eq("user_id", user.id)
+        .maybeSingle<{ role: string }>();
+
+      tenantRole = membership?.role ?? null;
+    }
 
     return {
       email: user.email ?? null,
       id: user.id,
       isPlatformAdmin: claims.isPlatformAdmin,
       isTemporaryApplicant: claims.isTemporaryApplicant,
+      tenantRole,
       tenantId: claims.tenantId,
       tenantSlug:
         typeof userMetadata?.tenant_slug === "string"

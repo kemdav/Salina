@@ -1,7 +1,32 @@
+"use client";
+
+import { useActionState } from "react";
+
 import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
+import { StatusBanner } from "@/components/molecules/status-banner";
+import { TextField } from "@/components/molecules/text-field";
 import { AuthenticatedShell } from "@/components/templates/authenticated-shell";
 import { OFFICER_TENANT_BRANDING } from "@/lib/officer-demo-data";
+import {
+    confirmTemporaryApplicantAction,
+    createTemporaryApplicantAction,
+    type TemporaryApplicantActionState,
+} from "@/lib/actions/temporary-applicants";
+
+const INITIAL_TEMPORARY_APPLICANT_STATE: TemporaryApplicantActionState = {
+    fields: {
+        applicantEmail: "",
+        applicantName: "",
+    },
+};
+
+const INITIAL_CONFIRM_STATE: TemporaryApplicantActionState = {
+    fields: {
+        applicantEmail: "",
+        applicantName: "",
+    },
+};
 
 const pipelineColumns = [
     {
@@ -44,6 +69,15 @@ const recruitmentStats = [
 ];
 
 export default function OfficerRecruitmentPage() {
+    const [createState, createAction, createPending] = useActionState(
+        createTemporaryApplicantAction,
+        INITIAL_TEMPORARY_APPLICANT_STATE,
+    );
+    const [confirmState, confirmAction, confirmPending] = useActionState(
+        confirmTemporaryApplicantAction,
+        INITIAL_CONFIRM_STATE,
+    );
+
     return (
         <AuthenticatedShell role="Officer" tenantBranding={OFFICER_TENANT_BRANDING}>
             <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 py-8">
@@ -64,6 +98,104 @@ export default function OfficerRecruitmentPage() {
                         <div className="flex flex-wrap gap-3">
                             <Button variant="secondary">Pipeline settings</Button>
                             <Button variant="dark">Add applicant</Button>
+                        </div>
+                    </div>
+
+                    <div className="mt-6 rounded-3xl border border-amber-200 bg-amber-50/80 p-5 shadow-sm">
+                        <div className="flex flex-wrap items-center gap-3">
+                            <Badge className="bg-amber-600 text-white">Temporary UI</Badge>
+                            <p className="text-sm font-medium text-amber-900">
+                                Temporary applicant tools. This is a provisional workflow until the final recruitment design is built.
+                            </p>
+                        </div>
+
+                        <div className="mt-5 grid gap-6 lg:grid-cols-2">
+                            <form action={createAction} className="rounded-2xl border border-amber-200 bg-white p-5 shadow-sm">
+                                <h3 className="text-base font-semibold text-slate-900">Create temporary applicant</h3>
+                                <p className="mt-1 text-sm leading-6 text-slate-600">
+                                    Generate an invite link for a temporary applicant who will finish the application flow before conversion.
+                                </p>
+
+                                <div className="mt-5 space-y-4">
+                                    <TextField
+                                        defaultValue={createState.fields.applicantName}
+                                        id="applicantName"
+                                        label="Applicant name"
+                                        name="applicantName"
+                                        placeholder="Jordan Reyes"
+                                        required
+                                        type="text"
+                                    />
+                                    <TextField
+                                        defaultValue={createState.fields.applicantEmail}
+                                        id="applicantEmail"
+                                        label="Applicant email"
+                                        name="applicantEmail"
+                                        placeholder="jordan.reyes@campus.edu"
+                                        required
+                                        type="email"
+                                    />
+                                </div>
+
+                                <div className="mt-5 flex items-center justify-between gap-3">
+                                    <Button disabled={createPending} type="submit" variant="dark">
+                                        {createPending ? "Creating invite..." : "Create invite"}
+                                    </Button>
+                                </div>
+
+                                {createState.error ? (
+                                    <div className="mt-4">
+                                        <StatusBanner tone="error">{createState.error}</StatusBanner>
+                                    </div>
+                                ) : createState.notice ? (
+                                    <div className="mt-4 space-y-3">
+                                        <StatusBanner tone="success">{createState.notice}</StatusBanner>
+                                        {createState.inviteUrl ? (
+                                            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+                                                <p className="font-semibold">Invite link</p>
+                                                <a className="mt-1 break-all underline" href={createState.inviteUrl}>
+                                                    {createState.inviteUrl}
+                                                </a>
+                                            </div>
+                                        ) : null}
+                                    </div>
+                                ) : null}
+                            </form>
+
+                            <form action={confirmAction} className="rounded-2xl border border-amber-200 bg-white p-5 shadow-sm">
+                                <h3 className="text-base font-semibold text-slate-900">Confirm temporary applicant</h3>
+                                <p className="mt-1 text-sm leading-6 text-slate-600">
+                                    Once the applicant finishes the workflow, convert their temporary account into an official member.
+                                </p>
+
+                                <div className="mt-5 space-y-4">
+                                    <TextField
+                                        defaultValue=""
+                                        id="temporaryApplicantId"
+                                        label="Temporary applicant ID"
+                                        name="temporaryApplicantId"
+                                        placeholder="Paste the temporary applicant UUID"
+                                        required
+                                        type="text"
+                                    />
+                                </div>
+
+                                <div className="mt-5 flex items-center justify-between gap-3">
+                                    <Button disabled={confirmPending} type="submit" variant="secondary">
+                                        {confirmPending ? "Confirming..." : "Confirm applicant"}
+                                    </Button>
+                                </div>
+
+                                {confirmState.error ? (
+                                    <div className="mt-4">
+                                        <StatusBanner tone="error">{confirmState.error}</StatusBanner>
+                                    </div>
+                                ) : confirmState.notice ? (
+                                    <div className="mt-4">
+                                        <StatusBanner tone="success">{confirmState.notice}</StatusBanner>
+                                    </div>
+                                ) : null}
+                            </form>
                         </div>
                     </div>
 
