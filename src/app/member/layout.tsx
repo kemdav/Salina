@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 
+import { TemporaryApplicantRouteGuard } from "@/components/providers/temporary-applicant-route-guard";
 import { TemporaryApplicantProvider } from "@/components/providers/temporary-applicant-provider";
 import { getCurrentViewer } from "@/lib/supabase/server";
 
@@ -40,6 +41,7 @@ export default async function MemberLayout({
 
   return (
     <TemporaryApplicantProvider value={viewer?.isTemporaryApplicant ?? false}>
+      <TemporaryApplicantRouteGuard />
       {children}
     </TemporaryApplicantProvider>
   );

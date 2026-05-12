@@ -16,7 +16,7 @@ export function AuthHeading({
   return (
     <div className={cn("mb-8", align === "center" && "text-center")}>
       {eyebrow ? (
-        <p className="mb-2 text-[11px] uppercase tracking-[0.12em] text-[var(--muted)]">
+        <p className="mb-2 text-[11px] uppercase tracking-[0.12em] text-(--muted)">
           {eyebrow}
         </p>
       ) : null}
@@ -25,7 +25,7 @@ export function AuthHeading({
       </h1>
       <p
         className={cn(
-          "mt-1.5 text-[15px] leading-[1.6] text-[var(--muted)]",
+          "mt-1.5 text-[15px] leading-[1.6] text-(--muted)",
           align === "center" && "mx-auto max-w-80"
         )}
       >

@@ -283,6 +283,19 @@ export async function signUpAction(
       };
     }
 
+    if (temporaryApplicant.applicant_name.trim().toLowerCase() !== parsed.data.fullName.trim().toLowerCase()) {
+      return {
+        errors: {
+          fullName: "Name does not match the invitation.",
+        },
+        fields: {
+          email: values.email,
+          fullName: values.fullName,
+        },
+        formError: undefined,
+      };
+    }
+
     const { data: tenant, error: tenantError } = await adminClient
       .from("organizations")
       .select("slug")

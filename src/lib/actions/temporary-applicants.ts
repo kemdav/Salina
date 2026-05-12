@@ -19,6 +19,15 @@ const confirmTemporaryApplicantSchema = z.object({
   temporaryApplicantId: z.string().uuid("Select a valid temporary applicant."),
 });
 
+const submitTemporaryApplicantApplicationSchema = z.object({
+  experience: z
+    .string()
+    .trim()
+    .min(1, "Share a short summary of your background."),
+  interests: z.string().trim().min(1, "Share what you want to do here."),
+  motivation: z.string().trim().min(1, "Tell us why you are applying."),
+});
+
 export type TemporaryApplicantActionState = {
   error?: string;
   inviteToken?: string;
@@ -27,6 +36,16 @@ export type TemporaryApplicantActionState = {
   fields: {
     applicantEmail: string;
     applicantName: string;
+  };
+};
+
+export type TemporaryApplicantApplicationActionState = {
+  error?: string;
+  notice?: string;
+  fields: {
+    experience: string;
+    interests: string;
+    motivation: string;
   };
 };
 
@@ -378,6 +397,106 @@ export async function confirmTemporaryApplicantAction(
       applicantName: applicant.applicant_name,
     },
     notice: `${applicant.applicant_name} was converted into an official member.`,
+  };
+}
+
+export async function submitTemporaryApplicantApplicationAction(
+  _previousState: TemporaryApplicantApplicationActionState,
+  formData: FormData,
+): Promise<TemporaryApplicantApplicationActionState> {
+  const values = submitTemporaryApplicantApplicationSchema.safeParse({
+    experience: String(formData.get("experience") ?? "").trim(),
+    interests: String(formData.get("interests") ?? "").trim(),
+    motivation: String(formData.get("motivation") ?? "").trim(),
+  });
+
+  if (!values.success) {
+    const fieldErrors = values.error.flatten().fieldErrors;
+
+    return {
+      error: undefined,
+      fields: {
+        experience: String(formData.get("experience") ?? "").trim(),
+        interests: String(formData.get("interests") ?? "").trim(),
+        motivation: String(formData.get("motivation") ?? "").trim(),
+      },
+      notice:
+        fieldErrors.experience?.[0] ??
+        fieldErrors.interests?.[0] ??
+        fieldErrors.motivation?.[0] ??
+        "Complete the application form.",
+    };
+  }
+
+  const adminClient = createSupabaseAdminClient("temporary-applicants-submit");
+  const viewer = await getCurrentViewer();
+  const tenantContext = await resolveCurrentTenant();
+
+  if (!adminClient) {
+    return {
+      error: "Temporary applicant submissions are unavailable right now.",
+      fields: values.data,
+    };
+  }
+
+  if (!viewer || !tenantContext.tenant) {
+    return {
+      error: "You must be signed in to submit your application.",
+      fields: values.data,
+    };
+  }
+
+  if (!viewer.isTemporaryApplicant) {
+    return {
+      error: "Only temporary applicants can submit this form.",
+      fields: values.data,
+    };
+  }
+
+  const { data: applicant, error } = await adminClient
+    .from("temporary_applicants")
+    .select("id, tenant_id, applicant_name, applicant_user_id, status")
+    .eq("tenant_id", tenantContext.tenant.id)
+    .eq("applicant_user_id", viewer.id)
+    .maybeSingle<TemporaryApplicantRecord>();
+
+  if (error) {
+    return {
+      error: error.message,
+      fields: values.data,
+    };
+  }
+
+  if (!applicant) {
+    return {
+      error: "Your temporary applicant record was not found.",
+      fields: values.data,
+    };
+  }
+
+  const { error: updateError } = await adminClient
+    .from("temporary_applicants")
+    .update({
+      application_data: {
+        experience: values.data.experience,
+        interests: values.data.interests,
+        motivation: values.data.motivation,
+      },
+      status: "submitted",
+    })
+    .eq("id", applicant.id);
+
+  if (updateError) {
+    return {
+      error: updateError.message,
+      fields: values.data,
+    };
+  }
+
+  return {
+    error: undefined,
+    fields: values.data,
+    notice: "Your temporary applicant submission has been saved for review.",
   };
 }
 
