@@ -202,12 +202,18 @@ export const getCurrentViewer = cache(async (): Promise<ViewerContext | null> =>
     let tenantRole: string | null = null;
 
     if (claims.tenantId) {
-      const { data: membership } = await client
+      const { data: membership, error: membershipError } = await client
         .from("organization_memberships")
         .select("role")
         .eq("tenant_id", claims.tenantId)
         .eq("user_id", user.id)
         .maybeSingle<{ role: string }>();
+
+      if (membershipError) {
+        console.error("Failed to load organization membership:", membershipError);
+        // Throwing here will be caught by call sites handling getCurrentViewer appropriately
+        throw membershipError;
+      }
 
       tenantRole = membership?.role ?? null;
     }

@@ -352,8 +352,6 @@ export async function signUpAction(
       .from("temporary_applicants")
       .update({
         applicant_user_id: data.user.id,
-        status: "submitted",
-        submitted_at: new Date().toISOString(),
       })
       .eq("id", temporaryApplicant.id);
 

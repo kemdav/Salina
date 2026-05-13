@@ -170,7 +170,8 @@ export async function createTemporaryApplicantAction(
   }
 
   const adminClient = createSupabaseAdminClient("temporary-applicants-create");
-  const { tenantContext, viewer } = await getAuthorizedTenantContext();
+  const viewer = await getCurrentViewer();
+  const tenantContext = await resolveCurrentTenant();
 
   if (!adminClient) {
     return {
@@ -254,7 +255,8 @@ export async function confirmTemporaryApplicantAction(
   }
 
   const adminClient = createSupabaseAdminClient("temporary-applicants-confirm");
-  const { tenantContext, viewer } = await getAuthorizedTenantContext();
+  const viewer = await getCurrentViewer();
+  const tenantContext = await resolveCurrentTenant();
 
   if (!adminClient) {
     return {
@@ -483,6 +485,7 @@ export async function submitTemporaryApplicantApplicationAction(
         motivation: values.data.motivation,
       },
       status: "submitted",
+      submitted_at: new Date().toISOString(),
     })
     .eq("id", applicant.id);
 
@@ -499,4 +502,5 @@ export async function submitTemporaryApplicantApplicationAction(
     notice: "Your temporary applicant submission has been saved for review.",
   };
 }
+
 
