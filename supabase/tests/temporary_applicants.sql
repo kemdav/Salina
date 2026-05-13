@@ -45,6 +45,18 @@ values
     timezone('utc', now())
   ),
   (
+    '91000000-0000-0000-0000-000000000015',
+    'authenticated',
+    'authenticated',
+    'tenant-one-officer@test.salina.dev',
+    extensions.crypt('password123', extensions.gen_salt('bf')),
+    timezone('utc', now()),
+    jsonb_build_object('tenant_id', '91000000-0000-0000-0000-000000000001'),
+    '{}'::jsonb,
+    timezone('utc', now()),
+    timezone('utc', now())
+  ),
+  (
     '91000000-0000-0000-0000-000000000022',
     'authenticated',
     'authenticated',
@@ -83,6 +95,20 @@ values
     'submitted'
   );
 
+insert into public.organization_memberships (
+  id,
+  tenant_id,
+  user_id,
+  role
+)
+values
+  (
+    '91000000-0000-0000-0000-000000000055',
+    '91000000-0000-0000-0000-000000000001',
+    '91000000-0000-0000-0000-000000000015',
+    'officer'
+  );
+
 set local role authenticated;
 set local "request.jwt.claims" = '{"role":"authenticated","sub":"91000000-0000-0000-0000-000000000011","app_metadata":{"tenant_id":"91000000-0000-0000-0000-000000000001"}}';
 
@@ -91,6 +117,8 @@ select results_eq(
   array[1::bigint],
   'tenant one only sees its own temporary applicant'
 );
+
+set local "request.jwt.claims" = '{"role":"authenticated","sub":"91000000-0000-0000-0000-000000000015","app_metadata":{"tenant_id":"91000000-0000-0000-0000-000000000001"}}';
 
 select lives_ok(
   $$
