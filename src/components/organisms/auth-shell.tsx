@@ -21,7 +21,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
           <p className="max-w-xs text-[32px] font-bold leading-[1.2] tracking-[-0.5px] text-white [font-family:var(--font-heading)]">
             Where organizations operate.
           </p>
-          <p className="mt-3 max-w-[260px] text-[15px] leading-[1.65] text-white/45">
+          <p className="mt-3 max-w-65 text-[15px] leading-[1.65] text-white/45">
             From recruitment to roster, everything your organization needs, in
             one place.
           </p>
@@ -30,7 +30,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
 
       <main className="flex flex-1 flex-col bg-[#FEFEFE]">
         <div className="flex flex-1 items-center justify-center py-6">
-          <div className="w-full max-w-[440px] px-6">{children}</div>
+          <div className="w-full max-w-110 px-6">{children}</div>
         </div>
         <AuthFooter bordered />
       </main>

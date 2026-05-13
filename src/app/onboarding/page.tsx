@@ -11,6 +11,10 @@ export default async function OnboardingPage() {
         redirect("/login");
     }
 
+    if (viewer.isTemporaryApplicant && viewer.tenantSlug) {
+        redirect(`${await getTenantAppUrl(viewer.tenantSlug)}/member/applications`);
+    }
+
     if (viewer.tenantId && viewer.tenantSlug) {
         redirect(await getTenantAppUrl(viewer.tenantSlug));
     }

@@ -1,15 +1,20 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { StatusBanner } from "@/components/molecules/status-banner";
 import {
   AuthenticatedTopBar,
   type AuthenticatedTenantBranding,
 } from "@/components/molecules/authenticated-top-bar";
 import { SidebarNav } from "@/components/organisms/sidebar-nav";
 import type { UserRole } from "@/lib/navigation-config";
+import { useTemporaryApplicant } from "@/components/providers/temporary-applicant-provider";
 
 interface AuthenticatedShellProps {
   children?: ReactNode;
   emptyState?: ReactNode;
   role: UserRole;
+  isTemporaryApplicant?: boolean;
   tenantBranding?: AuthenticatedTenantBranding;
   userName?: string;
 }
@@ -48,22 +53,45 @@ function ShellEmptyState({ role }: { role: UserRole }) {
 export function AuthenticatedShell({
   children,
   emptyState,
+  isTemporaryApplicant,
   role,
   tenantBranding,
   userName,
 }: AuthenticatedShellProps) {
+  const temporaryApplicantFromContext = useTemporaryApplicant();
+  const temporaryApplicant =
+    typeof isTemporaryApplicant === "boolean"
+      ? isTemporaryApplicant
+      : temporaryApplicantFromContext;
+
   return (
     <div className="flex w-full h-dvh overflow-hidden bg-slate-50">
-      <SidebarNav role={role} tenant={tenantBranding} userName={userName} />
+      <SidebarNav
+        isTemporaryApplicant={temporaryApplicant}
+        role={role}
+        tenant={tenantBranding}
+        userName={userName}
+      />
 
       <main className="flex-1 h-full overflow-y-auto relative flex flex-col">
         <AuthenticatedTopBar
+          isTemporaryApplicant={temporaryApplicant}
           role={role}
           tenantBranding={tenantBranding}
           userName={userName}
         />
 
         <div className="flex-1 p-6 lg:p-8">
+          {temporaryApplicant ? (
+            <div className="mb-6">
+              <StatusBanner
+                className="border-amber-500/30 bg-amber-50 text-amber-900"
+                tone="info"
+              >
+                Temporary UI: this applicant experience is provisional until the final design is ready.
+              </StatusBanner>
+            </div>
+          ) : null}
           {children ?? emptyState ?? <ShellEmptyState role={role} />}
         </div>
       </main>

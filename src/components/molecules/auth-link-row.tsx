@@ -20,7 +20,7 @@ export function AuthLinkRow({
   return (
     <p
       className={cn(
-        "text-sm text-[var(--muted)]",
+        "text-sm text-(--muted)",
         align === "center" && "text-center",
         className
       )}

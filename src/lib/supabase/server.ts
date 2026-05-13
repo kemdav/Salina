@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 
+import { getAuthSessionClaims } from "@/lib/auth-policy";
 import { getTenantRequestContext } from "@/lib/tenant";
 
 export type ThemeConfig = {
@@ -27,6 +28,8 @@ export type ViewerContext = {
   email: string | null;
   id: string;
   isPlatformAdmin: boolean;
+  isTemporaryApplicant: boolean;
+  tenantRole: string | null;
   tenantId: string | null;
   tenantSlug: string | null;
 };
@@ -69,11 +72,13 @@ function createSupabaseAdminClient() {
 }
 
 function isInvalidRefreshTokenError(error: unknown) {
-  if (!(error instanceof Error)) {
-    return false;
-  }
-
-  const message = error.message.toLowerCase();
+  const message =
+    typeof error === "string"
+      ? error.toLowerCase()
+      : error && typeof error === "object" && "message" in error &&
+          typeof (error as { message?: unknown }).message === "string"
+        ? (error as { message: string }).message.toLowerCase()
+        : "";
 
   return (
     message.includes("invalid refresh token") ||
@@ -107,16 +112,6 @@ async function createSupabaseUserClient() {
       },
     },
   });
-}
-
-function getViewerRoles(appMetadata: Record<string, unknown> | undefined) {
-  const rawRoles = appMetadata?.roles;
-
-  if (!Array.isArray(rawRoles)) {
-    return [];
-  }
-
-  return rawRoles.filter((role): role is string => typeof role === "string");
 }
 
 async function getOrganizationById(tenantId: string): Promise<OrganizationRecord | null> {
@@ -199,21 +194,37 @@ export const getCurrentViewer = cache(async (): Promise<ViewerContext | null> =>
       return null;
     }
 
-    const roles = getViewerRoles(user.app_metadata);
+    const claims = getAuthSessionClaims(user);
     const userMetadata =
       user.user_metadata && typeof user.user_metadata === "object"
         ? (user.user_metadata as Record<string, unknown>)
         : undefined;
+    let tenantRole: string | null = null;
+
+    if (claims.tenantId) {
+      const { data: membership, error: membershipError } = await client
+        .from("organization_memberships")
+        .select("role")
+        .eq("tenant_id", claims.tenantId)
+        .eq("user_id", user.id)
+        .maybeSingle<{ role: string }>();
+
+      if (membershipError) {
+        console.error("Failed to load organization membership:", membershipError);
+        // Throwing here will be caught by call sites handling getCurrentViewer appropriately
+        throw membershipError;
+      }
+
+      tenantRole = membership?.role ?? null;
+    }
 
     return {
       email: user.email ?? null,
       id: user.id,
-      isPlatformAdmin:
-        roles.includes("system_admin") || user.app_metadata?.role === "system_admin",
-      tenantId:
-        typeof user.app_metadata?.tenant_id === "string"
-          ? user.app_metadata.tenant_id
-          : null,
+      isPlatformAdmin: claims.isPlatformAdmin,
+      isTemporaryApplicant: claims.isTemporaryApplicant,
+      tenantRole,
+      tenantId: claims.tenantId,
       tenantSlug:
         typeof userMetadata?.tenant_slug === "string"
           ? userMetadata.tenant_slug

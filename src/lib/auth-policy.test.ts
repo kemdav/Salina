@@ -26,6 +26,7 @@ test("auth session claims detect system admins and tenant IDs", () => {
     }),
     {
       isPlatformAdmin: true,
+      isTemporaryApplicant: false,
       tenantId: "11111111-1111-1111-1111-111111111111",
     }
   );
@@ -38,6 +39,7 @@ test("auth session claims detect system admins and tenant IDs", () => {
     }),
     {
       isPlatformAdmin: true,
+      isTemporaryApplicant: false,
       tenantId: null,
     }
   );
@@ -51,7 +53,39 @@ test("auth session claims detect system admins and tenant IDs", () => {
     }),
     {
       isPlatformAdmin: false,
+      isTemporaryApplicant: false,
       tenantId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    }
+  );
+});
+
+test("temporary applicant claims are detected from auth metadata", () => {
+  assert.deepEqual(
+    getAuthSessionClaims({
+      app_metadata: {
+        temporary_applicant: true,
+      },
+    }),
+    {
+      isPlatformAdmin: false,
+      isTemporaryApplicant: true,
+      tenantId: null,
+    }
+  );
+});
+
+test("auth session claims preserve tenant and temporary flags together", () => {
+  assert.deepEqual(
+    getAuthSessionClaims({
+      app_metadata: {
+        tenant_id: "cccccccc-cccc-cccc-cccc-cccccccccccc",
+        temporary_applicant: true,
+      },
+    }),
+    {
+      isPlatformAdmin: false,
+      isTemporaryApplicant: true,
+      tenantId: "cccccccc-cccc-cccc-cccc-cccccccccccc",
     }
   );
 });
