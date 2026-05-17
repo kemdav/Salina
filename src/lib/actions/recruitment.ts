@@ -69,15 +69,15 @@ export async function updateRecruitmentEntry(rawInput: unknown) {
   }
 
   const input = updateEntrySchema.parse(rawInput);
+  const { id, ...rawUpdates } = input;
+  const updates = Object.fromEntries(
+    Object.entries(rawUpdates).filter(([, value]) => value !== undefined),
+  );
 
   const { data, error } = await adminClient
     .from("recruitment_entries")
-    .update({
-      title: input.title,
-      description: input.description,
-      status: input.status,
-    })
-    .eq("id", input.id)
+    .update(updates)
+    .eq("id", id)
     .eq("tenant_id", tenant.id)
     .select()
     .single();
