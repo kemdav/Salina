@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useOptimistic } from "react";
+import { useState, useOptimistic, startTransition } from "react";
 import { Button } from "@/components/atoms/button";
 import {
   updateApplicantStage,
@@ -56,17 +56,28 @@ export function ApplicationBoard({
   );
 
   async function handleMoveStage(applicantId: string, newStage: string) {
-    setOptimisticApplicants({ id: applicantId, stage: newStage });
-    // Also update server action
-    await updateApplicantStage(applicantId, newStage);
+    startTransition(() => {
+      setOptimisticApplicants({ id: applicantId, stage: newStage });
+    });
+    try {
+      await updateApplicantStage(applicantId, newStage);
+    } catch (e) {
+      alert("Failed to move stage.");
+    }
   }
 
   async function handleDecision(
     applicantId: string,
     status: "approved" | "rejected",
   ) {
-    setOptimisticApplicants({ id: applicantId, status });
-    await updateApplicantDecision(applicantId, status);
+    startTransition(() => {
+      setOptimisticApplicants({ id: applicantId, status });
+    });
+    try {
+      await updateApplicantDecision(applicantId, status);
+    } catch (e) {
+      alert("Failed to log decision.");
+    }
   }
 
   // Pre-process applicants per column

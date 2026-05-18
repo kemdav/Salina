@@ -1,3 +1,0 @@
--- Removed accidental Supabase Studio scratch query.
--- If this data is actually needed for local development, move it into
--- `supabase/seed.sql` and make it idempotent with `NOT EXISTS` guards.

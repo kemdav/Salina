@@ -1,6 +1,6 @@
 "use client";
 
-import { useOptimistic, useState } from "react";
+import { useOptimistic, useState, startTransition } from "react";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
@@ -51,7 +51,7 @@ export function RecruitmentList({ entries }: { entries: RecruitmentEntry[] }) {
 
   async function handleCreate(formData: FormData) {
     const title = formData.get("title") as string;
-    const description = formData.get("description") as string;
+    const description = (formData.get("description") ?? "").toString();
 
     if (!title) return;
 
@@ -64,23 +64,35 @@ export function RecruitmentList({ entries }: { entries: RecruitmentEntry[] }) {
     };
 
     // Optimistically add
-    dispatchOptimistic({ type: "add", payload: newEntry });
+    startTransition(() => {
+      dispatchOptimistic({ type: "add", payload: newEntry });
+    });
 
     setIsCreating(false);
 
-    // Call server
-    await createRecruitmentEntry({ title, description, status: "draft" });
+    try {
+      // Call server
+      await createRecruitmentEntry({ title, description, status: "draft" });
+    } catch (e) {
+      alert("Failed to create entry.");
+    }
   }
 
   async function handleStatusChange(
     entry: RecruitmentEntry,
     newStatus: string,
   ) {
-    dispatchOptimistic({
-      type: "update",
-      payload: { ...entry, status: newStatus },
+    startTransition(() => {
+      dispatchOptimistic({
+        type: "update",
+        payload: { ...entry, status: newStatus },
+      });
     });
-    await updateRecruitmentEntry({ id: entry.id, status: newStatus });
+    try {
+      await updateRecruitmentEntry({ id: entry.id, status: newStatus });
+    } catch (e) {
+      alert("Failed to update status.");
+    }
   }
 
   return (
@@ -95,7 +107,12 @@ export function RecruitmentList({ entries }: { entries: RecruitmentEntry[] }) {
         >
           Recruitment Cycles
         </h1>
-        <Button onClick={() => setIsCreating(!isCreating)}>
+        <Button 
+          onClick={() => {
+            console.log("Button clicked!");
+            setIsCreating((prev) => !prev);
+          }}
+        >
           {isCreating ? "Cancel" : "+ New Cycle"}
         </Button>
       </div>
@@ -168,12 +185,14 @@ export function RecruitmentList({ entries }: { entries: RecruitmentEntry[] }) {
                 <select
                   value={entry.status}
                   onChange={(e) => handleStatusChange(entry, e.target.value)}
-                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold uppercase appearance-none cursor-pointer border-none outline-none ${
+                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold uppercase cursor-pointer border-none outline-none ${
                     entry.status === "published"
                       ? "bg-success/10 text-success"
                       : entry.status === "closed"
                         ? "bg-slate-100 text-slate-500"
-                        : "bg-warning/10 text-warning"
+                        : entry.status === "paused"
+                          ? "bg-purple-100 text-purple-700" 
+                          : "bg-warning/10 text-warning"
                   }`}
                 >
                   <option value="draft">Draft</option>

@@ -1,8 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { resolveCurrentTenant, getCurrentViewer } from "@/lib/supabase/server";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { resolveCurrentTenant, getCurrentViewer, createSupabaseUserClient } from "@/lib/supabase/server";
 import { canManageTemporaryApplicants } from "@/lib/organization-permissions";
 import { z } from "zod";
 
@@ -19,11 +18,11 @@ const updateEntrySchema = createEntrySchema.partial().extend({
 export async function createRecruitmentEntry(rawInput: unknown) {
   const { tenant } = await resolveCurrentTenant();
   const viewer = await getCurrentViewer();
-  const adminClient = createSupabaseAdminClient("create-recruitment");
+  const userClient = await createSupabaseUserClient();
 
   if (
     !tenant ||
-    !adminClient ||
+    !userClient ||
     !viewer ||
     !canManageTemporaryApplicants(viewer)
   ) {
@@ -34,7 +33,7 @@ export async function createRecruitmentEntry(rawInput: unknown) {
 
   const input = createEntrySchema.parse(rawInput);
 
-  const { data, error } = await adminClient
+  const { data, error } = await userClient
     .from("recruitment_entries")
     .insert({
       tenant_id: tenant.id,
@@ -55,11 +54,11 @@ export async function createRecruitmentEntry(rawInput: unknown) {
 export async function updateRecruitmentEntry(rawInput: unknown) {
   const { tenant } = await resolveCurrentTenant();
   const viewer = await getCurrentViewer();
-  const adminClient = createSupabaseAdminClient("update-recruitment");
+  const userClient = await createSupabaseUserClient();
 
   if (
     !tenant ||
-    !adminClient ||
+    !userClient ||
     !viewer ||
     !canManageTemporaryApplicants(viewer)
   ) {
@@ -74,7 +73,7 @@ export async function updateRecruitmentEntry(rawInput: unknown) {
     Object.entries(rawUpdates).filter(([, value]) => value !== undefined),
   );
 
-  const { data, error } = await adminClient
+  const { data, error } = await userClient
     .from("recruitment_entries")
     .update(updates)
     .eq("id", id)
@@ -88,22 +87,26 @@ export async function updateRecruitmentEntry(rawInput: unknown) {
   return data;
 }
 
+const updateStageSchema = z.enum(["application", "screening", "interview", "deliberation"]);
+
 export async function updateApplicantStage(applicantId: string, stage: string) {
   const { tenant } = await resolveCurrentTenant();
   const viewer = await getCurrentViewer();
-  const adminClient = createSupabaseAdminClient("update-applicant-stage");
+  const userClient = await createSupabaseUserClient();
 
   if (
     !tenant ||
-    !adminClient ||
+    !userClient ||
     !viewer ||
     !canManageTemporaryApplicants(viewer)
   ) {
     throw new Error("You do not have permission to manage applicants.");
   }
+  
+  const parsedStage = updateStageSchema.parse(stage);
 
   // Fetch current data
-  const { data: current, error: fetchErr } = await adminClient
+  const { data: current, error: fetchErr } = await userClient
     .from("temporary_applicants")
     .select("application_data")
     .eq("id", applicantId)
@@ -113,9 +116,10 @@ export async function updateApplicantStage(applicantId: string, stage: string) {
   if (fetchErr) throw new Error(fetchErr.message);
 
   // Update jsonb safely
-  const updatedData = { ...current.application_data, stage };
+  const applicationData = current.application_data && typeof current.application_data === "object" ? current.application_data : {};
+  const updatedData = { ...applicationData, stage: parsedStage };
 
-  const { data, error } = await adminClient
+  const { data, error } = await userClient
     .from("temporary_applicants")
     .update({ application_data: updatedData })
     .eq("id", applicantId)
@@ -135,18 +139,18 @@ export async function updateApplicantDecision(
 ) {
   const { tenant } = await resolveCurrentTenant();
   const viewer = await getCurrentViewer();
-  const adminClient = createSupabaseAdminClient("update-applicant-decision");
+  const userClient = await createSupabaseUserClient();
 
   if (
     !tenant ||
-    !adminClient ||
+    !userClient ||
     !viewer ||
     !canManageTemporaryApplicants(viewer)
   ) {
     throw new Error("You do not have permission to manage applicants.");
   }
 
-  const { data, error } = await adminClient
+  const { data, error } = await userClient
     .from("temporary_applicants")
     .update({ status })
     .eq("id", applicantId)

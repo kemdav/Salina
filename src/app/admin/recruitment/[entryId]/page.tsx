@@ -1,5 +1,4 @@
-import { resolveCurrentTenant, getCurrentViewer } from "@/lib/supabase/server";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { resolveCurrentTenant, getCurrentViewer, createSupabaseUserClient } from "@/lib/supabase/server";
 import { canManageTemporaryApplicants } from "@/lib/organization-permissions";
 import { redirect } from "next/navigation";
 import { ApplicationBoard } from "@/components/organisms/application-board";
@@ -12,14 +11,14 @@ export default async function RecruitmentEntryPage({
   const { entryId } = await params;
   const { tenant } = await resolveCurrentTenant();
   const viewer = await getCurrentViewer();
-  const adminClient = createSupabaseAdminClient("recruitment-entry");
+  const userClient = await createSupabaseUserClient();
 
-  if (!tenant || !adminClient || !canManageTemporaryApplicants(viewer)) {
+  if (!tenant || !userClient || !viewer || !canManageTemporaryApplicants(viewer)) {
     redirect("/admin/dashboard");
   }
 
   // Double check entry exists
-  const { data: entry, error: entryErr } = await adminClient
+  const { data: entry, error: entryErr } = await userClient
     .from("recruitment_entries")
     .select("title")
     .eq("id", entryId)
@@ -31,7 +30,7 @@ export default async function RecruitmentEntryPage({
   }
 
   // Retrieve temporary_applicants with this entry
-  const { data: applicantsRaw, error: applicantsErr } = await adminClient
+  const { data: applicantsRaw, error: applicantsErr } = await userClient
     .from("temporary_applicants")
     .select(
       "id, applicant_name, applicant_email, status, created_at, application_data",
