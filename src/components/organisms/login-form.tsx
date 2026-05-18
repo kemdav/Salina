@@ -37,7 +37,7 @@ export function LoginForm() {
         title="Sign in"
       />
 
-      {state.error ? <StatusBanner tone="error">{state.error}</StatusBanner> : null}
+      {state.error ? <StatusBanner tone="error">{typeof state.error === 'string' && state.error !== '{}' ? state.error : 'An unexpected error occurred. Please try again.'}</StatusBanner> : null}
 
       <form action={formAction} className="flex flex-col gap-5" noValidate>
         <TextField

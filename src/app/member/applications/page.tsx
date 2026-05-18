@@ -1,96 +1,127 @@
-'use client';
+"use client";
 
+import { useActionState } from "react";
+
+import { Button } from "@/components/atoms/button";
+import { StatusBanner } from "@/components/molecules/status-banner";
+import { TextField } from "@/components/molecules/text-field";
 import { AuthenticatedShell } from "@/components/templates/authenticated-shell";
-import { ApplicationList } from "@/components/organisms/application-list";
-import { ApplicationData } from "@/components/molecules/application-card";
+import {
+  submitTemporaryApplicantApplicationAction,
+  type TemporaryApplicantApplicationActionState,
+} from "@/lib/actions/temporary-applicants";
 
-// Current Tenant Data
-const dummyTenant = {
-    name: "Cebu Institute of Technology - University",
-    primaryColor: "#c6623e",
-    textColor: "#ffffff"
+const INITIAL_APPLICATION_STATE: TemporaryApplicantApplicationActionState = {
+  fields: {
+    experience: "",
+    interests: "",
+    motivation: "",
+  },
 };
 
-// Dummy Data covering all status types!
-const myApplications: ApplicationData[] = [
-    {
-        id: "app-101",
-        orgName: "The Racers",
-        branding: { primaryColor: "#7f1d1d", textColor: "#ffffff" },
-        appliedDate: "April 20, 2026",
-        status: "In Review",
-        currentStage: "Interview Phase",
-        message: "Your application is currently being reviewed by the executive committee. Please keep an eye on your email for an interview schedule."
-    },
-    {
-        id: "app-102",
-        orgName: "Tokyo Metropolitan Curse Technical College",
-        branding: { primaryColor: "#3b82f6", textColor: "#ffffff" },
-        appliedDate: "April 28, 2026",
-        status: "Pending",
-        currentStage: "Awaiting Initial Screening",
-    },
-    {
-        id: "app-103",
-        orgName: "Wildcats E-Sports Lounge",
-        branding: { primaryColor: "#8b5cf6", textColor: "#ffffff" },
-        appliedDate: "March 15, 2026",
-        status: "Accepted",
-        currentStage: "Onboarding Completed",
-        message: "Welcome to the team! Make sure to attend the general assembly on Friday."
-    },
-    {
-        id: "app-104",
-        orgName: "The Seven",
-        branding: { primaryColor: "#10b981", textColor: "#ffffff" },
-        appliedDate: "January 10, 2026",
-        status: "Rejected",
-        currentStage: "Closed",
-        message: "Thank you for your interest. Unfortunately, we have reached our maximum member capacity for this semester."
-    }
-];
+function ApplicationTextAreaField({
+  defaultValue,
+  id,
+  label,
+  name,
+  placeholder,
+}: {
+  defaultValue: string;
+  id: string;
+  label: string;
+  name: string;
+  placeholder: string;
+}) {
+  return (
+    <div>
+      <label
+        className="mb-1.5 block text-sm font-medium text-slate-700"
+        htmlFor={id}
+      >
+        {label}
+      </label>
+      <textarea
+        className="min-h-32 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition-colors placeholder:text-slate-400 focus:border-[#c6623e] focus:ring-2 focus:ring-[#c6623e]/15"
+        defaultValue={defaultValue}
+        id={id}
+        name={name}
+        placeholder={placeholder}
+        required
+      />
+    </div>
+  );
+}
 
 export default function MemberApplicationsPage() {
-    return (
-        <AuthenticatedShell role="Member" tenantBranding={dummyTenant}>
-            <div className="w-full max-w-5xl mx-auto py-8">
+  const [state, formAction, pending] = useActionState(
+    submitTemporaryApplicantApplicationAction,
+    INITIAL_APPLICATION_STATE,
+  );
 
-                {/* Page Header */}
-                <div className="mb-8">
-                    <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight font-[family:var(--font-heading)]">
-                        My Applications
-                    </h2>
-                    <p className="text-sm text-slate-500 mt-2 max-w-2xl leading-relaxed">
-                        Track the status of your membership requests across all organizations.
-                    </p>
-                </div>
+  return (
+    <AuthenticatedShell role="Member">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 py-8">
+        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
+          <div className="max-w-3xl space-y-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#c6623e]">
+              Temporary applicant
+            </p>
+            <h2
+              className="text-3xl font-bold tracking-tight text-slate-900"
+              style={{ fontFamily: "var(--font-heading)" }}
+            >
+              Complete your application
+            </h2>
+            <p className="text-sm leading-6 text-slate-600">
+              Tell the organization why you are applying, what experience you bring, and what you want to contribute. Your submission will be stored for officer review.
+            </p>
+          </div>
 
-                {/* Main Content Area */}
-                <div className="flex flex-col lg:flex-row gap-8 items-start">
+          <div className="mt-6 rounded-3xl border border-amber-200 bg-amber-50/80 p-5 text-sm leading-6 text-amber-900">
+            Finish this form after sign-up to complete your temporary applicant submission.
+          </div>
 
-                    {/* The Application List Organism */}
-                    <div className="flex-1 w-full">
-                        <ApplicationList applications={myApplications} />
-                    </div>
+          <form action={formAction} className="mt-6 space-y-5">
+            {state.error ? (
+              <StatusBanner tone="error">{state.error}</StatusBanner>
+            ) : state.notice ? (
+              <StatusBanner tone="success">{state.notice}</StatusBanner>
+            ) : null}
 
-                    {/* Right Sidebar: Info Card */}
-                    <div className="w-full lg:w-72 shrink-0 space-y-6">
-                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 shadow-sm">
-                            <h3 className="font-bold text-slate-800 mb-2 flex items-center gap-2">
-                                <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                Digital ID Sync
-                            </h3>
-                            <p className="text-xs text-slate-500 leading-relaxed mb-4">
-                                When you apply to an organization, a snapshot of your Digital ID is shared with their officers.
-                            </p>
-                            <button className="w-full px-4 py-2 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors">
-                                Update Digital ID
-                            </button>
-                        </div>
-                    </div>
-                </div>
+            <ApplicationTextAreaField
+              defaultValue={state.fields.motivation}
+              id="motivation"
+              label="Why are you applying?"
+              name="motivation"
+              placeholder="Share what drew you to this organization."
+            />
 
+            <ApplicationTextAreaField
+              defaultValue={state.fields.experience}
+              id="experience"
+              label="Relevant experience"
+              name="experience"
+              placeholder="Describe leadership, volunteer, academic, or community experience that is relevant."
+            />
+
+            <TextField
+              defaultValue={state.fields.interests}
+              id="interests"
+              label="What do you want to do here?"
+              name="interests"
+              placeholder="Events, outreach, design, operations, or anything else."
+              required
+              type="text"
+            />
+
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              <Button disabled={pending} type="submit" variant="dark">
+                {pending ? "Saving application..." : "Submit application"}
+              </Button>
             </div>
-        </AuthenticatedShell>
-    );
+          </form>
+        </section>
+      </div>
+    </AuthenticatedShell>
+  );
 }

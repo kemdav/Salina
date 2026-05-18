@@ -11,6 +11,7 @@ import {
 } from "@/lib/auth-policy";
 import { LOCAL_COOKIE_DOMAIN } from "@/lib/host-routing";
 import { getTenantAppUrl } from "@/lib/root-domain";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createUserClient } from "@/lib/supabase/user-server";
 
 // 1. Zod schema validates email format and a non-empty password at the server boundary
@@ -23,6 +24,7 @@ const signUpSchema = z
   .object({
     confirmPassword: z.string().min(1, "Please confirm your password."),
     email: z.string().trim().email("Enter a valid email address."),
+    inviteToken: z.string().uuid().optional(),
     fullName: z.string().trim().min(1, "Full name is required."),
     password: z
       .string()
@@ -64,6 +66,18 @@ export type SignUpActionState = {
 
 const INITIAL_LOGIN_ERROR = "";
 
+function getCurrentAppMetadata(user: { app_metadata?: unknown }) {
+  return user.app_metadata && typeof user.app_metadata === "object"
+    ? (user.app_metadata as Record<string, unknown>)
+    : {};
+}
+
+function getCurrentUserMetadata(user: { user_metadata?: unknown }) {
+  return user.user_metadata && typeof user.user_metadata === "object"
+    ? (user.user_metadata as Record<string, unknown>)
+    : {};
+}
+
 export async function signIn(email: string, password: string) {
   const parsed = loginSchema.safeParse({
     email,
@@ -92,7 +106,9 @@ export async function signIn(email: string, password: string) {
   }
 
   // 4. Inspect the signed-in claims to determine the landing path.
-  const { isPlatformAdmin, tenantId } = getAuthSessionClaims(data.user);
+  const { isPlatformAdmin, isTemporaryApplicant, tenantId } = getAuthSessionClaims(
+    data.user,
+  );
 
   if (isPlatformAdmin) {
     redirect("/superadmin");
@@ -100,6 +116,21 @@ export async function signIn(email: string, password: string) {
 
   if (!tenantId) {
     redirect("/onboarding");
+  }
+
+  const { data: orgData, error: orgError } = await supabase
+    .from("organizations")
+    .select("slug")
+    .eq("id", tenantId)
+    .single();
+
+  if (orgError || !orgData) {
+    await supabase.auth.signOut();
+    return { error: "Organization record not located." };
+  }
+
+  if (isTemporaryApplicant) {
+    redirect(`${await getTenantAppUrl(orgData.slug)}/member/applications`);
   }
 
   // 5. Query organization_memberships table to confirm active membership
@@ -119,20 +150,6 @@ export async function signIn(email: string, password: string) {
   if (!membership) {
     await supabase.auth.signOut(); // Revoke the session
     return { error: "No active membership found for this organization." };
-  }
-
-  // 6. Redirect to the tenant shell
-  // Note: Depending on your exact domain mapping strategy, the organization slug resolves the tenant subdomain.
-  // In production it uses `${tenantSlug}.${ROOT_DOMAIN}`, locally `${tenantSlug}.localhost:3000`.
-  const { data: orgData, error: orgError } = await supabase
-    .from("organizations")
-    .select("slug")
-    .eq("id", tenantId)
-    .single();
-
-  if (orgError || !orgData) {
-    await supabase.auth.signOut();
-    return { error: "Organization record not located." };
   }
 
   // Navigate user securely into their scoped domain subdomain shell
@@ -160,6 +177,11 @@ export async function signUpAction(
   const values = {
     confirmPassword: String(formData.get("confirmPassword") ?? ""),
     email: String(formData.get("email") ?? "").trim(),
+    inviteToken: (() => {
+      const rawInviteToken = String(formData.get("inviteToken") ?? "").trim();
+
+      return rawInviteToken ? rawInviteToken : undefined;
+    })(),
     fullName: String(formData.get("fullName") ?? "").trim(),
     password: String(formData.get("password") ?? ""),
   };
@@ -184,6 +206,7 @@ export async function signUpAction(
   }
 
   const supabase = await createUserClient(LOCAL_COOKIE_DOMAIN); // Keep local auth cookies shared across salina.localhost subdomains.
+  const adminClient = createSupabaseAdminClient("auth-sign-up");
 
   if (!supabase) {
     return {
@@ -216,6 +239,146 @@ export async function signUpAction(
         fullName: values.fullName,
       },
       formError: error?.message ?? "Unable to create your account.",
+    };
+  }
+
+  if (parsed.data.inviteToken) {
+    if (!adminClient) {
+      return {
+        errors: {},
+        fields: {
+          email: values.email,
+          fullName: values.fullName,
+        },
+        formError: "Temporary applicant invitations are unavailable right now.",
+      };
+    }
+
+    const { data: temporaryApplicant, error: temporaryApplicantError } = await adminClient
+      .from("temporary_applicants")
+      .select("id, tenant_id, applicant_email, applicant_name, invite_token")
+      .eq("invite_token", parsed.data.inviteToken)
+      .eq("applicant_email", parsed.data.email)
+      .maybeSingle<{ id: string; tenant_id: string; applicant_email: string; applicant_name: string; invite_token: string }>();
+
+    if (temporaryApplicantError) {
+      return {
+        errors: {},
+        fields: {
+          email: values.email,
+          fullName: values.fullName,
+        },
+        formError: temporaryApplicantError.message,
+      };
+    }
+
+    if (!temporaryApplicant) {
+      return {
+        errors: {},
+        fields: {
+          email: values.email,
+          fullName: values.fullName,
+        },
+        formError: "That temporary applicant invitation is invalid or expired.",
+      };
+    }
+
+    if (temporaryApplicant.applicant_name.trim().toLowerCase() !== parsed.data.fullName.trim().toLowerCase()) {
+      return {
+        errors: {
+          fullName: "Name does not match the invitation.",
+        },
+        fields: {
+          email: values.email,
+          fullName: values.fullName,
+        },
+        formError: undefined,
+      };
+    }
+
+    const { data: tenant, error: tenantError } = await adminClient
+      .from("organizations")
+      .select("slug")
+      .eq("id", temporaryApplicant.tenant_id)
+      .single<{ slug: string }>();
+
+    if (tenantError || !tenant) {
+      return {
+        errors: {},
+        fields: {
+          email: values.email,
+          fullName: values.fullName,
+        },
+        formError: tenantError?.message ?? "Unable to resolve the temporary applicant organization.",
+      };
+    }
+
+    const currentAppMetadata = getCurrentAppMetadata(data.user);
+    const currentUserMetadata = getCurrentUserMetadata(data.user);
+
+    const { error: metadataError } = await adminClient.auth.admin.updateUserById(
+      data.user.id,
+      {
+        app_metadata: {
+          ...currentAppMetadata,
+          tenant_id: temporaryApplicant.tenant_id,
+          tenant_slug: tenant.slug,
+          temporary_applicant: true,
+          temporary_applicant_id: temporaryApplicant.id,
+        },
+        user_metadata: {
+          ...currentUserMetadata,
+          full_name: parsed.data.fullName,
+          tenant_id: temporaryApplicant.tenant_id,
+          tenant_slug: tenant.slug,
+          temporary_applicant: true,
+          temporary_applicant_id: temporaryApplicant.id,
+        },
+      }
+    );
+
+    if (metadataError) {
+      return {
+        errors: {},
+        fields: {
+          email: values.email,
+          fullName: values.fullName,
+        },
+        formError: metadataError.message,
+      };
+    }
+
+    const { error: applicantLinkError } = await adminClient
+      .from("temporary_applicants")
+      .update({
+        applicant_user_id: data.user.id,
+      })
+      .eq("id", temporaryApplicant.id);
+
+    if (applicantLinkError) {
+      return {
+        errors: {},
+        fields: {
+          email: values.email,
+          fullName: values.fullName,
+        },
+        formError: applicantLinkError.message,
+      };
+    }
+
+    if (data.session) {
+      await supabase.auth.refreshSession();
+      redirect(`${await getTenantAppUrl(tenant.slug)}/member/applications`);
+    }
+
+    return {
+      errors: {},
+      fields: {
+        email: values.email,
+        fullName: values.fullName,
+      },
+      formNotice:
+        "Check your email to confirm your temporary applicant account, then sign in to continue the application.",
     };
   }
 

@@ -36,6 +36,7 @@ export function getAuthSessionClaims(user: {
   return {
     isPlatformAdmin:
       roles.includes("system_admin") || appMetadata.role === "system_admin",
+    isTemporaryApplicant: appMetadata.temporary_applicant === true,
     tenantId:
       typeof appMetadata.tenant_id === "string"
         ? appMetadata.tenant_id

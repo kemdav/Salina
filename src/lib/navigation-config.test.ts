@@ -14,3 +14,11 @@ test("member sidebar routes exclude discover", () => {
   ]);
   assert.equal(memberRouteHrefs.includes("/member/discover"), false);
 });
+
+test("temporary applicants only see the applications tab", () => {
+  const memberRouteHrefs = getSidebarRoutes("Member", {
+    temporaryApplicant: true,
+  }).map((route) => route.href);
+
+  assert.deepEqual(memberRouteHrefs, ["/member/applications"]);
+});
