@@ -102,6 +102,7 @@ function isPostgrestError(error: unknown): error is PostgrestError {
 }
 
 function getProvisioningErrorMessage(error: unknown): string {
+  console.error("PROVISIONING ERROR:", error);
   if (isPostgrestError(error) && error.code === "23505") {
     const detail = `${error.message} ${error.details ?? ""}`.toLowerCase();
 
@@ -116,7 +117,7 @@ function getProvisioningErrorMessage(error: unknown): string {
     return error.message;
   }
 
-  return "Organization provisioning failed.";
+  return `Organization provisioning failed. Error: ${JSON.stringify(error)}`;
 }
 
 async function deleteOrganizationSilently(organizationId: string) {

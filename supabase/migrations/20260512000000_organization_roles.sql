@@ -3,14 +3,20 @@ create table public.organization_roles (
   tenant_id uuid not null references public.organizations(id) on delete cascade,
   name text not null,
   description text,
-  permissions jsonb default '[]'::jsonb,
+  permissions jsonb default '[]'::jsonb check (jsonb_typeof(permissions) = 'array'),
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now()),
-  unique (tenant_id, name)
+  unique (tenant_id, name),
+  unique (tenant_id, id)
 );
 
 alter table public.organization_memberships
-add column role_id uuid references public.organization_roles(id) on delete restrict;
+add column role_id uuid,
+add constraint fk_org_memberships_role
+  foreign key (tenant_id, role_id)
+  references public.organization_roles(tenant_id, id) on delete restrict;
+
+create index organization_memberships_role_id_idx on public.organization_memberships (role_id);
 
 create trigger set_organization_roles_updated_at
 before update on public.organization_roles

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { resolveCurrentTenant } from "@/lib/supabase/server";
 import { createUserClient } from "@/lib/supabase/user-server";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 export interface OrganizationRole {
   id: string;
@@ -27,7 +28,7 @@ export interface UpdateRoleInput {
   permissions?: string[];
 }
 
-async function verifyAdminStatus(client: any, tenantId: string) {
+async function verifyAdminStatus(client: SupabaseClient, tenantId: string) {
   const { data: { user }, error: userError } = await client.auth.getUser();
   if (userError || !user) {
     throw new Error("Unauthorized");
@@ -45,7 +46,7 @@ async function verifyAdminStatus(client: any, tenantId: string) {
   }
 
   if (!["admin", "owner", "system_admin"].includes(data.role)) {
-    throw new Error("Unauthorized: Requires admin privileges.");
+    throw new Error("Unauthorized: Requires admin privileges or system_admin role assigned in database.");
   }
 }
 
@@ -80,7 +81,7 @@ export async function getRoles(): Promise<OrganizationRole[]> {
     throw new Error(`Failed to fetch roles: ${error.message}`);
   }
 
-  return (data || []).map((role: any) => ({
+  return (data || []).map((role: OrganizationRole & { organization_memberships?: { count: number }[] }) => ({
     ...role,
     member_count: role.organization_memberships?.[0]?.count || 0,
   }));
@@ -115,7 +116,7 @@ export async function createRole(data: CreateRoleInput): Promise<OrganizationRol
     throw new Error(`Failed to create role: ${error.message}`);
   }
 
-  revalidatePath("/[tenantSlug]/settings/roles", "page");
+  revalidatePath(`/${tenant.slug}/settings/roles`);
   return newRole;
 }
 
@@ -133,10 +134,14 @@ export async function updateRole(roleId: string, data: UpdateRoleInput): Promise
 
   await verifyAdminStatus(client, tenant.id);
 
-  const updates: Record<string, any> = {};
+  const updates: Partial<UpdateRoleInput> = {};
   if (data.name !== undefined) updates.name = data.name;
   if (data.description !== undefined) updates.description = data.description;
   if (data.permissions !== undefined) updates.permissions = data.permissions;
+
+  if (Object.keys(updates).length === 0) {
+    throw new Error("No role fields were provided to update.");
+  }
 
   const { data: updatedRole, error } = await client
     .from("organization_roles")
@@ -150,7 +155,7 @@ export async function updateRole(roleId: string, data: UpdateRoleInput): Promise
     throw new Error(`Failed to update role: ${error.message}`);
   }
 
-  revalidatePath("/[tenantSlug]/settings/roles", "page");
+  revalidatePath(`/${tenant.slug}/settings/roles`);
   return updatedRole;
 }
 
@@ -181,12 +186,15 @@ export async function deleteRole(roleId: string): Promise<void> {
       }
       throw error;
     }
-  } catch (error: any) {
-    if (error.message.includes("Cannot delete role")) {
-      throw error;
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      if (error.message.includes("Cannot delete role")) {
+        throw error;
+      }
+      throw new Error(`Failed to delete role: ${error.message}`);
     }
-    throw new Error(`Failed to delete role: ${error.message}`);
+    throw new Error("Failed to delete role: Unknown error");
   }
 
-  revalidatePath("/[tenantSlug]/settings/roles", "page");
+  revalidatePath(`/${tenant.slug}/settings/roles`);
 }
