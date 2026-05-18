@@ -202,7 +202,7 @@ export function ApplicationBoard({
                 <Button
                   key={s.id}
                   variant={
-                    selectedApplicant.stage === s.id ? "default" : "outline"
+                    selectedApplicant.stage === s.id ? "primary" : "ghost"
                   }
                   onClick={() => {
                     handleMoveStage(selectedApplicant.id, s.id);
