@@ -92,10 +92,13 @@ export async function getRoles(): Promise<OrganizationRole[]> {
     throw new Error(`Failed to fetch roles: ${error.message}`);
   }
 
-  return (data || []).map((role: OrganizationRole & { organization_memberships?: { count: number }[] }) => ({
-    ...role,
-    member_count: role.organization_memberships?.[0]?.count || 0,
-  }));
+  return (data || []).map((role: OrganizationRole & { organization_memberships?: { count: number }[] }) => {
+    const { organization_memberships, ...cleanRole } = role;
+    return {
+      ...cleanRole,
+      member_count: organization_memberships?.[0]?.count || 0,
+    };
+  });
 }
 
 export async function createRole(data: CreateRoleInput): Promise<OrganizationRole> {
@@ -127,7 +130,7 @@ export async function createRole(data: CreateRoleInput): Promise<OrganizationRol
     throw new Error(`Failed to create role: ${error.message}`);
   }
 
-  revalidatePath(`/${tenant.slug}/settings/roles`);
+  revalidatePath(`/admin/roles`);
   return newRole;
 }
 
@@ -170,7 +173,7 @@ export async function updateRole(roleId: string, data: UpdateRoleInput): Promise
     throw new Error(`Role not found or you do not have permission to update it.`);
   }
 
-  revalidatePath(`/${tenant.slug}/settings/roles`);
+  revalidatePath(`/admin/roles`);
   return updatedRole;
 }
 
@@ -217,5 +220,5 @@ export async function deleteRole(roleId: string): Promise<void> {
     throw new Error("Failed to delete role: Unknown error");
   }
 
-  revalidatePath(`/${tenant.slug}/settings/roles`);
+  revalidatePath(`/admin/roles`);
 }
