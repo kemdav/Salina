@@ -193,7 +193,7 @@ export function RecruitmentList({
                   <option value="paused">Paused</option>
                   <option value="closed">Closed</option>
                 </select>
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-slate-500 suppress-hydration-warning" suppressHydrationWarning>
                   {new Date(entry.created_at).toLocaleDateString()}
                 </span>
               </div>
