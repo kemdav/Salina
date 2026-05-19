@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/atoms/button";
 
 interface RoleRow {
@@ -22,6 +24,10 @@ const PERMISSIONS = [
 ];
 
 export default function AdminRolesPage() {
+  const handleOpenForm = () => {
+    console.log("Create role button clicked");
+  };
+
   return (
     <div style={{ fontFamily: "var(--font-body)" }}>
       <div className="mb-6 flex items-start justify-between gap-4">
@@ -36,7 +42,9 @@ export default function AdminRolesPage() {
             Create custom roles and control what each role can do.
           </p>
         </div>
-        <Button className="h-9 px-4 text-sm">+ Create Role</Button>
+        <Button className="h-9 px-4 text-sm" onClick={handleOpenForm}>
+          + Create Role
+        </Button>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
