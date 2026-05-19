@@ -18,7 +18,13 @@ type RecruitmentEntry = {
   created_at: string;
 };
 
-export function RecruitmentList({ entries }: { entries: RecruitmentEntry[] }) {
+export function RecruitmentList({ 
+  entries, 
+  isOfficer = false 
+}: { 
+  entries: RecruitmentEntry[];
+  isOfficer?: boolean;
+}) {
   const [optimisticEntries, dispatchOptimistic] = useOptimistic(
     entries,
     (state, action: { type: "add" | "update"; payload: RecruitmentEntry }) => {
@@ -107,14 +113,11 @@ export function RecruitmentList({ entries }: { entries: RecruitmentEntry[] }) {
         >
           Recruitment Cycles
         </h1>
-        <Button 
-          onClick={() => {
-            console.log("Button clicked!");
-            setIsCreating((prev) => !prev);
-          }}
-        >
-          {isCreating ? "Cancel" : "+ New Cycle"}
-        </Button>
+        {!isOfficer && (
+          <Button onClick={() => setIsCreating(true)}>
+            + New Cycle
+          </Button>
+        )}
       </div>
 
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center justify-between">
@@ -144,34 +147,44 @@ export function RecruitmentList({ entries }: { entries: RecruitmentEntry[] }) {
       </div>
 
       {isCreating && (
-        <form
-          action={handleCreate}
-          className="mb-8 rounded-2xl border border-border bg-slate-50 p-6 shadow-sm"
-        >
-          <h2 className="mb-4 text-lg font-semibold">
-            Create New Recruitment Cycle
-          </h2>
-          <div className="mb-4 space-y-4">
-            <div>
-              <Label htmlFor="title">Title</Label>
-              <Input
-                id="title"
-                name="title"
-                required
-                placeholder="e.g. Spring 2026 Hiring"
-              />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <form
+            action={handleCreate}
+            className="w-full max-w-md rounded-2xl border border-border bg-white shadow-xl flex flex-col"
+          >
+            <div className="p-6 pb-0">
+              <h2 className="mb-4 text-xl font-bold">
+                Create New Recruitment Cycle
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="title">Title</Label>
+                  <Input
+                    id="title"
+                    name="title"
+                    required
+                    placeholder="e.g. Spring 2026 Hiring"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Input
+                    id="description"
+                    name="description"
+                    placeholder="Brief details about this cycle"
+                  />
+                </div>
+              </div>
             </div>
-            <div>
-              <Label htmlFor="description">Description</Label>
-              <Input
-                id="description"
-                name="description"
-                placeholder="Brief details about this cycle"
-              />
+            
+            <div className="mt-8 flex justify-end gap-3 rounded-b-2xl bg-slate-50 p-4 border-t border-slate-100">
+              <Button type="button" variant="ghost" onClick={() => setIsCreating(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">Create Cycle</Button>
             </div>
-          </div>
-          <Button type="submit">Create Cycle</Button>
-        </form>
+          </form>
+        </div>
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -183,9 +196,10 @@ export function RecruitmentList({ entries }: { entries: RecruitmentEntry[] }) {
             <div>
               <div className="mb-2 flex items-center justify-between">
                 <select
+                  disabled={isOfficer}
                   value={entry.status}
                   onChange={(e) => handleStatusChange(entry, e.target.value)}
-                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold uppercase cursor-pointer border-none outline-none ${
+                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold uppercase ${!isOfficer && 'cursor-pointer'} border-none outline-none ${
                     entry.status === "published"
                       ? "bg-success/10 text-success"
                       : entry.status === "closed"
@@ -214,12 +228,22 @@ export function RecruitmentList({ entries }: { entries: RecruitmentEntry[] }) {
               )}
             </div>
 
-            <Link
-              href={`/admin/recruitment/${entry.id}`}
-              className="mt-4 block w-full rounded-lg bg-slate-100 py-2 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
-            >
-              View Pipeline
-            </Link>
+            <div className="mt-4 flex gap-2">
+              {!isOfficer && (
+                <Link
+                  href={`/admin/recruitment/${entry.id}/settings`}
+                  className="flex flex-1 items-center justify-center rounded-lg bg-slate-100 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
+                >
+                  Settings
+                </Link>
+              )}
+              <Link
+                href={`/${isOfficer ? 'officer' : 'admin'}/recruitment/${entry.id}`}
+                className="flex flex-[2] items-center justify-center rounded-lg bg-primary py-2 text-sm font-semibold text-white transition hover:bg-primary-hover"
+              >
+                View Pipeline
+              </Link>
+            </div>
           </div>
         ))}
 

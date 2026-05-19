@@ -17,19 +17,22 @@ export type BoardApplicant = {
   created_at: string;
 };
 
-const STAGES = [
-  { id: "application", label: "Application" },
-  { id: "screening", label: "Screening" },
-  { id: "interview", label: "Interview" },
-  { id: "deliberation", label: "Deliberation" },
-];
+export type BoardStage = {
+  id: string;
+  name: string;
+  type: string;
+  meetingLink?: string;
+  questions?: { id: string; label: string; required: boolean }[];
+};
 
 export function ApplicationBoard({
   entryTitle,
   applicants,
+  stages = [],
 }: {
   entryTitle: string;
   applicants: BoardApplicant[];
+  stages?: BoardStage[];
 }) {
   const [selectedApplicant, setSelectedApplicant] =
     useState<BoardApplicant | null>(null);
@@ -80,11 +83,20 @@ export function ApplicationBoard({
     }
   }
 
+  const effectiveStages = stages.length > 0 
+    ? stages 
+    : [
+        { id: "application", name: "Application", type: "form" },
+        { id: "screening", name: "Screening", type: "form" },
+        { id: "interview", name: "Interview", type: "interview" },
+        { id: "deliberation", name: "Deliberation", type: "deliberation" },
+      ];
+
   // Pre-process applicants per column
-  const cols = STAGES.map((stage) => ({
+  const cols = effectiveStages.map((stage) => ({
     ...stage,
     applicants: filteredApplicants.filter(
-      (a) => (a.stage || "application") === stage.id,
+      (a) => (a.stage || effectiveStages[0].id) === stage.id,
     ),
   }));
 
@@ -124,7 +136,7 @@ export function ApplicationBoard({
             >
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-sm font-semibold text-foreground">
-                  {col.label}
+                  {col.name}
                 </span>
                 <span className="rounded-full border border-border bg-white px-2 py-0.5 text-xs text-slate-500">
                   {col.applicants.length}
@@ -209,7 +221,7 @@ export function ApplicationBoard({
           <div className="space-y-4">
             <h3 className="text-sm font-bold text-slate-700">Move to Stage</h3>
             <div className="flex flex-col gap-2">
-              {STAGES.map((s) => (
+              {effectiveStages.map((s) => (
                 <Button
                   key={s.id}
                   variant={
@@ -223,10 +235,25 @@ export function ApplicationBoard({
                   }}
                   className="justify-start"
                 >
-                  {s.label}
+                  {s.name}
                 </Button>
               ))}
             </div>
+
+            {/* Display meeting link depending on the current stage type */}
+            {effectiveStages.find(s => s.id === selectedApplicant.stage)?.type === 'interview' && effectiveStages.find(s => s.id === selectedApplicant.stage)?.meetingLink && (
+              <div className="pt-4 mt-4 border-t border-slate-200">
+                <h3 className="text-sm font-bold text-slate-700 mb-3">Interview Link</h3>
+                <a 
+                  href={effectiveStages.find(s => s.id === selectedApplicant.stage)?.meetingLink}
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="inline-flex w-full items-center justify-center rounded-lg bg-indigo-50 py-2 text-sm font-semibold text-indigo-600 hover:bg-indigo-100 transition"
+                >
+                  Join Meeting
+                </a>
+              </div>
+            )}
 
             <div className="pt-4 mt-6 border-t border-slate-200">
               <h3 className="text-sm font-bold text-slate-700 mb-3">
