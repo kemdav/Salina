@@ -48,6 +48,7 @@ export async function createRecruitmentEntry(rawInput: unknown) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/admin/recruitment");
+  revalidatePath("/officer/recruitment");
   return data;
 }
 

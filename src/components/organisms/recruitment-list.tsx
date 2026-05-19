@@ -1,14 +1,17 @@
 "use client";
 
 import { useOptimistic, useState, startTransition } from "react";
+import type { FormEvent } from "react";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
+import { CreateRecruitmentCycleModal } from "@/components/organisms/create-recruitment-cycle-modal";
 import {
   createRecruitmentEntry,
   updateRecruitmentEntry,
 } from "@/lib/actions/recruitment";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 type RecruitmentEntry = {
   id: string;
@@ -40,7 +43,8 @@ export function RecruitmentList({
     },
   );
 
-  const [isCreating, setIsCreating] = useState(false);
+  const router = useRouter();
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -55,31 +59,29 @@ export function RecruitmentList({
     return matchesSearch && matchesStatus;
   });
 
-  async function handleCreate(formData: FormData) {
+  async function handleCreate(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const title = formData.get("title") as string;
     const description = (formData.get("description") ?? "").toString();
 
     if (!title) return;
 
-    const newEntry = {
-      id: crypto.randomUUID(),
-      title,
-      description,
-      status: "draft",
-      created_at: new Date().toISOString(),
-    };
-
-    // Optimistically add
-    startTransition(() => {
-      dispatchOptimistic({ type: "add", payload: newEntry });
-    });
-
-    setIsCreating(false);
+    setIsCreateOpen(false);
+    form.reset();
 
     try {
-      // Call server
-      await createRecruitmentEntry({ title, description, status: "draft" });
-    } catch (e) {
+      const created = await createRecruitmentEntry({
+        title,
+        description,
+        status: "draft",
+      });
+      startTransition(() => {
+        dispatchOptimistic({ type: "add", payload: created });
+      });
+      router.refresh();
+    } catch {
       alert("Failed to create entry.");
     }
   }
@@ -102,10 +104,18 @@ export function RecruitmentList({
   }
 
   return (
+    
     <div
       className="mx-auto max-w-4xl p-6 sm:p-8"
       style={{ fontFamily: "var(--font-body)" }}
     >
+      {/* <button
+            type="button"
+            onClick={() => alert("Button was clicked!")}
+            className="inline-flex items-center justify-center rounded-(--radius) bg-primary px-4 py-2 text-sm font-medium text-white transition-all hover:bg-primary-hover"
+          >
+            + New Cycle
+          </button> */}
       <div className="mb-6 flex items-center justify-between">
         <h1
           className="text-3xl font-bold tracking-tight text-foreground"
@@ -114,9 +124,13 @@ export function RecruitmentList({
           Recruitment Cycles
         </h1>
         {!isOfficer && (
-          <Button onClick={() => setIsCreating(true)}>
+          <button
+            type="button"
+            onClick={() => setIsCreateOpen(true)}
+            className="inline-flex items-center justify-center rounded-(--radius) bg-primary px-4 py-2 text-sm font-medium text-white transition-all hover:bg-primary-hover"
+          >
             + New Cycle
-          </Button>
+          </button>
         )}
       </div>
 
@@ -146,46 +160,11 @@ export function RecruitmentList({
         </div>
       </div>
 
-      {isCreating && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <form
-            action={handleCreate}
-            className="w-full max-w-md rounded-2xl border border-border bg-white shadow-xl flex flex-col"
-          >
-            <div className="p-6 pb-0">
-              <h2 className="mb-4 text-xl font-bold">
-                Create New Recruitment Cycle
-              </h2>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="title">Title</Label>
-                  <Input
-                    id="title"
-                    name="title"
-                    required
-                    placeholder="e.g. Spring 2026 Hiring"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Input
-                    id="description"
-                    name="description"
-                    placeholder="Brief details about this cycle"
-                  />
-                </div>
-              </div>
-            </div>
-            
-            <div className="mt-8 flex justify-end gap-3 rounded-b-2xl bg-slate-50 p-4 border-t border-slate-100">
-              <Button type="button" variant="ghost" onClick={() => setIsCreating(false)}>
-                Cancel
-              </Button>
-              <Button type="submit">Create Cycle</Button>
-            </div>
-          </form>
-        </div>
-      )}
+      <CreateRecruitmentCycleModal
+        open={isCreateOpen && !isOfficer}
+        onClose={() => setIsCreateOpen(false)}
+        onSubmit={handleCreate}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {filteredEntries.map((entry) => (
@@ -247,7 +226,7 @@ export function RecruitmentList({
           </div>
         ))}
 
-        {filteredEntries.length === 0 && !isCreating && (
+        {filteredEntries.length === 0 && (
           <div className="col-span-full py-12 text-center text-slate-500">
             No recruitment cycles found.
           </div>
