@@ -45,9 +45,7 @@ export default async function Home() {
                 Tenant theme config
               </h2>
               <pre className="mt-5 overflow-x-auto rounded-2xl border border-white/5 bg-stone-950/70 p-4 text-xs leading-6 text-stone-200">
-                {Object.keys(tenantContext.tenant.themeConfig || {}).length > 0
-                  ? JSON.stringify(tenantContext.tenant.themeConfig, null, 2)
-                  : "No theme configured."}
+                {JSON.stringify(tenantContext.tenant.themeConfig, null, 2)}
               </pre>
             </section>
           ) : null}
