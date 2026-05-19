@@ -24,7 +24,7 @@ export interface CreateRoleInput {
 
 export interface UpdateRoleInput {
   name?: string;
-  description?: string;
+  description?: string | null;
   permissions?: string[];
 }
 
@@ -34,12 +34,21 @@ async function verifyAdminStatus(client: SupabaseClient, tenantId: string) {
     throw new Error("Unauthorized");
   }
 
+  const appMetadata = user.app_metadata || {};
+  const isPlatformAdmin =
+    appMetadata.role === "system_admin" ||
+    (Array.isArray(appMetadata.roles) && appMetadata.roles.includes("system_admin"));
+
+  if (isPlatformAdmin) {
+    return;
+  }
+
   const { data, error } = await client
     .from("organization_memberships")
     .select("role")
     .eq("tenant_id", tenantId)
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
 
   if (error || !data) {
     throw new Error("Unauthorized: Could not verify permissions.");
@@ -61,6 +70,8 @@ export async function getRoles(): Promise<OrganizationRole[]> {
   if (!client) {
     throw new Error("Could not initialize Supabase client.");
   }
+
+  await verifyAdminStatus(client, tenant.id);
 
   const { data, error } = await client
     .from("organization_roles")
@@ -149,10 +160,14 @@ export async function updateRole(roleId: string, data: UpdateRoleInput): Promise
     .eq("id", roleId)
     .eq("tenant_id", tenant.id)
     .select()
-    .single();
+    .maybeSingle();
 
   if (error) {
     throw new Error(`Failed to update role: ${error.message}`);
+  }
+
+  if (!updatedRole) {
+    throw new Error(`Role not found or you do not have permission to update it.`);
   }
 
   revalidatePath(`/${tenant.slug}/settings/roles`);
@@ -174,17 +189,23 @@ export async function deleteRole(roleId: string): Promise<void> {
   await verifyAdminStatus(client, tenant.id);
 
   try {
-    const { error } = await client
+    const { data: deletedRole, error } = await client
       .from("organization_roles")
       .delete()
       .eq("id", roleId)
-      .eq("tenant_id", tenant.id);
+      .eq("tenant_id", tenant.id)
+      .select("id")
+      .maybeSingle();
 
     if (error) {
       if (error.code === "23503") { // PostgreSQL foreign_key_violation code
         throw new Error("Cannot delete role: There are still members assigned to this role.");
       }
       throw error;
+    }
+
+    if (!deletedRole) {
+      throw new Error("Role not found or you do not have permission to delete it.");
     }
   } catch (error: unknown) {
     if (error instanceof Error) {

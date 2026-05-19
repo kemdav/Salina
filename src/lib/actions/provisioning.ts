@@ -102,7 +102,6 @@ function isPostgrestError(error: unknown): error is PostgrestError {
 }
 
 function getProvisioningErrorMessage(error: unknown): string {
-  console.error("PROVISIONING ERROR:", error);
   if (isPostgrestError(error) && error.code === "23505") {
     const detail = `${error.message} ${error.details ?? ""}`.toLowerCase();
 
