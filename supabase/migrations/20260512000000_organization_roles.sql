@@ -3,7 +3,7 @@ create table public.organization_roles (
   tenant_id uuid not null references public.organizations(id) on delete cascade,
   name text not null,
   description text,
-  permissions jsonb default '[]'::jsonb check (jsonb_typeof(permissions) = 'array'),
+  permissions jsonb not null default '[]'::jsonb check (jsonb_typeof(permissions) = 'array'),
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now()),
   unique (tenant_id, name),
@@ -50,8 +50,7 @@ create policy organization_roles_tenant_isolation_select
   for select
   to authenticated
   using (
-    public.has_tenant_access(tenant_id) and 
-    public.is_tenant_admin(tenant_id)
+    public.has_tenant_access(tenant_id)
   );
 
 create policy organization_roles_tenant_isolation_insert

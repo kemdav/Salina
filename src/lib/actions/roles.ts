@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { resolveCurrentTenant } from "@/lib/supabase/server";
 import { createUserClient } from "@/lib/supabase/user-server";
-import { SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export interface OrganizationRole {
   id: string;
@@ -204,7 +204,10 @@ export async function deleteRole(roleId: string): Promise<void> {
       if (error.code === "23503") { // PostgreSQL foreign_key_violation code
         throw new Error("Cannot delete role: There are still members assigned to this role.");
       }
-      throw error;
+       const errorMessage = error.code
+         ? `${error.message} (code: ${error.code})`
+         : error.message;
+       throw new Error(errorMessage);
     }
 
     if (!deletedRole) {
