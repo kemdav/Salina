@@ -14,7 +14,7 @@ alter table public.organization_memberships
 add column role_id uuid,
 add constraint fk_org_memberships_role
   foreign key (tenant_id, role_id)
-  references public.organization_roles(tenant_id, id) on delete cascade;
+  references public.organization_roles(tenant_id, id) on delete restrict;
 
 create index organization_memberships_role_id_idx on public.organization_memberships (role_id);
 
