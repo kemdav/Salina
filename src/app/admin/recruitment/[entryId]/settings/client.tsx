@@ -1,6 +1,6 @@
 "use client";
 
-import { useOptimistic, useState, startTransition } from "react";
+import { useState } from "react";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
@@ -60,6 +60,7 @@ export function RecruitmentSettingsEditor({
       await updateRecruitmentSettings(entryId, { stages });
       alert("Settings saved successfully.");
     } catch (err) {
+      console.error(err);
       alert("Failed to save settings.");
     } finally {
       setIsSaving(false);

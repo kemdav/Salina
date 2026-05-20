@@ -88,7 +88,7 @@ export async function updateRecruitmentEntry(rawInput: unknown) {
   return data;
 }
 
-export async function updateRecruitmentSettings(entryId: string, settings: any) {
+export async function updateRecruitmentSettings(entryId: string, settings: Record<string, unknown>) {
   const { tenant } = await resolveCurrentTenant();
   const viewer = await getCurrentViewer();
   const userClient = await createSupabaseUserClient();
