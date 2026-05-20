@@ -1,7 +1,7 @@
 import { resolveCurrentTenant, getCurrentViewer, createSupabaseUserClient } from "@/lib/supabase/server";
 import { canManageTemporaryApplicants } from "@/lib/organization-permissions";
 import { redirect } from "next/navigation";
-import { ApplicationBoard } from "@/components/organisms/application-board";
+import { ApplicationBoard, BoardStage } from "@/components/organisms/application-board";
 import { AuthenticatedShell } from "@/components/templates/authenticated-shell";
 import { OFFICER_TENANT_BRANDING } from "@/lib/officer-demo-data";
 
@@ -54,7 +54,7 @@ export default async function OfficerRecruitmentEntryPage({
   // Render within Officer Shell
   return (
     <AuthenticatedShell role="Officer" tenantBranding={OFFICER_TENANT_BRANDING}>
-      <ApplicationBoard entryTitle={entry.title} applicants={applicants} stages={(entry.settings as { stages?: unknown[] })?.stages || []} />
+      <ApplicationBoard entryTitle={entry.title} applicants={applicants} stages={(entry.settings as { stages?: BoardStage[] })?.stages || []} />
     </AuthenticatedShell>
   );
 }

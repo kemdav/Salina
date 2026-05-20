@@ -5,7 +5,7 @@ import {
 } from "@/lib/supabase/server";
 import { canManageTemporaryApplicants } from "@/lib/organization-permissions";
 import { redirect } from "next/navigation";
-import { ApplicationBoard } from "@/components/organisms/application-board";
+import { ApplicationBoard, BoardStage } from "@/components/organisms/application-board";
 
 export default async function RecruitmentEntryPage({
   params,
@@ -60,5 +60,5 @@ export default async function RecruitmentEntryPage({
     stage: (a.application_data as { stage?: string })?.stage || "application",
   }));
 
-  return <ApplicationBoard entryTitle={entry.title} applicants={applicants} stages={(entry.settings as { stages?: unknown[] })?.stages || []} />;
+  return <ApplicationBoard entryTitle={entry.title} applicants={applicants} stages={(entry.settings as { stages?: BoardStage[] })?.stages || []} />;
 }
