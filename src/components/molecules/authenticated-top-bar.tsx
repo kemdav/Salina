@@ -8,7 +8,7 @@ import {
   superAdminNotifications,
   adminNotifications,
   officerNotifications,
-  memberNotifications
+  memberNotifications,
 } from "@/lib/notification-data";
 
 export interface AuthenticatedTenantBranding {
@@ -37,7 +37,10 @@ function getInitials(name: string) {
   );
 }
 
-export function AuthenticatedTopBar({ role, isTemporaryApplicant = false, tenantBranding,
+export function AuthenticatedTopBar({
+  role,
+  isTemporaryApplicant = false,
+  tenantBranding,
   userName = "Jane Doe",
 }: AuthenticatedTopBarProps) {
   const pathname = usePathname() || "";
@@ -46,7 +49,8 @@ export function AuthenticatedTopBar({ role, isTemporaryApplicant = false, tenant
   const lastSegment = segments[segments.length - 1] || "dashboard";
   const workspaceName = tenantBranding?.name ?? "Workspace";
   const workspaceLogo = tenantBranding?.logoUrl || tenantBranding?.logo;
-  const workspaceInitial = workspaceName.trim().slice(0, 1).toUpperCase() || "W";
+  const workspaceInitial =
+    workspaceName.trim().slice(0, 1).toUpperCase() || "W";
   const userInitials = getInitials(userName);
 
   const ROUTE_TITLES: Record<string, string> = {
@@ -69,17 +73,21 @@ export function AuthenticatedTopBar({ role, isTemporaryApplicant = false, tenant
     roleSegment === "officer" && lastSegment === "members"
       ? "Roster"
       : ROUTE_TITLES[lastSegment] ||
-      lastSegment
-        .split("-")
-        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-        .join(" ");
+        lastSegment
+          .split("-")
+          .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+          .join(" ");
 
   return (
     <header className="sticky top-0 z-30 flex h-20 shrink-0 items-center justify-between gap-4 border-b border-slate-200 bg-white/95 px-6 shadow-sm backdrop-blur sm:px-8">
       <div className="flex min-w-0 items-center gap-4">
         <div
           className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm"
-          style={tenantBranding ? { backgroundColor: tenantBranding.primaryColor } : undefined}
+          style={
+            tenantBranding
+              ? { backgroundColor: tenantBranding.primaryColor }
+              : undefined
+          }
         >
           {workspaceLogo ? (
             <div
@@ -124,10 +132,13 @@ export function AuthenticatedTopBar({ role, isTemporaryApplicant = false, tenant
       <div className="flex items-center gap-3">
         <NotificationBell
           initialNotifications={
-            role === "SuperAdmin" ? superAdminNotifications :
-              role === "Admin" ? adminNotifications :
-                role === "Officer" ? officerNotifications :
-                  memberNotifications
+            role === "SuperAdmin"
+              ? superAdminNotifications
+              : role === "Admin"
+                ? adminNotifications
+                : role === "Officer"
+                  ? officerNotifications
+                  : memberNotifications
           }
         />
 
@@ -136,13 +147,15 @@ export function AuthenticatedTopBar({ role, isTemporaryApplicant = false, tenant
           className="flex items-center gap-3 rounded-full border border-slate-200 bg-white px-2 py-1.5 text-left shadow-sm transition-colors hover:bg-slate-50"
           aria-label={`User menu for ${userName}`}
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
             {userInitials}
-          </div>
-          <div className="hidden pr-1 sm:block">
-            <p className="text-sm font-semibold text-slate-800">{userName}</p>
-            <p className="text-xs text-slate-500">{role}</p>
-          </div>
+          </span>
+          <span className="hidden pr-1 sm:block">
+            <span className="block text-sm font-semibold text-slate-800">
+              {userName}
+            </span>
+            <span className="block text-xs text-slate-500">{role}</span>
+          </span>
         </button>
       </div>
     </header>

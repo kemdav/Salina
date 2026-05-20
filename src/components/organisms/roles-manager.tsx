@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useOptimistic } from "react";
+import { useState, useOptimistic, useTransition } from "react";
 import { Button } from "@/components/atoms/button";
 import { AVAILABLE_PERMISSIONS } from "@/lib/organization-permissions";
 import {
@@ -16,6 +16,7 @@ export function RolesManager({
   initialRoles: OrganizationRole[];
 }) {
   const [isPending, setIsPending] = useState(false);
+  const [, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
   const [optimisticRoles, setOptimisticRoles] = useOptimistic(
@@ -90,33 +91,35 @@ export function RolesManager({
 
     try {
       if (editingRole) {
-        // We use non-transition optimistic update, or just rely on server state.
-        // Actually, without useTransition, we update state locally and await DB.
-        setOptimisticRoles({
-          type: "update",
-          role: { id: editingRole.id, ...payload },
+        startTransition(async () => {
+          setOptimisticRoles({
+            type: "update",
+            role: { id: editingRole.id, ...payload },
+          });
+          await updateRole(editingRole.id, payload);
+          handleCloseForm();
         });
-        await updateRole(editingRole.id, payload);
-        handleCloseForm();
       } else {
         const tempId =
           typeof crypto !== "undefined" && crypto.randomUUID
             ? crypto.randomUUID()
             : Math.random().toString(36).slice(2);
 
-        setOptimisticRoles({
-          type: "add",
-          role: {
-            id: tempId,
-            ...payload,
-            tenant_id: "temp",
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            member_count: 0,
-          },
+        startTransition(async () => {
+          setOptimisticRoles({
+            type: "add",
+            role: {
+              id: tempId,
+              ...payload,
+              tenant_id: "temp",
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              member_count: 0,
+            },
+          });
+          await createRole(payload);
+          handleCloseForm();
         });
-        await createRole(payload);
-        handleCloseForm();
       }
     } catch (err: unknown) {
       if (err instanceof Error) setError(err.message);
@@ -132,8 +135,10 @@ export function RolesManager({
     setError(null);
     setIsPending(true);
     try {
-      setOptimisticRoles({ type: "delete", role: { id } });
-      await deleteRole(id);
+      startTransition(async () => {
+        setOptimisticRoles({ type: "delete", role: { id } });
+        await deleteRole(id);
+      });
     } catch (err: unknown) {
       if (err instanceof Error) setError(err.message);
       else setError("Failed to delete role.");
