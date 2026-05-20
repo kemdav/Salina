@@ -1,5 +1,16 @@
 import type { ViewerContext } from "@/lib/supabase/server";
 
+export const AVAILABLE_PERMISSIONS = [
+  "Dashboard access",
+  "Member roster edits",
+  "Recruitment reviews",
+  "Event management",
+  "Announcement posting",
+  "Settings access",
+] as const;
+
+export type OrganizationPermission = typeof AVAILABLE_PERMISSIONS[number];
+
 type TemporaryApplicantPermissionViewer = Pick<
   ViewerContext,
   "isPlatformAdmin" | "tenantRole"

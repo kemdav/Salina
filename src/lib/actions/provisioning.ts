@@ -116,7 +116,7 @@ function getProvisioningErrorMessage(error: unknown): string {
     return error.message;
   }
 
-  return "Organization provisioning failed.";
+  return `Organization provisioning failed. Error: ${JSON.stringify(error)}`;
 }
 
 async function deleteOrganizationSilently(organizationId: string) {
