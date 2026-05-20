@@ -1,4 +1,8 @@
-import { resolveCurrentTenant, getCurrentViewer, createSupabaseUserClient } from "@/lib/supabase/server";
+import {
+  resolveCurrentTenant,
+  getCurrentViewer,
+  createSupabaseUserClient,
+} from "@/lib/supabase/server";
 import { RecruitmentList } from "@/components/organisms/recruitment-list";
 import { canManageTemporaryApplicants } from "@/lib/organization-permissions";
 import { redirect } from "next/navigation";
@@ -8,7 +12,12 @@ export default async function RecruitmentIndexPage() {
   const viewer = await getCurrentViewer();
   const userClient = await createSupabaseUserClient();
 
-  if (!tenant || !userClient || !viewer || !canManageTemporaryApplicants(viewer)) {
+  if (
+    !tenant ||
+    !userClient ||
+    !viewer ||
+    !canManageTemporaryApplicants(viewer)
+  ) {
     redirect("/admin/dashboard");
   }
 

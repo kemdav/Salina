@@ -16,7 +16,10 @@ export default function ErrorBoundary({
   }, [error]);
 
   return (
-    <div className="flex flex-col items-center justify-center p-12 text-center" style={{ fontFamily: "var(--font-body)" }}>
+    <div
+      className="flex flex-col items-center justify-center p-12 text-center"
+      style={{ fontFamily: "var(--font-body)" }}
+    >
       <div className="mb-6 rounded-full bg-red-100 p-4">
         <svg
           className="h-8 w-8 text-red-600"
@@ -32,9 +35,9 @@ export default function ErrorBoundary({
           />
         </svg>
       </div>
-      <h2 
+      <h2
         className="mb-2 text-2xl font-bold text-foreground"
-        style={{ fontFamily: 'var(--font-heading)' }}
+        style={{ fontFamily: "var(--font-heading)" }}
       >
         Something went wrong
       </h2>
@@ -45,7 +48,10 @@ export default function ErrorBoundary({
         <Button onClick={() => reset()} variant="secondary">
           Try again
         </Button>
-        <Link href="/admin/recruitment" className="inline-flex h-10 items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
+        <Link
+          href="/admin/recruitment"
+          className="inline-flex h-10 items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+        >
           Back to Recruitment
         </Link>
       </div>
