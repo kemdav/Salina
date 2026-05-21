@@ -103,17 +103,18 @@ export function MemberEventsManager({
         <div className="flex items-center gap-3">
           <div className="flex overflow-hidden rounded-xl border border-border bg-white">
             {(["list", "calendar"] as View[]).map((v) => (
-              <button
+              <Button
+                variant="ghost"
                 key={v}
                 onClick={() => setView(v)}
-                className={`px-4 py-2 text-sm font-medium capitalize transition-colors ${
+                className={`px-4 py-2 text-sm font-medium capitalize transition-colors rounded-none ${
                   view === v
                     ? "bg-foreground text-background"
-                    : "text-slate-500 hover:text-foreground"
+                    : "text-slate-500 hover:text-foreground hover:bg-transparent"
                 }`}
               >
                 {v}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -193,23 +194,23 @@ export function MemberEventsManager({
           {view === "calendar" && (
             <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
               <div className="flex items-center justify-between border-b border-border px-6 py-4">
-                <button
-                  type="button"
+                <Button
+                  variant="secondary"
                   onClick={prevMonth}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-slate-500 hover:text-foreground"
+                  className="flex h-8 w-8 items-center justify-center p-0"
                 >
                   ‹
-                </button>
+                </Button>
                 <h2 className="text-base font-bold text-foreground">
                   {MONTH_NAMES[calMonth - 1]} {calYear}
                 </h2>
-                <button
-                  type="button"
+                <Button
+                  variant="secondary"
                   onClick={nextMonth}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-slate-500 hover:text-foreground"
+                  className="flex h-8 w-8 items-center justify-center p-0"
                 >
                   ›
-                </button>
+                </Button>
               </div>
               <div className="grid grid-cols-7 border-b border-border">
                 {DAY_LABELS.map((d) => (
@@ -328,9 +329,10 @@ export function MemberEventsManager({
                   {selectedEvent.title}
                 </h2>
               </div>
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => setSelectedEvent(null)}
-                className="absolute top-4 right-4 p-2 rounded-full hover:bg-black/10 transition-colors z-20"
+                className="absolute top-4 right-4 p-2 h-auto rounded-full hover:bg-black/10 hover:text-primary-foreground transition-colors z-20"
               >
                 <svg
                   className="w-5 h-5"
@@ -345,7 +347,7 @@ export function MemberEventsManager({
                     d="M6 18L18 6M6 6l12 12"
                   />
                 </svg>
-              </button>
+              </Button>
             </div>
             <div className="p-6 space-y-6 overflow-y-auto">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

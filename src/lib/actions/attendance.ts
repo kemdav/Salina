@@ -69,7 +69,7 @@ export async function updateAttendanceStatus(attendanceId: string, rawStatus: un
 
   const status = statusSchema.parse(rawStatus);
 
-  const updatePayload: any = { status };
+  const updatePayload: { status: string; check_in_time?: string | null } = { status };
   if (status === "Verified") {
     updatePayload.check_in_time = new Date().toISOString();
   } else {

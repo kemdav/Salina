@@ -154,17 +154,18 @@ export function EventsManager({
         <div className="flex items-center gap-3">
           <div className="flex overflow-hidden rounded-xl border border-border bg-white">
             {(["list", "calendar"] as View[]).map((v) => (
-              <button
+              <Button
+                variant="ghost"
                 key={v}
                 onClick={() => setView(v)}
-                className={`px-4 py-2 text-sm font-medium capitalize transition-colors ${
+                className={`px-4 py-2 text-sm font-medium capitalize transition-colors rounded-none ${
                   view === v
                     ? "bg-foreground text-background"
-                    : "text-slate-500 hover:text-foreground"
+                    : "text-slate-500 hover:text-foreground hover:bg-transparent"
                 }`}
               >
                 {v}
-              </button>
+              </Button>
             ))}
           </div>
           {canManage && (
@@ -309,23 +310,23 @@ export function EventsManager({
       {view === "calendar" && (
         <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-border px-6 py-4">
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               onClick={prevMonth}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-slate-500 hover:text-foreground"
+              className="flex h-8 w-8 items-center justify-center p-0"
             >
               ‹
-            </button>
+            </Button>
             <h2 className="text-base font-bold text-foreground">
               {MONTH_NAMES[calMonth - 1]} {calYear}
             </h2>
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               onClick={nextMonth}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-slate-500 hover:text-foreground"
+              className="flex h-8 w-8 items-center justify-center p-0"
             >
               ›
-            </button>
+            </Button>
           </div>
           <div className="grid grid-cols-7 border-b border-border">
             {DAY_LABELS.map((d) => (
@@ -360,13 +361,15 @@ export function EventsManager({
                         {day}
                       </p>
                       {dayEvents.map((e) => (
-                        <div
+                        <Button
                           key={e.id}
-                          className="mb-1 truncate rounded bg-primary/10 px-1 text-xs text-primary"
+                          variant="ghost"
+                          onClick={() => setSelectedEvent(e)}
+                          className="mb-1 w-full truncate rounded bg-primary/10 px-1 text-left text-xs text-primary hover:bg-primary/20 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/40 h-auto py-0.5 justify-start block"
                           title={e.title}
                         >
                           {e.title}
-                        </div>
+                        </Button>
                       ))}
                     </>
                   )}
@@ -396,22 +399,29 @@ export function EventsManager({
               <Button
                 variant="secondary"
                 onClick={() => {
+                  const escapeCSV = (str: string | null | undefined) => {
+                    if (!str) return '""';
+                    const escaped = str.replace(/"/g, '""');
+                    const sanitized = escaped.match(/^[=+\-@\t\r]/) ? "'" + escaped : escaped;
+                    return `"${sanitized}"`;
+                  };
                   const csv = [
-                    ["Member", "Status", "Check-in Time"],
+                    ["Member", "Status", "Check-in Time"].map(escapeCSV),
                     ...attendanceRecords.map((r) => [
                       r.member,
                       r.status,
                       r.checkIn,
-                    ]),
+                    ].map(escapeCSV)),
                   ]
                     .map((e) => e.join(","))
-                    .join("\\n");
+                    .join("\n");
                   const blob = new Blob([csv], { type: "text/csv" });
                   const url = window.URL.createObjectURL(blob);
                   const a = document.createElement("a");
                   a.href = url;
                   a.download = `attendance-${selectedEvent.id}.csv`;
                   a.click();
+                  setTimeout(() => window.URL.revokeObjectURL(url), 100);
                 }}
               >
                 Export CSV
