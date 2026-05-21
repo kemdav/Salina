@@ -39,9 +39,9 @@ export async function createEvent(rawInput: unknown) {
 
   if (error) throw new Error(error.message);
 
-  revalidatePath(`/${tenant.slug}/admin/events`);
-  revalidatePath(`/${tenant.slug}/officer/events`);
-  revalidatePath(`/${tenant.slug}/member/events`);
+  revalidatePath(`/admin/events`);
+  revalidatePath(`/officer/events`);
+  revalidatePath(`/member/events`);
   return data;
 }
 
@@ -62,9 +62,9 @@ export async function deleteEvent(eventId: string) {
 
   if (error) throw new Error(error.message);
 
-  revalidatePath(`/${tenant.slug}/admin/events`);
-  revalidatePath(`/${tenant.slug}/officer/events`);
-  revalidatePath(`/${tenant.slug}/member/events`);
+  revalidatePath(`/admin/events`);
+  revalidatePath(`/officer/events`);
+  revalidatePath(`/member/events`);
   return true;
 }
 

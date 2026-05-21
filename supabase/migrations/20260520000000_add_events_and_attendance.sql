@@ -7,19 +7,21 @@ create table public.events (
   start_time timestamptz not null,
   end_time timestamptz not null,
   created_at timestamptz not null default timezone('utc', now()),
-  updated_at timestamptz not null default timezone('utc', now())
+  updated_at timestamptz not null default timezone('utc', now()),
+   unique (id, tenant_id)
 );
 
 create table public.event_attendees (
   id uuid primary key default extensions.gen_random_uuid(),
   tenant_id uuid not null references public.organizations(id) on delete cascade,
-  event_id uuid not null references public.events(id) on delete cascade,
+  event_id uuid not null,
   member_id uuid not null references public.organization_memberships(id) on delete cascade,
   status text not null default 'Pending' check (status in ('Pending', 'Verified', 'Flagged', 'Rejected')),
   check_in_time timestamptz,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now()),
-  unique (event_id, member_id)
+   unique (event_id, member_id),
+   foreign key (event_id, tenant_id) references public.events(id, tenant_id) on delete cascade
 );
 
 create index events_tenant_id_idx on public.events (tenant_id);
@@ -123,7 +125,11 @@ create policy event_attendees_isolation_insert
   for insert
   to authenticated
   with check (
-    public.has_tenant_access(tenant_id) and (
+    public.has_tenant_access(tenant_id) and
+    exists (
+      select 1 from public.events
+      where id = event_attendees.event_id and tenant_id = event_attendees.tenant_id
+    ) and (
       public.is_event_manager(tenant_id) or
       exists (
         select 1 from public.organization_memberships

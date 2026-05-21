@@ -37,6 +37,17 @@ export async function participateInEvent(eventId: string) {
     throw new Error("You have already RSVP'd to this event.");
   }
 
+  const { data: eventTarget, error: eventError } = await userClient
+    .from("events")
+    .select("id")
+    .eq("id", eventId)
+    .eq("tenant_id", tenant.id)
+    .single();
+
+  if (eventError || !eventTarget) {
+    throw new Error("Event not found or does not belong to your organization.");
+  }
+
   const { data, error } = await userClient
     .from("event_attendees")
     .insert({

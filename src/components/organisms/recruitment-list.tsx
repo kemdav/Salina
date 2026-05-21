@@ -220,7 +220,7 @@ export function RecruitmentList({
               )}
               <Link
                 href={`/${isOfficer ? "officer" : "admin"}/recruitment/${entry.id}`}
-                className="flex flex-[2] items-center justify-center rounded-lg bg-primary py-2 text-sm font-semibold text-white transition hover:bg-primary-hover"
+                className="flex flex-2 items-center justify-center rounded-lg bg-primary py-2 text-sm font-semibold text-white transition hover:bg-primary-hover"
               >
                 View Pipeline
               </Link>

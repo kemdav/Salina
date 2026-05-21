@@ -77,12 +77,17 @@ select results_eq(
 
 set local "request.jwt.claims" = '{"role":"authenticated","sub":"81000000-0000-0000-0000-000000000015","app_metadata":{"tenant_id":"81000000-0000-0000-0000-000000000001"}}';
 
-select lives_ok(
+select results_eq(
   $$
-    update public.events
-    set title = 'Officer Updated Event'
-    where id = '81000000-0000-0000-0000-000000000041'
+    with touched as (
+      update public.events
+      set title = 'Officer Updated Event'
+      where id = '81000000-0000-0000-0000-000000000041'
+      returning id
+    )
+    select count(*)::bigint from touched
   $$,
+  array[1::bigint],
   'officer can update own tenant events'
 );
 
