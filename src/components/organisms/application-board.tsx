@@ -61,7 +61,7 @@ export function ApplicationBoard({
     });
     try {
       await updateApplicantStage(applicantId, newStage);
-    } catch (e) {
+    } catch {
       alert("Failed to move stage.");
     }
   }
@@ -75,7 +75,7 @@ export function ApplicationBoard({
     });
     try {
       await updateApplicantDecision(applicantId, status);
-    } catch (e) {
+    } catch {
       alert("Failed to log decision.");
     }
   }

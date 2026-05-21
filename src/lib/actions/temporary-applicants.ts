@@ -75,7 +75,7 @@ function getCurrentUserMetadata(user: {
     : {};
 }
 
-async function getAuthorizedTenantContext() {
+export async function getAuthorizedTenantContext() {
   const viewer = await getCurrentViewer();
   const tenantContext = await resolveCurrentTenant();
 

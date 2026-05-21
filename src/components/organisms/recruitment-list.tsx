@@ -73,7 +73,7 @@ export function RecruitmentList({ entries }: { entries: RecruitmentEntry[] }) {
     try {
       // Call server
       await createRecruitmentEntry({ title, description, status: "draft" });
-    } catch (e) {
+    } catch {
       alert("Failed to create entry.");
     }
   }
@@ -90,7 +90,7 @@ export function RecruitmentList({ entries }: { entries: RecruitmentEntry[] }) {
     });
     try {
       await updateRecruitmentEntry({ id: entry.id, status: newStatus });
-    } catch (e) {
+    } catch {
       alert("Failed to update status.");
     }
   }

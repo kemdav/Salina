@@ -51,6 +51,7 @@ export function DigitalIdCard({ tenant, user }: DigitalIdCardProps) {
                     <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/png, image/jpeg, image/webp" className="hidden" />
                     <div className="w-28 h-28 rounded-full border-4 border-white bg-slate-100 flex items-center justify-center overflow-hidden shadow-xl">
                         {avatarPreview ? (
+                            /* eslint-disable-next-line @next/next/no-img-element */
                             <img src={avatarPreview} alt={user.name} className="w-full h-full object-cover" />
                         ) : (
                             <svg className="w-20 h-20 text-slate-300 mt-6" viewBox="0 0 24 24" fill="currentColor">

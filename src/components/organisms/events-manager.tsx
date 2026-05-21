@@ -62,6 +62,7 @@ export function EventsManager({
 
   useEffect(() => {
     if (selectedEvent) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       loadAttendance(selectedEvent.id);
     }
   }, [selectedEvent]);

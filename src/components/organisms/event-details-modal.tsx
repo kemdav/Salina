@@ -42,7 +42,7 @@ export function EventDetailsModal({
   return (
     <div
       className={cn(
-        "fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 transition-all duration-300",
+        "fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6 transition-all duration-300",
         isOpen
           ? "opacity-100 visible"
           : "opacity-0 invisible pointer-events-none",
