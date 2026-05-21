@@ -21,17 +21,24 @@ interface OrgEvent {
 
 export function EventsManager({
   initialEvents,
-  tenantSlug,
   canManage,
 }: {
   initialEvents: OrgEvent[];
-  tenantSlug: string;
   canManage: boolean;
 }) {
   const [view, setView] = useState<View>("list");
   const [events, setEvents] = useState<OrgEvent[]>(initialEvents);
   const [selectedEvent, setSelectedEvent] = useState<OrgEvent | null>(null);
-  const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
+  const [attendanceRecords, setAttendanceRecords] = useState<
+    {
+      id: string;
+      status: string;
+      checkIn: string;
+      member: string;
+      memberId: string;
+      eventId: string;
+    }[]
+  >([]);
 
   const now = new Date();
   const [calYear, setCalYear] = useState(now.getFullYear());
@@ -71,8 +78,8 @@ export function EventsManager({
       setIsCreating(false);
       const updated = await getEvents();
       setEvents(updated);
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
     }
   }
 
@@ -83,8 +90,8 @@ export function EventsManager({
       const updated = await getEvents();
       setEvents(updated);
       if (selectedEvent?.id === id) setSelectedEvent(null);
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
     }
   }
 
@@ -92,8 +99,8 @@ export function EventsManager({
     try {
       await updateAttendanceStatus(recordId, status);
       if (selectedEvent) loadAttendance(selectedEvent.id);
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
     }
   }
 

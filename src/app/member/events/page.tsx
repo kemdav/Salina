@@ -27,7 +27,7 @@ export default async function MemberEventsPage() {
     .eq("user_id", viewer.id)
     .single();
 
-  let initialAttendance: any[] = [];
+  let initialAttendance: { event_id: string; status: string }[] = [];
   if (membership) {
     const { data: att } = await userClient
       .from("event_attendees")

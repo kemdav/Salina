@@ -40,6 +40,7 @@ export async function participateInEvent(eventId: string) {
   const { data, error } = await userClient
     .from("event_attendees")
     .insert({
+      tenant_id: tenant.id,
       event_id: eventId,
       member_id: membership.id,
       status: "Pending",
@@ -49,9 +50,9 @@ export async function participateInEvent(eventId: string) {
 
   if (error) throw new Error(error.message);
 
-  revalidatePath(`/${tenant.slug}/admin/events`);
-  revalidatePath(`/${tenant.slug}/officer/events`);
-  revalidatePath(`/${tenant.slug}/member/events`);
+  revalidatePath(`/admin/events`);
+  revalidatePath(`/officer/events`);
+  revalidatePath(`/member/events`);
   return data;
 }
 
@@ -68,18 +69,25 @@ export async function updateAttendanceStatus(attendanceId: string, rawStatus: un
 
   const status = statusSchema.parse(rawStatus);
 
+  const updatePayload: any = { status };
+  if (status === "Verified") {
+    updatePayload.check_in_time = new Date().toISOString();
+  } else {
+    updatePayload.check_in_time = null;
+  }
+
   const { data, error } = await userClient
     .from("event_attendees")
-    .update({ status })
+    .update(updatePayload)
     .eq("id", attendanceId)
     .select()
     .single();
 
   if (error) throw new Error(error.message);
 
-  revalidatePath(`/${tenant.slug}/admin/events`);
-  revalidatePath(`/${tenant.slug}/officer/events`);
-  revalidatePath(`/${tenant.slug}/member/events`);
+  revalidatePath(`/admin/events`);
+  revalidatePath(`/officer/events`);
+  revalidatePath(`/member/events`);
   return data;
 }
 
@@ -110,8 +118,17 @@ export async function getAttendanceRecords(eventId: string) {
   if (error) throw new Error(error.message);
 
   const records = await Promise.all(
-    data.map(async (record: any) => {
-      const userId = record.organization_memberships.user_id;
+    (data as unknown as {
+      id: string;
+      status: string;
+      check_in_time: string;
+      member_id: string;
+      organization_memberships: { id: string; user_id: string | null } | { id: string; user_id: string | null }[];
+    }[]).map(async (record) => {
+      const membership = Array.isArray(record.organization_memberships) 
+        ? record.organization_memberships[0] 
+        : record.organization_memberships;
+      const userId = membership?.user_id;
       let name = "Unknown Member";
       if (userId) {
         const { data: userData } = await adminClient.auth.admin.getUserById(userId);
@@ -122,7 +139,7 @@ export async function getAttendanceRecords(eventId: string) {
       return {
         id: record.id,
         status: record.status,
-        checkIn: new Date(record.check_in_time).toLocaleString(),
+        checkIn: record.check_in_time,
         member: name,
         memberId: record.member_id,
         eventId: eventId,

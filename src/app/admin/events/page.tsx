@@ -7,7 +7,7 @@ import { notFound } from "next/navigation";
 export default async function AdminEventsPage() {
   const { tenant } = await resolveCurrentTenant();
   const viewer = await getCurrentViewer();
-  
+
   if (!tenant || !viewer) {
     notFound();
   }
@@ -17,7 +17,7 @@ export default async function AdminEventsPage() {
 
   return (
     <div className="w-full max-w-6xl mx-auto py-8">
-      <EventsManager initialEvents={events} tenantSlug={tenant.slug} canManage={canManage} />
+      <EventsManager initialEvents={events} canManage={canManage} />
     </div>
   );
 }

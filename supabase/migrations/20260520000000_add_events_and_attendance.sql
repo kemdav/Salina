@@ -12,16 +12,18 @@ create table public.events (
 
 create table public.event_attendees (
   id uuid primary key default extensions.gen_random_uuid(),
+  tenant_id uuid not null references public.organizations(id) on delete cascade,
   event_id uuid not null references public.events(id) on delete cascade,
   member_id uuid not null references public.organization_memberships(id) on delete cascade,
   status text not null default 'Pending' check (status in ('Pending', 'Verified', 'Flagged', 'Rejected')),
-  check_in_time timestamptz not null default timezone('utc', now()),
+  check_in_time timestamptz,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now()),
   unique (event_id, member_id)
 );
 
 create index events_tenant_id_idx on public.events (tenant_id);
+create index event_attendees_tenant_id_idx on public.event_attendees (tenant_id);
 create index event_attendees_event_id_idx on public.event_attendees (event_id);
 create index event_attendees_member_id_idx on public.event_attendees (member_id);
 
@@ -40,8 +42,28 @@ before insert or update on public.events
 for each row
 execute function public.enforce_tenant_scope();
 
+create trigger enforce_event_attendees_tenant_scope
+before insert or update on public.event_attendees
+for each row
+execute function public.enforce_tenant_scope();
+
 alter table public.events enable row level security;
 alter table public.event_attendees enable row level security;
+
+create or replace function public.is_event_manager(p_tenant_id uuid)
+returns boolean
+language sql
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.organization_memberships
+    where tenant_id = p_tenant_id
+      and user_id = auth.uid()
+      and role in ('admin', 'owner', 'system_admin', 'officer')
+  ) or public.is_platform_admin();
+$$;
 
 -- Policies for events
 create policy events_tenant_isolation_select
@@ -56,7 +78,7 @@ create policy events_tenant_isolation_insert
   to authenticated
   with check (
     public.has_tenant_access(tenant_id) and
-    public.is_tenant_admin(tenant_id)
+    public.is_event_manager(tenant_id)
   );
 
 create policy events_tenant_isolation_update
@@ -65,11 +87,11 @@ create policy events_tenant_isolation_update
   to authenticated
   using (
     public.has_tenant_access(tenant_id) and
-    public.is_tenant_admin(tenant_id)
+    public.is_event_manager(tenant_id)
   )
   with check (
     public.has_tenant_access(tenant_id) and
-    public.is_tenant_admin(tenant_id)
+    public.is_event_manager(tenant_id)
   );
 
 create policy events_tenant_isolation_delete
@@ -78,7 +100,7 @@ create policy events_tenant_isolation_delete
   to authenticated
   using (
     public.has_tenant_access(tenant_id) and
-    public.is_tenant_admin(tenant_id)
+    public.is_event_manager(tenant_id)
   );
 
 -- Policies for event_attendees
@@ -87,10 +109,12 @@ create policy event_attendees_isolation_select
   for select
   to authenticated
   using (
-    exists (
-      select 1 from public.events
-      where events.id = event_attendees.event_id
-      and public.has_tenant_access(events.tenant_id)
+    public.has_tenant_access(tenant_id) and (
+      public.is_event_manager(tenant_id) or
+      exists (
+        select 1 from public.organization_memberships
+        where id = event_attendees.member_id and user_id = auth.uid()
+      )
     )
   );
 
@@ -99,10 +123,12 @@ create policy event_attendees_isolation_insert
   for insert
   to authenticated
   with check (
-    exists (
-      select 1 from public.events
-      where events.id = event_attendees.event_id
-      and public.has_tenant_access(events.tenant_id)
+    public.has_tenant_access(tenant_id) and (
+      public.is_event_manager(tenant_id) or
+      exists (
+        select 1 from public.organization_memberships
+        where id = event_attendees.member_id and user_id = auth.uid()
+      )
     )
   );
 
@@ -111,20 +137,10 @@ create policy event_attendees_isolation_update
   for update
   to authenticated
   using (
-    exists (
-      select 1 from public.events
-      where events.id = event_attendees.event_id
-      and public.has_tenant_access(events.tenant_id)
-      and public.is_tenant_admin(events.tenant_id)
-    )
+    public.has_tenant_access(tenant_id) and public.is_event_manager(tenant_id)
   )
   with check (
-    exists (
-      select 1 from public.events
-      where events.id = event_attendees.event_id
-      and public.has_tenant_access(events.tenant_id)
-      and public.is_tenant_admin(events.tenant_id)
-    )
+    public.has_tenant_access(tenant_id) and public.is_event_manager(tenant_id)
   );
 
 create policy event_attendees_isolation_delete
@@ -132,12 +148,7 @@ create policy event_attendees_isolation_delete
   for delete
   to authenticated
   using (
-    exists (
-      select 1 from public.events
-      where events.id = event_attendees.event_id
-      and public.has_tenant_access(events.tenant_id)
-      and public.is_tenant_admin(events.tenant_id)
-    )
+    public.has_tenant_access(tenant_id) and public.is_event_manager(tenant_id)
   );
 
 grant select, insert, update, delete on public.events to authenticated, service_role;

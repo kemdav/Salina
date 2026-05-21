@@ -46,11 +46,7 @@ export default async function OfficerEventsPage() {
       }}
     >
       <div className="w-full max-w-6xl mx-auto py-8 animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
-        <EventsManager
-          initialEvents={events}
-          tenantSlug={tenant.slug}
-          canManage={canManage}
-        />
+        <EventsManager initialEvents={events} canManage={canManage} />
       </div>
     </AuthenticatedShell>
   );
