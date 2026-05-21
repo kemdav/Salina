@@ -1,13 +1,11 @@
-import {
-  resolveCurrentTenant,
-  getCurrentViewer,
-  createSupabaseUserClient,
-} from "@/lib/supabase/server";
+import { resolveCurrentTenant, getCurrentViewer, createSupabaseUserClient } from "@/lib/supabase/server";
 import { canManageTemporaryApplicants } from "@/lib/organization-permissions";
 import { redirect } from "next/navigation";
 import { ApplicationBoard, BoardStage } from "@/components/organisms/application-board";
+import { AuthenticatedShell } from "@/components/templates/authenticated-shell";
+import { OFFICER_TENANT_BRANDING } from "@/lib/officer-demo-data";
 
-export default async function RecruitmentEntryPage({
+export default async function OfficerRecruitmentEntryPage({
   params,
 }: {
   params: Promise<{ entryId: string }>;
@@ -17,16 +15,10 @@ export default async function RecruitmentEntryPage({
   const viewer = await getCurrentViewer();
   const userClient = await createSupabaseUserClient();
 
-  if (
-    !tenant ||
-    !userClient ||
-    !viewer ||
-    !canManageTemporaryApplicants(viewer)
-  ) {
-    redirect("/admin/dashboard");
+  if (!tenant || !userClient || !viewer || !canManageTemporaryApplicants(viewer)) {
+    redirect("/officer/recruitment");
   }
 
-  // Double check entry exists
   const { data: entry, error: entryErr } = await userClient
     .from("recruitment_entries")
     .select("title, settings")
@@ -35,10 +27,9 @@ export default async function RecruitmentEntryPage({
     .single();
 
   if (entryErr || !entry) {
-    redirect("/admin/recruitment");
+    redirect("/officer/recruitment");
   }
 
-  // Retrieve temporary_applicants with this entry
   const { data: applicantsRaw, error: applicantsErr } = await userClient
     .from("temporary_applicants")
     .select(
@@ -60,5 +51,10 @@ export default async function RecruitmentEntryPage({
     stage: (a.application_data as { stage?: string })?.stage || "application",
   }));
 
-  return <ApplicationBoard entryTitle={entry.title} applicants={applicants} stages={(entry.settings as { stages?: BoardStage[] })?.stages || []} />;
+  // Render within Officer Shell
+  return (
+    <AuthenticatedShell role="Officer" tenantBranding={OFFICER_TENANT_BRANDING}>
+      <ApplicationBoard entryTitle={entry.title} applicants={applicants} stages={(entry.settings as { stages?: BoardStage[] })?.stages || []} />
+    </AuthenticatedShell>
+  );
 }

@@ -1,14 +1,17 @@
 "use client";
 
 import { useOptimistic, useState, startTransition } from "react";
+import type { FormEvent } from "react";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
+import { CreateRecruitmentCycleModal } from "@/components/organisms/create-recruitment-cycle-modal";
 import {
   createRecruitmentEntry,
   updateRecruitmentEntry,
 } from "@/lib/actions/recruitment";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 type RecruitmentEntry = {
   id: string;
@@ -18,7 +21,13 @@ type RecruitmentEntry = {
   created_at: string;
 };
 
-export function RecruitmentList({ entries }: { entries: RecruitmentEntry[] }) {
+export function RecruitmentList({
+  entries,
+  isOfficer = false,
+}: {
+  entries: RecruitmentEntry[];
+  isOfficer?: boolean;
+}) {
   const [optimisticEntries, dispatchOptimistic] = useOptimistic(
     entries,
     (state, action: { type: "add" | "update"; payload: RecruitmentEntry }) => {
@@ -34,7 +43,8 @@ export function RecruitmentList({ entries }: { entries: RecruitmentEntry[] }) {
     },
   );
 
-  const [isCreating, setIsCreating] = useState(false);
+  const router = useRouter();
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -49,30 +59,28 @@ export function RecruitmentList({ entries }: { entries: RecruitmentEntry[] }) {
     return matchesSearch && matchesStatus;
   });
 
-  async function handleCreate(formData: FormData) {
+  async function handleCreate(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const title = formData.get("title") as string;
     const description = (formData.get("description") ?? "").toString();
 
     if (!title) return;
 
-    const newEntry = {
-      id: crypto.randomUUID(),
-      title,
-      description,
-      status: "draft",
-      created_at: new Date().toISOString(),
-    };
-
-    // Optimistically add
-    startTransition(() => {
-      dispatchOptimistic({ type: "add", payload: newEntry });
-    });
-
-    setIsCreating(false);
+    setIsCreateOpen(false);
+    form.reset();
 
     try {
-      // Call server
-      await createRecruitmentEntry({ title, description, status: "draft" });
+      const created = await createRecruitmentEntry({
+        title,
+        description,
+        status: "draft",
+      });
+      startTransition(() => {
+        dispatchOptimistic({ type: "add", payload: created });
+      });
+      router.refresh();
     } catch {
       alert("Failed to create entry.");
     }
@@ -100,6 +108,13 @@ export function RecruitmentList({ entries }: { entries: RecruitmentEntry[] }) {
       className="mx-auto max-w-4xl p-6 sm:p-8"
       style={{ fontFamily: "var(--font-body)" }}
     >
+      {/* <button
+            type="button"
+            onClick={() => alert("Button was clicked!")}
+            className="inline-flex items-center justify-center rounded-(--radius) bg-primary px-4 py-2 text-sm font-medium text-white transition-all hover:bg-primary-hover"
+          >
+            + New Cycle
+          </button> */}
       <div className="mb-6 flex items-center justify-between">
         <h1
           className="text-3xl font-bold tracking-tight text-foreground"
@@ -107,14 +122,15 @@ export function RecruitmentList({ entries }: { entries: RecruitmentEntry[] }) {
         >
           Recruitment Cycles
         </h1>
-        <Button 
-          onClick={() => {
-            console.log("Button clicked!");
-            setIsCreating((prev) => !prev);
-          }}
-        >
-          {isCreating ? "Cancel" : "+ New Cycle"}
-        </Button>
+        {!isOfficer && (
+          <button
+            type="button"
+            onClick={() => setIsCreateOpen(true)}
+            className="inline-flex items-center justify-center rounded-(--radius) bg-primary px-4 py-2 text-sm font-medium text-white transition-all hover:bg-primary-hover"
+          >
+            + New Cycle
+          </button>
+        )}
       </div>
 
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center justify-between">
@@ -143,36 +159,11 @@ export function RecruitmentList({ entries }: { entries: RecruitmentEntry[] }) {
         </div>
       </div>
 
-      {isCreating && (
-        <form
-          action={handleCreate}
-          className="mb-8 rounded-2xl border border-border bg-slate-50 p-6 shadow-sm"
-        >
-          <h2 className="mb-4 text-lg font-semibold">
-            Create New Recruitment Cycle
-          </h2>
-          <div className="mb-4 space-y-4">
-            <div>
-              <Label htmlFor="title">Title</Label>
-              <Input
-                id="title"
-                name="title"
-                required
-                placeholder="e.g. Spring 2026 Hiring"
-              />
-            </div>
-            <div>
-              <Label htmlFor="description">Description</Label>
-              <Input
-                id="description"
-                name="description"
-                placeholder="Brief details about this cycle"
-              />
-            </div>
-          </div>
-          <Button type="submit">Create Cycle</Button>
-        </form>
-      )}
+      <CreateRecruitmentCycleModal
+        open={isCreateOpen && !isOfficer}
+        onClose={() => setIsCreateOpen(false)}
+        onSubmit={handleCreate}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {filteredEntries.map((entry) => (
@@ -183,15 +174,16 @@ export function RecruitmentList({ entries }: { entries: RecruitmentEntry[] }) {
             <div>
               <div className="mb-2 flex items-center justify-between">
                 <select
+                  disabled={isOfficer}
                   value={entry.status}
                   onChange={(e) => handleStatusChange(entry, e.target.value)}
-                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold uppercase cursor-pointer border-none outline-none ${
+                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold uppercase ${!isOfficer && "cursor-pointer"} border-none outline-none ${
                     entry.status === "published"
                       ? "bg-success/10 text-success"
                       : entry.status === "closed"
                         ? "bg-slate-100 text-slate-500"
                         : entry.status === "paused"
-                          ? "bg-purple-100 text-purple-700" 
+                          ? "bg-purple-100 text-purple-700"
                           : "bg-warning/10 text-warning"
                   }`}
                 >
@@ -200,7 +192,10 @@ export function RecruitmentList({ entries }: { entries: RecruitmentEntry[] }) {
                   <option value="paused">Paused</option>
                   <option value="closed">Closed</option>
                 </select>
-                <span className="text-xs text-slate-500">
+                <span
+                  className="text-xs text-slate-500 suppress-hydration-warning"
+                  suppressHydrationWarning
+                >
                   {new Date(entry.created_at).toLocaleDateString()}
                 </span>
               </div>
@@ -214,16 +209,26 @@ export function RecruitmentList({ entries }: { entries: RecruitmentEntry[] }) {
               )}
             </div>
 
-            <Link
-              href={`/admin/recruitment/${entry.id}`}
-              className="mt-4 block w-full rounded-lg bg-slate-100 py-2 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
-            >
-              View Pipeline
-            </Link>
+            <div className="mt-4 flex gap-2">
+              {!isOfficer && (
+                <Link
+                  href={`/admin/recruitment/${entry.id}/settings`}
+                  className="flex flex-1 items-center justify-center rounded-lg bg-slate-100 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
+                >
+                  Settings
+                </Link>
+              )}
+              <Link
+                href={`/${isOfficer ? "officer" : "admin"}/recruitment/${entry.id}`}
+                className="flex flex-[2] items-center justify-center rounded-lg bg-primary py-2 text-sm font-semibold text-white transition hover:bg-primary-hover"
+              >
+                View Pipeline
+              </Link>
+            </div>
           </div>
         ))}
 
-        {filteredEntries.length === 0 && !isCreating && (
+        {filteredEntries.length === 0 && (
           <div className="col-span-full py-12 text-center text-slate-500">
             No recruitment cycles found.
           </div>
