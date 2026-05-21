@@ -746,7 +746,7 @@ export function AccreditationReviewWorkspace() {
                   type="button"
                   className="text-sm transition-colors hover:text-foreground"
                   style={{ color: "var(--muted)" }}
-                  onClick={handleAddNote}
+                  onClick={(handleAddNote)}
                 >
                   Add Internal Note
                 </button>

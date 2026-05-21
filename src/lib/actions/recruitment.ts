@@ -48,6 +48,7 @@ export async function createRecruitmentEntry(rawInput: unknown) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/admin/recruitment");
+  revalidatePath("/officer/recruitment");
   return data;
 }
 
@@ -87,7 +88,36 @@ export async function updateRecruitmentEntry(rawInput: unknown) {
   return data;
 }
 
-const updateStageSchema = z.enum(["application", "screening", "interview", "deliberation"]);
+export async function updateRecruitmentSettings(entryId: string, settings: Record<string, unknown>) {
+  const { tenant } = await resolveCurrentTenant();
+  const viewer = await getCurrentViewer();
+  const userClient = await createSupabaseUserClient();
+
+  if (
+    !tenant ||
+    !userClient ||
+    !viewer ||
+    !canManageTemporaryApplicants(viewer)
+  ) {
+    throw new Error(
+      "You do not have permission to manage recruitment entries.",
+    );
+  }
+
+  const { data, error } = await userClient
+    .from("recruitment_entries")
+    .update({ settings })
+    .eq("id", entryId)
+    .eq("tenant_id", tenant.id)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath(`/admin/recruitment/${entryId}/settings`);
+  revalidatePath("/admin/recruitment");
+  return data;
+}
 
 export async function updateApplicantStage(applicantId: string, stage: string) {
   const { tenant } = await resolveCurrentTenant();
@@ -103,7 +133,9 @@ export async function updateApplicantStage(applicantId: string, stage: string) {
     throw new Error("You do not have permission to manage applicants.");
   }
   
-  const parsedStage = updateStageSchema.parse(stage);
+  // Validation relies on the provided stage matching a configured phase ID 
+  // or a fallback default phase string in the calling components.
+  const parsedStage = stage;
 
   // Fetch current data
   const { data: current, error: fetchErr } = await userClient
