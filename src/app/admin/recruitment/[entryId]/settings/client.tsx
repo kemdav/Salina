@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
-import { updateRecruitmentSettings } from "@/lib/actions/recruitment";
+import { updateRecruitmentSettings } from "@/lib/actions/recruitment-client";
 
 type StageType = "form" | "interview" | "deliberation";
 

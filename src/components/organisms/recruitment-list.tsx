@@ -9,7 +9,7 @@ import { CreateRecruitmentCycleModal } from "@/components/organisms/create-recru
 import {
   createRecruitmentEntry,
   updateRecruitmentEntry,
-} from "@/lib/actions/recruitment";
+} from "@/lib/actions/recruitment-client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 

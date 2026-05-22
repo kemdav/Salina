@@ -5,7 +5,7 @@ import { Button } from "@/components/atoms/button";
 import {
   updateApplicantStage,
   updateApplicantDecision,
-} from "@/lib/actions/recruitment";
+} from "@/lib/actions/recruitment-client";
 import { Input } from "@/components/atoms/input";
 
 export type BoardApplicant = {

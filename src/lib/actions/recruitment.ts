@@ -1,4 +1,3 @@
-"use server";
 
 import { revalidatePath } from "next/cache";
 import { resolveCurrentTenant, getCurrentViewer, createSupabaseUserClient } from "@/lib/supabase/server";
