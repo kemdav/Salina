@@ -119,7 +119,7 @@ function getProvisioningErrorMessage(error: unknown): string {
   return `Organization provisioning failed. Error: ${JSON.stringify(error)}`;
 }
 
-async function deleteOrganizationSilently(organizationId: string) {
+export async function deleteOrganizationSilently(organizationId: string) {
   const client = createSupabaseAdminClient();
 
   if (!client) {

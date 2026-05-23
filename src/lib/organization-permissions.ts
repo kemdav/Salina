@@ -33,3 +33,21 @@ export function canManageTemporaryApplicants(
     viewer.tenantRole === "officer"
   );
 }
+
+export function canManageEvents(
+  viewer: TemporaryApplicantPermissionViewer | null | undefined
+) {
+  if (!viewer) {
+    return false;
+  }
+
+  if (viewer.isPlatformAdmin) {
+    return true;
+  }
+
+  return (
+    viewer.tenantRole === "owner" ||
+    viewer.tenantRole === "admin" ||
+    viewer.tenantRole === "officer"
+  );
+}

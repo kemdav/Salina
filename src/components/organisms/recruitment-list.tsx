@@ -21,10 +21,10 @@ type RecruitmentEntry = {
   created_at: string;
 };
 
-export function RecruitmentList({ 
-  entries, 
-  isOfficer = false 
-}: { 
+export function RecruitmentList({
+  entries,
+  isOfficer = false,
+}: {
   entries: RecruitmentEntry[];
   isOfficer?: boolean;
 }) {
@@ -98,13 +98,12 @@ export function RecruitmentList({
     });
     try {
       await updateRecruitmentEntry({ id: entry.id, status: newStatus });
-    } catch (e) {
+    } catch {
       alert("Failed to update status.");
     }
   }
 
   return (
-    
     <div
       className="mx-auto max-w-4xl p-6 sm:p-8"
       style={{ fontFamily: "var(--font-body)" }}
@@ -178,13 +177,13 @@ export function RecruitmentList({
                   disabled={isOfficer}
                   value={entry.status}
                   onChange={(e) => handleStatusChange(entry, e.target.value)}
-                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold uppercase ${!isOfficer && 'cursor-pointer'} border-none outline-none ${
+                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold uppercase ${!isOfficer && "cursor-pointer"} border-none outline-none ${
                     entry.status === "published"
                       ? "bg-success/10 text-success"
                       : entry.status === "closed"
                         ? "bg-slate-100 text-slate-500"
                         : entry.status === "paused"
-                          ? "bg-purple-100 text-purple-700" 
+                          ? "bg-purple-100 text-purple-700"
                           : "bg-warning/10 text-warning"
                   }`}
                 >
@@ -193,7 +192,10 @@ export function RecruitmentList({
                   <option value="paused">Paused</option>
                   <option value="closed">Closed</option>
                 </select>
-                <span className="text-xs text-slate-500 suppress-hydration-warning" suppressHydrationWarning>
+                <span
+                  className="text-xs text-slate-500 suppress-hydration-warning"
+                  suppressHydrationWarning
+                >
                   {new Date(entry.created_at).toLocaleDateString()}
                 </span>
               </div>
@@ -217,8 +219,8 @@ export function RecruitmentList({
                 </Link>
               )}
               <Link
-                href={`/${isOfficer ? 'officer' : 'admin'}/recruitment/${entry.id}`}
-                className="flex flex-[2] items-center justify-center rounded-lg bg-primary py-2 text-sm font-semibold text-white transition hover:bg-primary-hover"
+                href={`/${isOfficer ? "officer" : "admin"}/recruitment/${entry.id}`}
+                className="flex flex-2 items-center justify-center rounded-lg bg-primary py-2 text-sm font-semibold text-white transition hover:bg-primary-hover"
               >
                 View Pipeline
               </Link>
