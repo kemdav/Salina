@@ -51,13 +51,16 @@ export default async function RecruitmentEntryPage({
     throw applicantsErr;
   }
 
+  const settingsStages = (entry.settings as { stages?: BoardStage[] })?.stages || [];
+  const initialStageId = settingsStages.length > 0 ? settingsStages[0].id : "application";
+
   const applicants = (applicantsRaw || []).map((a) => ({
     id: a.id,
     name: a.applicant_name,
     email: a.applicant_email,
     status: a.status,
     created_at: a.created_at,
-    stage: (a.application_data as { stage?: string })?.stage || "application",
+    stage: (a.application_data as { stage?: string })?.stage || initialStageId,
   }));
 
   return <ApplicationBoard entryTitle={entry.title} applicants={applicants} stages={(entry.settings as { stages?: BoardStage[] })?.stages || []} />;

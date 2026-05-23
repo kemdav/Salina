@@ -132,19 +132,36 @@ export async function updateApplicantStage(applicantId: string, stage: string) {
     throw new Error("You do not have permission to manage applicants.");
   }
   
-  // Validation relies on the provided stage matching a configured phase ID 
-  // or a fallback default phase string in the calling components.
-  const parsedStage = stage;
-
   // Fetch current data
   const { data: current, error: fetchErr } = await userClient
     .from("temporary_applicants")
-    .select("application_data")
+    .select("application_data, recruitment_entry_id")
     .eq("id", applicantId)
     .eq("tenant_id", tenant.id)
     .single();
 
   if (fetchErr) throw new Error(fetchErr.message);
+
+  let validStages = ["application", "screening", "interview", "deliberation"];
+  
+  if (current.recruitment_entry_id) {
+    const { data: entryData } = await userClient
+      .from("recruitment_entries")
+      .select("settings")
+      .eq("id", current.recruitment_entry_id)
+      .single();
+      
+    const settingsStages = (entryData?.settings as { stages?: { id: string }[] })?.stages;
+    if (Array.isArray(settingsStages) && settingsStages.length > 0) {
+      validStages = settingsStages.map(s => s.id);
+    }
+  }
+
+  if (!validStages.includes(stage)) {
+    throw new Error(`Invalid stage: ${stage}. Valid stages are: ${validStages.join(", ")}`);
+  }
+
+  const parsedStage = stage;
 
   // Update jsonb safely
   const applicationData = current.application_data && typeof current.application_data === "object" ? current.application_data : {};

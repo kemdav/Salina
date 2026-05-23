@@ -13,6 +13,7 @@ import {
 const createTemporaryApplicantSchema = z.object({
   applicantEmail: z.string().trim().email("Enter a valid email address."),
   applicantName: z.string().trim().min(1, "Applicant name is required."),
+  recruitmentEntryId: z.string().uuid("Invalid recruitment cycle.").optional(),
 });
 
 const confirmTemporaryApplicantSchema = z.object({
@@ -36,6 +37,7 @@ export type TemporaryApplicantActionState = {
   fields: {
     applicantEmail: string;
     applicantName: string;
+    recruitmentEntryId?: string;
   };
 };
 
@@ -152,6 +154,7 @@ export async function createTemporaryApplicantAction(
   const values = createTemporaryApplicantSchema.safeParse({
     applicantEmail: String(formData.get("applicantEmail") ?? "").trim(),
     applicantName: String(formData.get("applicantName") ?? "").trim(),
+    recruitmentEntryId: formData.get("recruitmentEntryId") ? String(formData.get("recruitmentEntryId")).trim() : undefined,
   });
 
   if (!values.success) {
@@ -162,10 +165,11 @@ export async function createTemporaryApplicantAction(
       fields: {
         applicantEmail: String(formData.get("applicantEmail") ?? "").trim(),
         applicantName: String(formData.get("applicantName") ?? "").trim(),
+        recruitmentEntryId: formData.get("recruitmentEntryId") ? String(formData.get("recruitmentEntryId")).trim() : undefined,
       },
       inviteToken: undefined,
       inviteUrl: undefined,
-      notice: fieldErrors.applicantEmail?.[0] ?? fieldErrors.applicantName?.[0] ?? "Enter applicant details.",
+      notice: fieldErrors.applicantEmail?.[0] ?? fieldErrors.applicantName?.[0] ?? fieldErrors.recruitmentEntryId?.[0] ?? "Enter applicant details.",
     };
   }
 
@@ -179,6 +183,7 @@ export async function createTemporaryApplicantAction(
       fields: {
         applicantEmail: values.data.applicantEmail,
         applicantName: values.data.applicantName,
+        recruitmentEntryId: values.data.recruitmentEntryId,
       },
     };
   }
@@ -189,6 +194,7 @@ export async function createTemporaryApplicantAction(
       fields: {
         applicantEmail: values.data.applicantEmail,
         applicantName: values.data.applicantName,
+        recruitmentEntryId: values.data.recruitmentEntryId,
       },
     };
   }
@@ -199,6 +205,7 @@ export async function createTemporaryApplicantAction(
       fields: {
         applicantEmail: values.data.applicantEmail,
         applicantName: values.data.applicantName,
+        recruitmentEntryId: values.data.recruitmentEntryId,
       },
     };
   }
@@ -210,6 +217,7 @@ export async function createTemporaryApplicantAction(
       applicant_name: values.data.applicantName,
       invited_by: viewer.id,
       tenant_id: tenantContext.tenant.id,
+      recruitment_entry_id: values.data.recruitmentEntryId || null,
     })
     .select("id, invite_token")
     .single<{ id: string; invite_token: string }>();
@@ -220,6 +228,7 @@ export async function createTemporaryApplicantAction(
       fields: {
         applicantEmail: values.data.applicantEmail,
         applicantName: values.data.applicantName,
+        recruitmentEntryId: values.data.recruitmentEntryId,
       },
     };
   }
@@ -229,10 +238,102 @@ export async function createTemporaryApplicantAction(
     fields: {
       applicantEmail: values.data.applicantEmail,
       applicantName: values.data.applicantName,
+      recruitmentEntryId: values.data.recruitmentEntryId,
     },
     inviteToken: applicant.invite_token,
     inviteUrl: await buildInviteUrl(tenantContext.tenant.slug, applicant.invite_token),
     notice: `Temporary applicant created for ${values.data.applicantName}.`,
+  };
+}
+
+export async function selfInitiateApplicationAction(
+  _previousState: TemporaryApplicantActionState,
+  formData: FormData,
+): Promise<TemporaryApplicantActionState> {
+  const values = createTemporaryApplicantSchema.safeParse({
+    applicantEmail: String(formData.get("applicantEmail") ?? "").trim(),
+    applicantName: String(formData.get("applicantName") ?? "").trim(),
+    recruitmentEntryId: formData.get("recruitmentEntryId") ? String(formData.get("recruitmentEntryId")).trim() : undefined,
+  });
+
+  const tenantSlug = String(formData.get("tenantSlug") ?? "").trim();
+
+  if (!values.success || !values.data.recruitmentEntryId || !tenantSlug) {
+    const fieldErrors = !values.success ? values.error.flatten().fieldErrors : {};
+
+    return {
+      error: undefined,
+      fields: {
+        applicantEmail: String(formData.get("applicantEmail") ?? "").trim(),
+        applicantName: String(formData.get("applicantName") ?? "").trim(),
+        recruitmentEntryId: formData.get("recruitmentEntryId") ? String(formData.get("recruitmentEntryId")).trim() : undefined,
+      },
+      inviteToken: undefined,
+      inviteUrl: undefined,
+      notice: fieldErrors.applicantEmail?.[0] ?? fieldErrors.applicantName?.[0] ?? "Enter applicant details.",
+    };
+  }
+
+  const adminClient = createSupabaseAdminClient("temporary-applicants-create-self");
+
+  if (!adminClient) {
+    return {
+      error: "Application system is unavailable right now.",
+      fields: values.data,
+    };
+  }
+
+  const { data: tenantData, error: tenantError } = await adminClient
+    .from("organizations")
+    .select("id")
+    .eq("slug", tenantSlug)
+    .single();
+
+  if (tenantError || !tenantData) {
+    return {
+      error: "Organization not found.",
+      fields: values.data,
+    };
+  }
+
+  const { data: entryData, error: entryError } = await adminClient
+    .from("recruitment_entries")
+    .select("status")
+    .eq("id", values.data.recruitmentEntryId)
+    .eq("tenant_id", tenantData.id)
+    .single();
+
+  if (entryError || !entryData || entryData.status !== "published") {
+    return {
+      error: "This recruitment cycle is not currently open.",
+      fields: values.data,
+    };
+  }
+
+  const { data: applicant, error } = await adminClient
+    .from("temporary_applicants")
+    .insert({
+      applicant_email: values.data.applicantEmail,
+      applicant_name: values.data.applicantName,
+      tenant_id: tenantData.id,
+      recruitment_entry_id: values.data.recruitmentEntryId,
+    })
+    .select("id, invite_token")
+    .single<{ id: string; invite_token: string }>();
+
+  if (error || !applicant) {
+    return {
+      error: error?.message ?? "Unable to create your application.",
+      fields: values.data,
+    };
+  }
+
+  return {
+    error: undefined,
+    fields: values.data,
+    inviteToken: applicant.invite_token,
+    inviteUrl: await buildInviteUrl(tenantSlug, applicant.invite_token),
+    notice: `Application started for ${values.data.applicantName}.`,
   };
 }
 
