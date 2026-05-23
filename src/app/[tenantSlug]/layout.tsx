@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { signOut } from "@/lib/actions/auth";
 import { Button } from "@/components/atoms/button";
 import { TenantProvider } from "@/components/providers/tenant-provider";
 import { TenantNameBadge } from "@/components/molecules/tenant-name-badge";
@@ -30,7 +31,9 @@ function SidebarPlaceholder() {
         <TenantNameBadge />
       </div>
       <div>
-        <Button className="w-full justify-start">Logout</Button>
+        <form action={signOut}>
+          <Button className="w-full justify-start" type="submit">Logout</Button>
+        </form>
       </div>
     </aside>
   );

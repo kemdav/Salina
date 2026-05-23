@@ -17,6 +17,7 @@ interface SidebarNavProps {
   tenant?: AuthenticatedTenantBranding;
   userName?: string;
   isTemporaryApplicant?: boolean;
+  onSignOut?: () => void;
 }
 
 function getInitials(name: string) {
@@ -35,6 +36,7 @@ export function SidebarNav({
   tenant,
   userName = "Jane Doe",
   isTemporaryApplicant = false,
+  onSignOut,
 }: SidebarNavProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -193,7 +195,15 @@ export function SidebarNav({
       </nav>
 
       <div className="shrink-0 border-t border-white/10 p-4">
-        <div className="flex cursor-pointer items-center gap-3 overflow-hidden rounded-lg bg-white/5 p-2 transition-colors hover:bg-white/10">
+        <div
+          className="flex cursor-pointer items-center gap-3 overflow-hidden rounded-lg bg-white/5 p-2 transition-colors hover:bg-white/10"
+          onClick={onSignOut}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") onSignOut?.();
+          }}
+        >
           <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-300 text-[11px] font-semibold text-slate-900">
             {getInitials(userName)}
           </div>
@@ -207,7 +217,7 @@ export function SidebarNav({
               {userName}
             </span>
             <span className="mt-1 text-[10px] uppercase tracking-wider text-(--sidebar-text,#94a3b8)">
-              {role}
+              Sign out
             </span>
           </div>
         </div>
