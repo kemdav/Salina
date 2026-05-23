@@ -9,6 +9,7 @@ import {
 import { SidebarNav } from "@/components/organisms/sidebar-nav";
 import type { UserRole } from "@/lib/navigation-config";
 import { useTemporaryApplicant } from "@/components/providers/temporary-applicant-provider";
+import { signOut } from "@/lib/actions/auth";
 
 interface AuthenticatedShellProps {
   children?: ReactNode;
@@ -68,6 +69,7 @@ export function AuthenticatedShell({
     <div className="flex w-full h-dvh overflow-hidden bg-slate-50">
       <SidebarNav
         isTemporaryApplicant={temporaryApplicant}
+        onSignOut={signOut}
         role={role}
         tenant={tenantBranding}
         userName={userName}
@@ -76,6 +78,7 @@ export function AuthenticatedShell({
       <main className="flex-1 h-full overflow-y-auto relative flex flex-col">
         <AuthenticatedTopBar
           isTemporaryApplicant={temporaryApplicant}
+          onSignOut={signOut}
           role={role}
           tenantBranding={tenantBranding}
           userName={userName}

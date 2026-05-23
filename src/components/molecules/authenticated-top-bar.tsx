@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { SalinaLogo } from "@/components/atoms/salina-logo";
 import type { UserRole } from "@/lib/navigation-config";
@@ -22,6 +23,7 @@ export interface AuthenticatedTenantBranding {
 interface AuthenticatedTopBarProps {
   role: UserRole;
   isTemporaryApplicant?: boolean;
+  onSignOut?: () => void;
   tenantBranding?: AuthenticatedTenantBranding;
   userName?: string;
 }
@@ -40,6 +42,7 @@ function getInitials(name: string) {
 export function AuthenticatedTopBar({
   role,
   isTemporaryApplicant = false,
+  onSignOut,
   tenantBranding,
   userName = "Jane Doe",
 }: AuthenticatedTopBarProps) {
@@ -52,6 +55,20 @@ export function AuthenticatedTopBar({
   const workspaceInitial =
     workspaceName.trim().slice(0, 1).toUpperCase() || "W";
   const userInitials = getInitials(userName);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    }
+    if (isMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isMenuOpen]);
 
   const ROUTE_TITLES: Record<string, string> = {
     dashboard: "Dashboard",
@@ -142,21 +159,51 @@ export function AuthenticatedTopBar({
           }
         />
 
-        <button
-          type="button"
-          className="flex items-center gap-3 rounded-full border border-slate-200 bg-white px-2 py-1.5 text-left shadow-sm transition-colors hover:bg-slate-50"
-          aria-label={`User menu for ${userName}`}
-        >
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
-            {userInitials}
-          </span>
-          <span className="hidden pr-1 sm:block">
-            <span className="block text-sm font-semibold text-slate-800">
-              {userName}
+        <div className="relative" ref={menuRef}>
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen((v) => !v)}
+            className="flex items-center gap-3 rounded-full border border-slate-200 bg-white px-2 py-1.5 text-left shadow-sm transition-colors hover:bg-slate-50"
+            aria-label={`User menu for ${userName}`}
+            aria-expanded={isMenuOpen}
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
+              {userInitials}
             </span>
-            <span className="block text-xs text-slate-500">{role}</span>
-          </span>
-        </button>
+            <span className="hidden pr-1 sm:block">
+              <span className="block text-sm font-semibold text-slate-800">
+                {userName}
+              </span>
+              <span className="block text-xs text-slate-500">{role}</span>
+            </span>
+          </button>
+
+          {isMenuOpen && (
+            <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-slate-200 bg-white py-1 shadow-lg">
+              <button
+                type="button"
+                onClick={onSignOut}
+                className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+                Sign out
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
