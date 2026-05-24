@@ -57,7 +57,7 @@ export default async function OfficerRecruitmentEntryPage({
   // Render within Officer Shell
   return (
     <AuthenticatedShell role="Officer" tenantBranding={OFFICER_TENANT_BRANDING}>
-      <ApplicationBoard entryTitle={entry.title} applicants={applicants} stages={(entry.settings as { stages?: BoardStage[] })?.stages || []} />
+      <ApplicationBoard entryTitle={entry.title} applicants={applicants} stages={(entry.settings as { stages?: BoardStage[] })?.stages || []} entryId={entryId} tenantSlug={tenant.slug} />
     </AuthenticatedShell>
   );
 }

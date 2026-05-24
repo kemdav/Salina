@@ -63,5 +63,5 @@ export default async function RecruitmentEntryPage({
     stage: (a.application_data as { stage?: string })?.stage || initialStageId,
   }));
 
-  return <ApplicationBoard entryTitle={entry.title} applicants={applicants} stages={(entry.settings as { stages?: BoardStage[] })?.stages || []} />;
+  return <ApplicationBoard entryTitle={entry.title} applicants={applicants} stages={(entry.settings as { stages?: BoardStage[] })?.stages || []} entryId={entryId} tenantSlug={tenant.slug} />;
 }

@@ -29,10 +29,14 @@ export function ApplicationBoard({
   entryTitle,
   applicants,
   stages = [],
+  entryId,
+  tenantSlug,
 }: {
   entryTitle: string;
   applicants: BoardApplicant[];
   stages?: BoardStage[];
+  entryId?: string;
+  tenantSlug?: string;
 }) {
   const [selectedApplicant, setSelectedApplicant] =
     useState<BoardApplicant | null>(null);
@@ -119,12 +123,39 @@ export function ApplicationBoard({
               {entryTitle}
             </h1>
           </div>
-          <Input
-            placeholder="Search applicants..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="max-w-xs"
-          />
+          <div className="flex items-center gap-3">
+            <Input
+              placeholder="Search applicants..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="max-w-xs"
+            />
+            {entryId && tenantSlug && (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    const url = `${window.location.origin}/${tenantSlug}/apply/${entryId}`;
+                    navigator.clipboard.writeText(url);
+                    alert("Public application link copied!");
+                  }}
+                >
+                  Copy Link
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    const url = `${window.location.origin}/${tenantSlug}/apply/${entryId}`;
+                    const subject = encodeURIComponent(`Apply to ${entryTitle}`);
+                    const body = encodeURIComponent(`Please use this link to apply:\n\n${url}`);
+                    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+                  }}
+                >
+                  Email Link
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Columns grid view */}
