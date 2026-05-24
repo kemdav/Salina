@@ -1,3 +1,4 @@
+'use client';
 
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/atoms/button';
@@ -5,7 +6,6 @@ import { SalinaLogo } from '@/components/atoms/salina-logo';
 import { NavLinks } from '@/components/molecules/nav-links';
 
 export function TopNavigation() {
-
     const router = useRouter();
 
     return (
