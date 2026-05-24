@@ -31,7 +31,7 @@ export default async function OfficerRecruitmentEntryPage({
 
   const { data: entry, error: entryErr } = await userClient
     .from("recruitment_entries")
-    .select("title, settings")
+    .select("title, settings, status")
     .eq("id", entryId)
     .eq("tenant_id", tenant.id)
     .single();
@@ -67,6 +67,7 @@ export default async function OfficerRecruitmentEntryPage({
   return (
     <ApplicationBoard
       entryTitle={entry.title}
+      entryStatus={entry.status}
       applicants={applicants}
       stages={(entry.settings as { stages?: BoardStage[] })?.stages || []}
       entryId={entryId}

@@ -29,7 +29,7 @@ export default async function RecruitmentEntryPage({
   // Double check entry exists
   const { data: entry, error: entryErr } = await userClient
     .from("recruitment_entries")
-    .select("title, settings")
+    .select("title, settings, status")
     .eq("id", entryId)
     .eq("tenant_id", tenant.id)
     .single();
@@ -63,5 +63,5 @@ export default async function RecruitmentEntryPage({
     stage: (a.application_data as { stage?: string })?.stage || initialStageId,
   }));
 
-  return <ApplicationBoard entryTitle={entry.title} applicants={applicants} stages={(entry.settings as { stages?: BoardStage[] })?.stages || []} entryId={entryId} tenantSlug={tenant.slug} />;
+  return <ApplicationBoard entryTitle={entry.title} entryStatus={entry.status} applicants={applicants} stages={(entry.settings as { stages?: BoardStage[] })?.stages || []} entryId={entryId} tenantSlug={tenant.slug} />;
 }

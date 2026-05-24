@@ -9,6 +9,7 @@ import {
   updateApplicantDecision,
 } from "@/lib/actions/recruitment-client";
 import { Input } from "@/components/atoms/input";
+import { StatusBadge } from "@/components/atoms/status-badge";
 
 export type BoardApplicant = {
   id: string;
@@ -35,12 +36,14 @@ export function ApplicationBoard({
   stages = [],
   entryId,
   tenantSlug,
+  entryStatus,
 }: {
   entryTitle: string;
   applicants: BoardApplicant[];
   stages?: BoardStage[];
   entryId?: string;
   tenantSlug?: string;
+  entryStatus?: string;
 }) {
   const router = useRouter();
   const [selectedApplicant, setSelectedApplicant] =
@@ -152,9 +155,24 @@ export function ApplicationBoard({
       <div className="min-w-0 flex-1 overflow-y-auto p-6 sm:p-8">
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-1">
-              Pipeline
-            </p>
+            <div className="flex items-center gap-2 mb-1">
+              <p className="text-sm font-semibold uppercase tracking-wider text-slate-500">
+                Pipeline
+              </p>
+              {entryStatus && (
+                <StatusBadge
+                  variant={
+                    entryStatus === "published"
+                      ? "green"
+                      : entryStatus === "closed"
+                      ? "red"
+                      : "yellow"
+                  }
+                >
+                  {entryStatus}
+                </StatusBadge>
+              )}
+            </div>
             <h1
               className="text-3xl font-bold tracking-tight text-foreground"
               style={{ fontFamily: "var(--font-heading)" }}
@@ -173,6 +191,8 @@ export function ApplicationBoard({
               <div className="flex items-center gap-2">
                 <Button
                   variant="secondary"
+                  disabled={entryStatus !== undefined && entryStatus !== "published"}
+                  title={entryStatus !== undefined && entryStatus !== "published" ? "Only available when published" : ""}
                   onClick={() => {
                     const url = `${window.location.origin}/${tenantSlug}/apply/${entryId}`;
                     navigator.clipboard.writeText(url);
@@ -184,6 +204,8 @@ export function ApplicationBoard({
                 <div className="relative">
                   <Button
                     variant="secondary"
+                    disabled={entryStatus !== undefined && entryStatus !== "published"}
+                    title={entryStatus !== undefined && entryStatus !== "published" ? "Only available when published" : ""}
                     onClick={() => setIsSendLinkOpen(!isSendLinkOpen)}
                   >
                     Send Link
