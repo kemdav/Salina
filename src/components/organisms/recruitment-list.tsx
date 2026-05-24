@@ -11,6 +11,7 @@ import {
 } from "@/lib/actions/recruitment";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Button } from "../atoms/button";
 
 type RecruitmentEntry = {
   id: string;
