@@ -11,6 +11,7 @@ import {
 } from "@/lib/auth-policy";
 import { LOCAL_COOKIE_DOMAIN } from "@/lib/host-routing";
 import { getTenantAppUrl } from "@/lib/root-domain";
+import { getRoleHomePath } from "@/lib/roles";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createUserClient } from "@/lib/supabase/user-server";
 
@@ -152,8 +153,9 @@ export async function signIn(email: string, password: string) {
     return { error: "No active membership found for this organization." };
   }
 
-  // Navigate user securely into their scoped domain subdomain shell
-  redirect(await getTenantAppUrl(orgData.slug));
+  // Navigate user to their role-appropriate home path
+  const roleHomePath = getRoleHomePath(membership.role);
+  redirect(`${await getTenantAppUrl(orgData.slug)}${roleHomePath}`);
 }
 
 export async function signInAction(

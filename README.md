@@ -24,6 +24,9 @@ Salina is a multi-tenant platform that gives every accredited organization its o
     - [Prerequisites](#prerequisites)
     - [3-Step Start](#3-step-start)
     - [Seeded Demo Tenants](#seeded-demo-tenants)
+    - [System Admin (Platform Management)](#system-admin-platform-management)
+    - [Acme](#acme)
+    - [ICPEP.SE - CIT University](#icpepse---cit-university)
   - [Project Structure](#project-structure)
   - [Contributing](#contributing)
 
@@ -157,15 +160,41 @@ Open **<http://salina.localhost:3000/login>** to sign in with the shared local a
 
 ### Seeded Demo Tenants
 
-The `supabase/seed.sql` file pre-populates three tenants for local development:
+The `supabase/seed.sql` file pre-populates three tenants for local development. The System Admin tenant is where all organizations are managed — its accounts are all platform-level `system_admin` for the Salina dev team. The other two tenants each have accounts spanning every role:
 
-| Tenant | Slug | Local URL | Email | Password |
-| --- | --- | --- | --- | --- |
-| System Admin | `system-admin` | <http://system-admin.salina.localhost:3000> | `system-admin@salina.dev` | `SalinaPreview123!` |
-| Acme | `acme` | <http://acme.salina.localhost:3000> | `acme-admin@salina.dev` | `SalinaPreview123!` |
-| ICPEP.SE - CIT University | `icpep-se` | <http://icpep-se.salina.localhost:3000> | `icpep-se-admin@salina.dev` | `SalinaPreview123!` |
+### System Admin (Platform Management)
 
-> These credentials are **local/preview only**. They are committed to the repo intentionally for development convenience.
+| Tenant | Role | Email | Password |
+| --- | --- | --- | --- |
+| System Admin | System Admin | `system-admin@salina.dev` | `SalinaPreview123!` |
+| System Admin | System Admin | `system-admin-1@salina.dev` | `SalinaPreview123!` |
+| System Admin | System Admin | `system-admin-2@salina.dev` | `SalinaPreview123!` |
+
+### Acme
+
+| Tenant | Role | Email | Password |
+| --- | --- | --- | --- |
+| Acme | Owner | `acme-admin@salina.dev` | `SalinaPreview123!` |
+| Acme | Officer | `acme-officer@salina.dev` | `SalinaPreview123!` |
+| Acme | Member | `acme-member@salina.dev` | `SalinaPreview123!` |
+| Acme | Viewer | `acme-viewer@salina.dev` | `SalinaPreview123!` |
+
+### ICPEP.SE - CIT University
+
+| Tenant | Role | Email | Password |
+| --- | --- | --- | --- |
+| ICPEP.SE - CIT University | Owner | `icpep-se-admin@salina.dev` | `SalinaPreview123!` |
+| ICPEP.SE - CIT University | Officer | `icpep-se-officer@salina.dev` | `SalinaPreview123!` |
+| ICPEP.SE - CIT University | Member | `icpep-se-member@salina.dev` | `SalinaPreview123!` |
+| ICPEP.SE - CIT University | Viewer | `icpep-se-viewer@salina.dev` | `SalinaPreview123!` |
+
+| Tenant | Slug | Local URL |
+| --- | --- | --- |
+| System Admin | `system-admin` | <http://system-admin.salina.localhost:3000> |
+| Acme | `acme` | <http://acme.salina.localhost:3000> |
+| ICPEP.SE - CIT University | `icpep-se` | <http://icpep-se.salina.localhost:3000> |
+
+> These credentials are **local/preview only**. They are committed intentionally for development convenience.
 
 ---
 
