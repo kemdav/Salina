@@ -1,9 +1,14 @@
-import { resolveCurrentTenant, getCurrentViewer, createSupabaseUserClient } from "@/lib/supabase/server";
+import {
+  resolveCurrentTenant,
+  getCurrentViewer,
+  createSupabaseUserClient,
+} from "@/lib/supabase/server";
 import { canManageTemporaryApplicants } from "@/lib/organization-permissions";
 import { redirect } from "next/navigation";
-import { ApplicationBoard, BoardStage } from "@/components/organisms/application-board";
-import { AuthenticatedShell } from "@/components/templates/authenticated-shell";
-import { OFFICER_TENANT_BRANDING } from "@/lib/officer-demo-data";
+import {
+  ApplicationBoard,
+  BoardStage,
+} from "@/components/organisms/application-board";
 
 export default async function OfficerRecruitmentEntryPage({
   params,
@@ -15,7 +20,12 @@ export default async function OfficerRecruitmentEntryPage({
   const viewer = await getCurrentViewer();
   const userClient = await createSupabaseUserClient();
 
-  if (!tenant || !userClient || !viewer || !canManageTemporaryApplicants(viewer)) {
+  if (
+    !tenant ||
+    !userClient ||
+    !viewer ||
+    !canManageTemporaryApplicants(viewer)
+  ) {
     redirect("/officer/recruitment");
   }
 
@@ -51,10 +61,11 @@ export default async function OfficerRecruitmentEntryPage({
     stage: (a.application_data as { stage?: string })?.stage || "application",
   }));
 
-  // Render within Officer Shell
   return (
-    <AuthenticatedShell role="Officer" tenantBranding={OFFICER_TENANT_BRANDING}>
-      <ApplicationBoard entryTitle={entry.title} applicants={applicants} stages={(entry.settings as { stages?: BoardStage[] })?.stages || []} />
-    </AuthenticatedShell>
+    <ApplicationBoard
+      entryTitle={entry.title}
+      applicants={applicants}
+      stages={(entry.settings as { stages?: BoardStage[] })?.stages || []}
+    />
   );
 }
