@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { AuthenticatedShell } from "@/components/templates/authenticated-shell";
 import { getCurrentViewer, resolveCurrentTenant } from "@/lib/supabase/server";
+import { getRoleHomePath, isRoleAtLeast } from "@/lib/roles";
 
 export default async function OfficerLayout({
   children,
@@ -21,6 +22,12 @@ export default async function OfficerLayout({
 
   if (!canAccessTenant) {
     redirect("/login");
+  }
+
+  // Enforce role gate: only officer, admin, owner, and system_admin can access /officer/*
+  if (!viewer.isPlatformAdmin && !isRoleAtLeast(viewer.tenantRole, "officer")) {
+    const homePath = getRoleHomePath(viewer.tenantRole);
+    redirect(homePath);
   }
 
   return (
