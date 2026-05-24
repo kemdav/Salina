@@ -5,6 +5,7 @@ import { AuthenticatedShell } from "@/components/templates/authenticated-shell";
 import { TemporaryApplicantRouteGuard } from "@/components/providers/temporary-applicant-route-guard";
 import { TemporaryApplicantProvider } from "@/components/providers/temporary-applicant-provider";
 import { getCurrentViewer, resolveCurrentTenant } from "@/lib/supabase/server";
+import { isRoleAtLeast } from "@/lib/roles";
 
 function isInvalidRefreshTokenError(error: unknown) {
   const message =
@@ -49,6 +50,13 @@ export default async function MemberLayout({
     (tenantContext.tenant && viewer.tenantId === tenantContext.tenant.id);
 
   if (!canAccessTenant) {
+    redirect("/login");
+  }
+
+  // Enforce role gate: only member, viewer, and higher roles can access /member/*
+  // Officers and above can preview member content (permeable upward).
+  // Users without a recognized role are redirected to login.
+  if (!viewer.isPlatformAdmin && !isRoleAtLeast(viewer.tenantRole, "viewer")) {
     redirect("/login");
   }
 
