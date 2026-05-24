@@ -5,6 +5,7 @@ import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
 import { updateRecruitmentSettings } from "@/lib/actions/recruitment-client";
+import { FeedbackModal, FeedbackTone } from "@/components/organisms/feedback-modal";
 
 type StageType = "form" | "interview" | "deliberation";
 
@@ -35,6 +36,29 @@ export function RecruitmentSettingsEditor({
     initialSettings.stages || []
   );
   const [isSaving, setIsSaving] = useState(false);
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean;
+    tone: FeedbackTone;
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    showCancel?: boolean;
+    onConfirm?: () => void;
+  }>({
+    isOpen: false,
+    tone: "info",
+    title: "",
+    message: "",
+  });
+
+  const openModal = (config: Omit<typeof modalConfig, "isOpen">) => {
+    setModalConfig({ ...config, isOpen: true });
+  };
+
+  const closeModal = () => {
+    setModalConfig((prev) => ({ ...prev, isOpen: false }));
+  };
 
   const addStage = (type: StageType) => {
     const newStage: RecruitmentStage = {
@@ -58,26 +82,49 @@ export function RecruitmentSettingsEditor({
     const stage = stages[index];
     const count = stageCounts[stage.id] || 0;
     if (count > 0) {
-      alert(`Cannot delete stage "${stage.name}" because there are still ${count} applicant(s) assigned to it. Please transfer them to another stage first.`);
+      openModal({
+        tone: "error",
+        title: "Cannot delete stage",
+        message: `Cannot delete stage "${stage.name}" because there are still ${count} applicant(s) assigned to it. Please transfer them to another stage first.`,
+        confirmText: "Okay",
+        showCancel: false,
+      });
       return;
     }
 
-    const confirmDelete = window.confirm(`Are you sure you want to delete the stage "${stage.name}"?`);
-    if (!confirmDelete) {
-      return;
-    }
-
-    setStages(stages.filter((_, i) => i !== index));
+    openModal({
+      tone: "warning",
+      title: "Delete stage",
+      message: `Are you sure you want to delete the stage "${stage.name}"?`,
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      showCancel: true,
+      onConfirm: () => {
+        setStages(stages.filter((_, i) => i !== index));
+      },
+    });
   };
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
       await updateRecruitmentSettings(entryId, { stages });
-      alert("Settings saved successfully.");
+      openModal({
+        tone: "success",
+        title: "Settings Saved",
+        message: "Settings saved successfully.",
+        confirmText: "Okay",
+        showCancel: false,
+      });
     } catch (err) {
       console.error(err);
-      alert(err instanceof Error ? err.message : "Failed to save settings.");
+      openModal({
+        tone: "error",
+        title: "Save Failed",
+        message: err instanceof Error ? err.message : "Failed to save settings.",
+        confirmText: "Okay",
+        showCancel: false,
+      });
     } finally {
       setIsSaving(false);
     }
@@ -217,6 +264,18 @@ export function RecruitmentSettingsEditor({
           {isSaving ? "Saving..." : "Save Pipeline"}
         </Button>
       </div>
+
+      <FeedbackModal
+        isOpen={modalConfig.isOpen}
+        onClose={closeModal}
+        tone={modalConfig.tone}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        confirmText={modalConfig.confirmText}
+        cancelText={modalConfig.cancelText}
+        showCancel={modalConfig.showCancel}
+        onConfirm={modalConfig.onConfirm}
+      />
     </div>
   );
 }

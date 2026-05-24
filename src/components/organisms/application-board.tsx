@@ -10,6 +10,7 @@ import {
 } from "@/lib/actions/recruitment-client";
 import { Input } from "@/components/atoms/input";
 import { StatusBadge } from "@/components/atoms/status-badge";
+import { FeedbackModal } from "@/components/organisms/feedback-modal";
 
 export type BoardApplicant = {
   id: string;
@@ -50,6 +51,29 @@ export function ApplicationBoard({
     useState<BoardApplicant | null>(null);
   const [isSendLinkOpen, setIsSendLinkOpen] = useState(false);
   const [pendingStage, setPendingStage] = useState<string | null>(null);
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean;
+    tone: "error" | "warning" | "success" | "info";
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    showCancel?: boolean;
+    onConfirm?: () => void;
+  }>({
+    isOpen: false,
+    tone: "info",
+    title: "",
+    message: "",
+  });
+
+  const openModal = (config: Omit<typeof modalConfig, "isOpen">) => {
+    setModalConfig({ ...config, isOpen: true });
+  };
+
+  const closeModal = () => {
+    setModalConfig((prev) => ({ ...prev, isOpen: false }));
+  };
 
   useEffect(() => {
     if (!entryId) return;
@@ -109,7 +133,13 @@ export function ApplicationBoard({
         await updateApplicantStage(applicantId, newStage);
         router.refresh();
       } catch {
-        alert("Failed to move stage.");
+        openModal({
+          tone: "error",
+          title: "Move Failed",
+          message: "Failed to move stage. Please try again.",
+          confirmText: "Okay",
+          showCancel: false,
+        });
       }
     });
   }
@@ -124,7 +154,13 @@ export function ApplicationBoard({
         await updateApplicantDecision(applicantId, status);
         router.refresh();
       } catch {
-        alert("Failed to log decision.");
+        openModal({
+          tone: "error",
+          title: "Decision Failed",
+          message: "Failed to log decision. Please try again.",
+          confirmText: "Okay",
+          showCancel: false,
+        });
       }
     });
   }
@@ -196,7 +232,13 @@ export function ApplicationBoard({
                   onClick={() => {
                     const url = `${window.location.origin}/${tenantSlug}/apply/${entryId}`;
                     navigator.clipboard.writeText(url);
-                    alert("Public application link copied!");
+                    openModal({
+                      tone: "success",
+                      title: "Link Copied",
+                      message: "Public application link copied to clipboard!",
+                      confirmText: "Okay",
+                      showCancel: false,
+                    });
                   }}
                 >
                   Copy Link
@@ -505,6 +547,18 @@ export function ApplicationBoard({
           </div>
         </aside>
       )}
+
+      <FeedbackModal
+        isOpen={modalConfig.isOpen}
+        onClose={closeModal}
+        tone={modalConfig.tone}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        confirmText={modalConfig.confirmText}
+        cancelText={modalConfig.cancelText}
+        showCancel={modalConfig.showCancel}
+        onConfirm={modalConfig.onConfirm}
+      />
     </div>
   );
 }
