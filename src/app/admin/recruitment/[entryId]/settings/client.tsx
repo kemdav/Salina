@@ -25,9 +25,11 @@ export type RecruitmentSettings = {
 export function RecruitmentSettingsEditor({
   entryId,
   initialSettings,
+  stageCounts = {},
 }: {
   entryId: string;
   initialSettings: RecruitmentSettings;
+  stageCounts?: Record<string, number>;
 }) {
   const [stages, setStages] = useState<RecruitmentStage[]>(
     initialSettings.stages || []
@@ -53,6 +55,18 @@ export function RecruitmentSettingsEditor({
   };
 
   const removeStage = (index: number) => {
+    const stage = stages[index];
+    const count = stageCounts[stage.id] || 0;
+    if (count > 0) {
+      alert(`Cannot delete stage "${stage.name}" because there are still ${count} applicant(s) assigned to it. Please transfer them to another stage first.`);
+      return;
+    }
+
+    const confirmDelete = window.confirm(`Are you sure you want to delete the stage "${stage.name}"?`);
+    if (!confirmDelete) {
+      return;
+    }
+
     setStages(stages.filter((_, i) => i !== index));
   };
 
@@ -63,7 +77,7 @@ export function RecruitmentSettingsEditor({
       alert("Settings saved successfully.");
     } catch (err) {
       console.error(err);
-      alert("Failed to save settings.");
+      alert(err instanceof Error ? err.message : "Failed to save settings.");
     } finally {
       setIsSaving(false);
     }

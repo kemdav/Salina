@@ -103,6 +103,56 @@ export async function updateRecruitmentSettings(entryId: string, settings: Recor
     );
   }
 
+  // 1. Fetch current settings to see what stages exist right now
+  const { data: currentEntry, error: entryErr } = await userClient
+    .from("recruitment_entries")
+    .select("settings")
+    .eq("id", entryId)
+    .eq("tenant_id", tenant.id)
+    .single();
+
+  if (entryErr || !currentEntry) {
+    throw new Error("Recruitment cycle not found.");
+  }
+
+  const currentSettings = currentEntry.settings as { stages?: { id: string; name: string }[] } | null;
+  const currentStages = currentSettings?.stages || [];
+
+  // 2. Fetch all temporary applicants to count their current stage assignment
+  const { data: applicants, error: appErr } = await userClient
+    .from("temporary_applicants")
+    .select("id, application_data")
+    .eq("recruitment_entry_id", entryId)
+    .eq("tenant_id", tenant.id);
+
+  if (appErr) {
+    throw new Error(`Failed to fetch applicants: ${appErr.message}`);
+  }
+
+  const currentInitialStageId = currentStages.length > 0 ? currentStages[0].id : "application";
+  const stageCounts: Record<string, number> = {};
+  if (applicants) {
+    for (const app of applicants) {
+      const stageId = (app.application_data as { stage?: string })?.stage || currentInitialStageId;
+      stageCounts[stageId] = (stageCounts[stageId] || 0) + 1;
+    }
+  }
+
+  // 3. Find if any stage is deleted in the new settings, and if that stage has applicants
+  const newStages = (settings as { stages?: { id: string }[] })?.stages || [];
+  const newStageIds = new Set(newStages.map((s) => s.id));
+
+  for (const currentStage of currentStages) {
+    if (!newStageIds.has(currentStage.id)) {
+      const count = stageCounts[currentStage.id] || 0;
+      if (count > 0) {
+        throw new Error(
+          `Cannot delete stage "${currentStage.name}" because there are still ${count} applicant(s) assigned to it. Please transfer them to another stage first.`
+        );
+      }
+    }
+  }
+
   const { data, error } = await userClient
     .from("recruitment_entries")
     .update({ settings })
