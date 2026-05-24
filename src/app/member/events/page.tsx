@@ -49,6 +49,7 @@ export default async function MemberEventsPage() {
         <MemberEventsManager
           events={events}
           initialAttendance={initialAttendance}
+          memberId={membership?.id || ""}
         />
       </div>
     </AuthenticatedShell>

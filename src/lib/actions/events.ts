@@ -11,6 +11,8 @@ const createEventSchema = z.object({
   location: z.string().min(1),
   start_time: z.string(),
   end_time: z.string(),
+  qr_attendance_enabled: z.boolean().optional().default(false),
+  require_check_out: z.boolean().optional().default(false),
 });
 
 export async function createEvent(rawInput: unknown) {
@@ -33,6 +35,8 @@ export async function createEvent(rawInput: unknown) {
       location: input.location,
       start_time: input.start_time,
       end_time: input.end_time,
+      qr_attendance_enabled: input.qr_attendance_enabled,
+      require_check_out: input.require_check_out,
     })
     .select()
     .single();

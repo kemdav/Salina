@@ -118,6 +118,7 @@ export async function getAttendanceRecords(eventId: string) {
       id,
       status,
       check_in_time,
+      check_out_time,
       member_id,
       organization_memberships!inner(
         id,
@@ -133,6 +134,7 @@ export async function getAttendanceRecords(eventId: string) {
       id: string;
       status: string;
       check_in_time: string;
+      check_out_time: string | null;
       member_id: string;
       organization_memberships: { id: string; user_id: string | null } | { id: string; user_id: string | null }[];
     }[]).map(async (record) => {
@@ -151,6 +153,7 @@ export async function getAttendanceRecords(eventId: string) {
         id: record.id,
         status: record.status,
         checkIn: record.check_in_time,
+        checkOut: record.check_out_time,
         member: name,
         memberId: record.member_id,
         eventId: eventId,
@@ -159,4 +162,66 @@ export async function getAttendanceRecords(eventId: string) {
   );
 
   return records;
+}
+
+export async function handleQRCheckInOut(eventId: string, memberId: string) {
+  const { tenant } = await resolveCurrentTenant();
+  const viewer = await getCurrentViewer();
+  const userClient = await createSupabaseUserClient();
+
+  if (!tenant || !userClient || !viewer || !canManageEvents(viewer)) {
+    throw new Error("You do not have permission to manage attendance.");
+  }
+
+  const { data: eventTarget, error: eventError } = await userClient
+    .from("events")
+    .select("id, require_check_out, qr_attendance_enabled")
+    .eq("id", eventId)
+    .eq("tenant_id", tenant.id)
+    .single();
+
+  if (eventError || !eventTarget) {
+    throw new Error("Event not found.");
+  }
+
+  if (!eventTarget.qr_attendance_enabled) {
+    throw new Error("QR Attendance is not enabled for this event.");
+  }
+
+  const { data: attendee, error: attendeeError } = await userClient
+    .from("event_attendees")
+    .select("id, status, check_in_time, check_out_time")
+    .eq("event_id", eventId)
+    .eq("member_id", memberId)
+    .single();
+
+  if (attendeeError || !attendee) {
+    throw new Error("Attendee not found for this event.");
+  }
+
+  const now = new Date().toISOString();
+
+  if (!attendee.check_in_time) {
+    const { error } = await userClient
+      .from("event_attendees")
+      .update({ check_in_time: now, status: "Verified" })
+      .eq("id", attendee.id);
+    if (error) throw new Error(error.message);
+    revalidatePath(`/admin/events`);
+    revalidatePath(`/officer/events`);
+    return "Signed In";
+  }
+
+  if (eventTarget.require_check_out && !attendee.check_out_time) {
+    const { error } = await userClient
+      .from("event_attendees")
+      .update({ check_out_time: now })
+      .eq("id", attendee.id);
+    if (error) throw new Error(error.message);
+    revalidatePath(`/admin/events`);
+    revalidatePath(`/officer/events`);
+    return "Signed Out";
+  }
+
+  throw new Error("Already scanned");
 }
