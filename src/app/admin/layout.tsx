@@ -23,7 +23,7 @@ export default async function AdminLayout({
               Organization Suspended
             </h1>
             <p className="text-stone-300">
-              Your organization's access has been temporarily suspended.
+              Your organization&apos;s access has been temporarily suspended.
             </p>
             <p className="mt-2 text-stone-500 text-sm">
               Please contact the platform administrator for assistance.
