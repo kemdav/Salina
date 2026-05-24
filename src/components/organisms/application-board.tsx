@@ -200,8 +200,9 @@ export function ApplicationBoard({
                             className="block px-4 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
                             onClick={() => {
                               const url = `${window.location.origin}/${tenantSlug}/apply/${entryId}`;
-                              const subject = encodeURIComponent(`Apply to ${entryTitle}`);
-                              const body = encodeURIComponent(`Please use this link to apply:\n\n${url}`);
+                              const subject = encodeURIComponent(`Invitation to Apply: ${entryTitle}`);
+                              const bodyText = `Hi there,\n\nWe're thrilled to invite you to apply for the ${entryTitle} role!\n\nOur team is looking forward to learning more about your background and interests. To get started, please complete your application using the secure link below:\n\n${url}\n\nIf you have any questions, feel free to reply directly to this email.\n\nBest regards,\nThe Recruitment Team`;
+                              const body = encodeURIComponent(bodyText);
                               window.open(`https://mail.google.com/mail/?view=cm&fs=1&su=${subject}&body=${body}`, '_blank');
                               setIsSendLinkOpen(false);
                             }}
@@ -212,8 +213,9 @@ export function ApplicationBoard({
                             className="block px-4 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
                             onClick={() => {
                               const url = `${window.location.origin}/${tenantSlug}/apply/${entryId}`;
-                              const subject = encodeURIComponent(`Apply to ${entryTitle}`);
-                              const body = encodeURIComponent(`Please use this link to apply:\n\n${url}`);
+                              const subject = encodeURIComponent(`Invitation to Apply: ${entryTitle}`);
+                              const bodyText = `Hi there,\n\nWe're thrilled to invite you to apply for the ${entryTitle} role!\n\nOur team is looking forward to learning more about your background and interests. To get started, please complete your application using the secure link below:\n\n${url}\n\nIf you have any questions, feel free to reply directly to this email.\n\nBest regards,\nThe Recruitment Team`;
+                              const body = encodeURIComponent(bodyText);
                               window.open(`https://outlook.live.com/mail/0/deeplink/compose?subject=${subject}&body=${body}`, '_blank');
                               setIsSendLinkOpen(false);
                             }}
@@ -224,8 +226,9 @@ export function ApplicationBoard({
                             className="block px-4 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
                             onClick={() => {
                               const url = `${window.location.origin}/${tenantSlug}/apply/${entryId}`;
-                              const subject = encodeURIComponent(`Apply to ${entryTitle}`);
-                              const body = encodeURIComponent(`Please use this link to apply:\n\n${url}`);
+                              const subject = encodeURIComponent(`Invitation to Apply: ${entryTitle}`);
+                              const bodyText = `Hi there,\n\nWe're thrilled to invite you to apply for the ${entryTitle} role!\n\nOur team is looking forward to learning more about your background and interests. To get started, please complete your application using the secure link below:\n\n${url}\n\nIf you have any questions, feel free to reply directly to this email.\n\nBest regards,\nThe Recruitment Team`;
+                              const body = encodeURIComponent(bodyText);
                               window.location.href = `mailto:?subject=${subject}&body=${body}`;
                               setIsSendLinkOpen(false);
                             }}
