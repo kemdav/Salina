@@ -223,8 +223,13 @@ export async function createTemporaryApplicantAction(
     .single<{ id: string; invite_token: string }>();
 
   if (error || !applicant) {
+    let errorMessage = error?.message ?? "Unable to create the temporary applicant.";
+    if (error?.code === "23505" || errorMessage.includes("unique constraint")) {
+      errorMessage = "An applicant with this email address already exists in this organization.";
+    }
+
     return {
-      error: error?.message ?? "Unable to create the temporary applicant.",
+      error: errorMessage,
       fields: {
         applicantEmail: values.data.applicantEmail,
         applicantName: values.data.applicantName,
@@ -322,8 +327,13 @@ export async function selfInitiateApplicationAction(
     .single<{ id: string; invite_token: string }>();
 
   if (error || !applicant) {
+    let errorMessage = error?.message ?? "Unable to create your application.";
+    if (error?.code === "23505" || errorMessage.includes("unique constraint")) {
+      errorMessage = "You have already started an application with this email address. Please check your inbox for the invitation link or sign in if you've already created an account.";
+    }
+
     return {
-      error: error?.message ?? "Unable to create your application.",
+      error: errorMessage,
       fields: values.data,
     };
   }

@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useOptimistic, startTransition } from "react";
+import { useState, useOptimistic, startTransition, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { createBrowserClient } from "@supabase/ssr";
 import { Button } from "@/components/atoms/button";
 import {
   updateApplicantStage,
@@ -22,6 +24,8 @@ export type BoardStage = {
   name: string;
   type: string;
   meetingLink?: string;
+  interviewDate?: string;
+  interviewTime?: string;
   questions?: { id: string; label: string; required: boolean }[];
 };
 
@@ -38,8 +42,41 @@ export function ApplicationBoard({
   entryId?: string;
   tenantSlug?: string;
 }) {
+  const router = useRouter();
   const [selectedApplicant, setSelectedApplicant] =
     useState<BoardApplicant | null>(null);
+  const [isSendLinkOpen, setIsSendLinkOpen] = useState(false);
+  const [pendingStage, setPendingStage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!entryId) return;
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!supabaseUrl || !supabaseKey) return;
+
+    const supabase = createBrowserClient(supabaseUrl, supabaseKey);
+
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'temporary_applicants',
+          filter: `recruitment_entry_id=eq.${entryId}`,
+        },
+        () => {
+          router.refresh();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [entryId, router]);
 
   const [optimisticApplicants, setOptimisticApplicants] = useOptimistic(
     applicants,
@@ -62,29 +99,31 @@ export function ApplicationBoard({
       a.email.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  async function handleMoveStage(applicantId: string, newStage: string) {
-    startTransition(() => {
+  function handleMoveStage(applicantId: string, newStage: string) {
+    startTransition(async () => {
       setOptimisticApplicants({ id: applicantId, stage: newStage });
+      try {
+        await updateApplicantStage(applicantId, newStage);
+        router.refresh();
+      } catch {
+        alert("Failed to move stage.");
+      }
     });
-    try {
-      await updateApplicantStage(applicantId, newStage);
-    } catch {
-      alert("Failed to move stage.");
-    }
   }
 
-  async function handleDecision(
+  function handleDecision(
     applicantId: string,
     status: "approved" | "rejected",
   ) {
-    startTransition(() => {
+    startTransition(async () => {
       setOptimisticApplicants({ id: applicantId, status });
+      try {
+        await updateApplicantDecision(applicantId, status);
+        router.refresh();
+      } catch {
+        alert("Failed to log decision.");
+      }
     });
-    try {
-      await updateApplicantDecision(applicantId, status);
-    } catch {
-      alert("Failed to log decision.");
-    }
   }
 
   const effectiveStages = stages.length > 0 
@@ -142,17 +181,62 @@ export function ApplicationBoard({
                 >
                   Copy Link
                 </Button>
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    const url = `${window.location.origin}/${tenantSlug}/apply/${entryId}`;
-                    const subject = encodeURIComponent(`Apply to ${entryTitle}`);
-                    const body = encodeURIComponent(`Please use this link to apply:\n\n${url}`);
-                    window.location.href = `mailto:?subject=${subject}&body=${body}`;
-                  }}
-                >
-                  Email Link
-                </Button>
+                <div className="relative">
+                  <Button
+                    variant="secondary"
+                    onClick={() => setIsSendLinkOpen(!isSendLinkOpen)}
+                  >
+                    Send Link
+                  </Button>
+                  {isSendLinkOpen && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-40" 
+                        onClick={() => setIsSendLinkOpen(false)}
+                      />
+                      <div className="absolute right-0 top-full mt-2 w-48 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div className="flex flex-col py-1">
+                          <button
+                            className="block px-4 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                            onClick={() => {
+                              const url = `${window.location.origin}/${tenantSlug}/apply/${entryId}`;
+                              const subject = encodeURIComponent(`Apply to ${entryTitle}`);
+                              const body = encodeURIComponent(`Please use this link to apply:\n\n${url}`);
+                              window.open(`https://mail.google.com/mail/?view=cm&fs=1&su=${subject}&body=${body}`, '_blank');
+                              setIsSendLinkOpen(false);
+                            }}
+                          >
+                            Send via Gmail
+                          </button>
+                          <button
+                            className="block px-4 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                            onClick={() => {
+                              const url = `${window.location.origin}/${tenantSlug}/apply/${entryId}`;
+                              const subject = encodeURIComponent(`Apply to ${entryTitle}`);
+                              const body = encodeURIComponent(`Please use this link to apply:\n\n${url}`);
+                              window.open(`https://outlook.live.com/mail/0/deeplink/compose?subject=${subject}&body=${body}`, '_blank');
+                              setIsSendLinkOpen(false);
+                            }}
+                          >
+                            Send via Outlook
+                          </button>
+                          <button
+                            className="block px-4 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                            onClick={() => {
+                              const url = `${window.location.origin}/${tenantSlug}/apply/${entryId}`;
+                              const subject = encodeURIComponent(`Apply to ${entryTitle}`);
+                              const body = encodeURIComponent(`Please use this link to apply:\n\n${url}`);
+                              window.location.href = `mailto:?subject=${subject}&body=${body}`;
+                              setIsSendLinkOpen(false);
+                            }}
+                          >
+                            Default Mail App
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -178,11 +262,12 @@ export function ApplicationBoard({
                 {col.applicants.map((a) => (
                   <div
                     key={a.id}
-                    onClick={() =>
+                    onClick={() => {
                       setSelectedApplicant(
                         selectedApplicant?.id === a.id ? null : a,
-                      )
-                    }
+                      );
+                      setPendingStage(null);
+                    }}
                     className={`cursor-pointer rounded-xl border p-4 shadow-sm transition-colors hover:border-primary/30 ${selectedApplicant?.id === a.id ? "border-primary ring-1 ring-primary/20 bg-primary/5" : "border-border bg-white"}`}
                   >
                     <div className="mb-2 flex items-center gap-2">
@@ -209,7 +294,10 @@ export function ApplicationBoard({
         <aside className="w-80 shrink-0 border-l border-border bg-white p-6 shadow-xl z-10 flex flex-col overflow-y-auto">
           <button
             type="button"
-            onClick={() => setSelectedApplicant(null)}
+            onClick={() => {
+              setSelectedApplicant(null);
+              setPendingStage(null);
+            }}
             className="mb-4 self-end text-xs text-slate-400 transition-colors hover:text-foreground"
           >
             ✕ Close
@@ -256,13 +344,12 @@ export function ApplicationBoard({
                 <Button
                   key={s.id}
                   variant={
-                    selectedApplicant.stage === s.id ? "primary" : "ghost"
+                    (pendingStage || selectedApplicant.stage) === s.id ? "primary" : "ghost"
                   }
                   onClick={() => {
-                    handleMoveStage(selectedApplicant.id, s.id);
-                    setSelectedApplicant((prev) =>
-                      prev ? { ...prev, stage: s.id } : null,
-                    );
+                    if (selectedApplicant.stage !== s.id) {
+                      setPendingStage(s.id);
+                    }
                   }}
                   className="justify-start"
                 >
@@ -271,18 +358,91 @@ export function ApplicationBoard({
               ))}
             </div>
 
+            {pendingStage && (
+              <div className="mt-3 p-4 border border-indigo-100 rounded-xl bg-indigo-50/50 space-y-3 animate-in fade-in slide-in-from-top-2">
+                <p className="text-sm font-medium text-slate-800">
+                  Move to <span className="font-bold">{effectiveStages.find(s => s.id === pendingStage)?.name}</span>?
+                </p>
+                <p className="text-xs text-slate-500">
+                  This will notify the applicant later.
+                </p>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => setPendingStage(null)} 
+                    variant="ghost" 
+                    className="flex-1 bg-white border border-slate-200"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      handleMoveStage(selectedApplicant.id, pendingStage);
+                      setSelectedApplicant(prev => prev ? { ...prev, stage: pendingStage } : null);
+                      setPendingStage(null);
+                    }} 
+                    variant="dark" 
+                    className="flex-1"
+                  >
+                    Confirm
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {/* Display meeting link depending on the current stage type */}
-            {effectiveStages.find(s => s.id === selectedApplicant.stage)?.type === 'interview' && effectiveStages.find(s => s.id === selectedApplicant.stage)?.meetingLink && (
+            {effectiveStages.find(s => s.id === selectedApplicant.stage)?.type === 'interview' && (
               <div className="pt-4 mt-4 border-t border-slate-200">
-                <h3 className="text-sm font-bold text-slate-700 mb-3">Interview Link</h3>
-                <a 
-                  href={effectiveStages.find(s => s.id === selectedApplicant.stage)?.meetingLink}
-                  target="_blank" 
-                  rel="noreferrer"
-                  className="inline-flex w-full items-center justify-center rounded-lg bg-indigo-50 py-2 text-sm font-semibold text-indigo-600 hover:bg-indigo-100 transition"
-                >
-                  Join Meeting
-                </a>
+                <h3 className="text-sm font-bold text-slate-700 mb-3">Interview Details</h3>
+                {(() => {
+                  const s = effectiveStages.find(s => s.id === selectedApplicant.stage);
+                  return (
+                    <div className="space-y-3">
+                      {(s?.interviewDate || s?.interviewTime) && (
+                        <div className="rounded-lg bg-slate-50 p-3 border border-slate-100 text-sm">
+                          {s?.interviewDate && (
+                            <div className="flex justify-between mb-1">
+                              <span className="text-slate-500 font-medium">Date:</span>
+                              <span className="text-slate-800 font-semibold">{s.interviewDate}</span>
+                            </div>
+                          )}
+                          {s?.interviewTime && (
+                            <div className="flex justify-between">
+                              <span className="text-slate-500 font-medium">Time:</span>
+                              <span className="text-slate-800 font-semibold">
+                                {(() => {
+                                  try {
+                                    const [hours, minutes] = s.interviewTime.split(':');
+                                    const h = parseInt(hours, 10);
+                                    const ampm = h >= 12 ? 'PM' : 'AM';
+                                    const h12 = h % 12 || 12;
+                                    return `${h12}:${minutes} ${ampm}`;
+                                  } catch {
+                                    return s.interviewTime;
+                                  }
+                                })()}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {s?.meetingLink && (
+                        <a 
+                          href={s.meetingLink}
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="inline-flex w-full items-center justify-center rounded-lg bg-indigo-50 py-2 text-sm font-semibold text-indigo-600 hover:bg-indigo-100 transition"
+                        >
+                          Join Meeting
+                        </a>
+                      )}
+                      
+                      {!s?.meetingLink && !s?.interviewDate && !s?.interviewTime && (
+                        <p className="text-sm text-slate-500 italic">No interview details configured.</p>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             )}
 

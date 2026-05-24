@@ -9,8 +9,6 @@ import {
   ApplicationBoard,
   BoardStage,
 } from "@/components/organisms/application-board";
-import { AuthenticatedShell } from "@/components/templates/authenticated-shell";
-import { OFFICER_TENANT_BRANDING } from "@/lib/officer-demo-data";
 
 export default async function OfficerRecruitmentEntryPage({
   params,
@@ -67,14 +65,12 @@ export default async function OfficerRecruitmentEntryPage({
   }));
 
   return (
-    <AuthenticatedShell role="Officer" tenantBranding={OFFICER_TENANT_BRANDING}>
-      <ApplicationBoard
-        entryTitle={entry.title}
-        applicants={applicants}
-        stages={(entry.settings as { stages?: BoardStage[] })?.stages || []}
-        entryId={entryId}
-        tenantSlug={tenant.slug}
-      />
-    </AuthenticatedShell>
+    <ApplicationBoard
+      entryTitle={entry.title}
+      applicants={applicants}
+      stages={(entry.settings as { stages?: BoardStage[] })?.stages || []}
+      entryId={entryId}
+      tenantSlug={tenant.slug}
+    />
   );
 }

@@ -13,6 +13,8 @@ export type RecruitmentStage = {
   name: string;
   type: StageType;
   meetingLink?: string;
+  interviewDate?: string;
+  interviewTime?: string;
   questions?: { id: string; label: string; required: boolean }[];
 };
 
@@ -107,13 +109,33 @@ export function RecruitmentSettingsEditor({
               </div>
 
               {stage.type === "interview" && (
-                <div>
-                  <Label>Meeting Link (e.g. Google Meet / Zoom)</Label>
-                  <Input
-                    value={stage.meetingLink || ""}
-                    onChange={(e) => updateStage(index, { meetingLink: e.target.value })}
-                    placeholder="https://meet.google.com/..."
-                  />
+                <div className="space-y-4">
+                  <div>
+                    <Label>Meeting Link (e.g. Google Meet / Zoom)</Label>
+                    <Input
+                      value={stage.meetingLink || ""}
+                      onChange={(e) => updateStage(index, { meetingLink: e.target.value })}
+                      placeholder="https://meet.google.com/..."
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Interview Date (Optional)</Label>
+                      <Input
+                        type="date"
+                        value={stage.interviewDate || ""}
+                        onChange={(e) => updateStage(index, { interviewDate: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label>Interview Time (Optional)</Label>
+                      <Input
+                        type="time"
+                        value={stage.interviewTime || ""}
+                        onChange={(e) => updateStage(index, { interviewTime: e.target.value })}
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
 
