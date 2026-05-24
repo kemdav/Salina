@@ -37,6 +37,7 @@ export function EventsManager({
       id: string;
       status: string;
       checkIn: string;
+      checkOut: string | null;
       member: string;
       memberId: string;
       eventId: string;
@@ -444,9 +445,9 @@ export function EventsManager({
                     return `"${sanitized}"`;
                   };
                   const csv = [
-                    ["Member", "Status", "Check-in Time"].map(escapeCSV),
+                    ["Member", "Status", "Check-in Time", "Check-out Time"].map(escapeCSV),
                     ...attendanceRecords.map((r) =>
-                      [r.member, r.status, r.checkIn].map(escapeCSV),
+                      [r.member, r.status, r.checkIn, r.checkOut || ""].map(escapeCSV),
                     ),
                   ]
                     .map((e) => e.join(","))
@@ -473,7 +474,7 @@ export function EventsManager({
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-slate-50/50">
-                  {["Member", "Check-in", "Status", "Actions"].map((col) => (
+                  {["Member", "Check-in", "Check-out", "Status", "Actions"].map((col) => (
                     <th
                       key={col}
                       className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500"
@@ -487,7 +488,7 @@ export function EventsManager({
                 {attendanceRecords.length === 0 && (
                   <tr>
                     <td
-                      colSpan={4}
+                      colSpan={5}
                       className="px-4 py-3 text-sm text-slate-500 text-center"
                     >
                       No attendees yet.
@@ -504,6 +505,9 @@ export function EventsManager({
                     </td>
                     <td className="px-4 py-3 text-sm text-slate-500">
                       {record.checkIn}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-slate-500">
+                      {record.checkOut || "-"}
                     </td>
                     <td className="px-4 py-3">
                       <span
