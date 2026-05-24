@@ -13,6 +13,25 @@ export default async function AdminLayout({
   const viewer = await getCurrentViewer();
 
   if (!viewer || !tenantContext.tenant) {
+    if (
+      tenantContext.resolutionError === "This organization has been suspended."
+    ) {
+      return (
+        <div className="flex min-h-screen items-center justify-center bg-stone-950 text-stone-50">
+          <div className="text-center p-8 border border-red-900/30 rounded-xl bg-red-950/10">
+            <h1 className="mb-4 text-3xl font-bold text-red-500">
+              Organization Suspended
+            </h1>
+            <p className="text-stone-300">
+              Your organization's access has been temporarily suspended.
+            </p>
+            <p className="mt-2 text-stone-500 text-sm">
+              Please contact the platform administrator for assistance.
+            </p>
+          </div>
+        </div>
+      );
+    }
     redirect("/login");
   }
 
