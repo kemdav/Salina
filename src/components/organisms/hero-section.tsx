@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { HeroActions } from "@/components/molecules/hero-actions";
 
 export function HeroSection() {
@@ -22,11 +23,13 @@ export function HeroSection() {
         </div>
 
         {/* Right Side: Platform Screenshot */}
-        <div className="w-full aspect-[4/3] lg:aspect-square overflow-hidden rounded-2xl shadow-xl ring-1 ring-border">
-          <img
+        <div className="relative w-full aspect-[4/3] lg:aspect-square overflow-hidden rounded-2xl shadow-xl ring-1 ring-border">
+          <Image
             src="https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=900&q=80"
             alt="Teams collaborating using Salina"
-            className="h-full w-full object-cover"
+            fill
+            className="object-cover"
+            sizes="(max-width: 1024px) 100vw, 50vw"
           />
         </div>
       </section>

@@ -1,13 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/atoms/button';
 
 export function HighlightSection() {
     const router = useRouter();
-    const [mounted, setMounted] = useState(false);
-    useEffect(() => { setMounted(true); }, []);
 
     return (
         <section className="px-8 py-24 w-full max-w-[var(--grid-max-width)] mx-auto">
@@ -24,7 +21,7 @@ export function HighlightSection() {
                 <Button
                     variant="secondary"
                     className="mt-10 h-12 px-10 text-base"
-                    onClick={() => { if (mounted) router.push('/sign-up'); }}
+                    onClick={() => router.push('/sign-up')}
                 >
                     Get Started for Free →
                 </Button>

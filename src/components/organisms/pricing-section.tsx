@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/atoms/button";
 import { ScrollReveal } from "@/components/atoms/scroll-reveal";
@@ -36,8 +35,6 @@ const CHECK_ICON = (
 
 export function PricingSection() {
     const router = useRouter();
-    const [mounted, setMounted] = useState(false);
-    useEffect(() => { setMounted(true); }, []);
 
     return (
         <section id="pricing" className="px-8 py-20 max-w-[var(--grid-max-width)] mx-auto w-full">
@@ -76,7 +73,7 @@ export function PricingSection() {
                         <Button
                             variant="secondary"
                             className="h-12 px-8 text-base shrink-0"
-                            onClick={() => { if (mounted) router.push("/sign-up"); }}
+                            onClick={() => router.push("/sign-up")}
                         >
                             Get Started →
                         </Button>

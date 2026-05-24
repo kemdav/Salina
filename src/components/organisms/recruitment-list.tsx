@@ -2,7 +2,6 @@
 
 import { useOptimistic, useState, startTransition } from "react";
 import type { FormEvent } from "react";
-import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
 import { CreateRecruitmentCycleModal } from "@/components/organisms/create-recruitment-cycle-modal";

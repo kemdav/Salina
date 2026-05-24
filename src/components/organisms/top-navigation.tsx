@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/atoms/button';
 import { SalinaLogo } from '@/components/atoms/salina-logo';
@@ -8,8 +7,6 @@ import { NavLinks } from '@/components/molecules/nav-links';
 
 export function TopNavigation() {
     const router = useRouter();
-    const [mounted, setMounted] = useState(false);
-    useEffect(() => { setMounted(true); }, []);
 
     return (
         <nav className="border-b border-border px-8 h-20 flex items-center justify-between sticky top-0 bg-background z-50">
@@ -26,7 +23,7 @@ export function TopNavigation() {
                 {/* Log In */}
                 <Button
                     variant="secondary"
-                    onClick={() => { if (mounted) router.push('/login'); }}
+                    onClick={() => router.push('/login')}
                 >
                     Log In
                 </Button>
@@ -34,7 +31,7 @@ export function TopNavigation() {
                 {/* Sign Up */}
                 <Button
                     variant="primary"
-                    onClick={() => { if (mounted) router.push('/sign-up'); }}
+                    onClick={() => router.push('/sign-up')}
                 >
                     Sign Up
                 </Button>
