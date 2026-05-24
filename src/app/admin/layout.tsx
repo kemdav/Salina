@@ -60,6 +60,8 @@ export default async function AdminLayout({
         logoUrl: tenantContext.tenant.themeConfig.logoUrl ?? undefined,
       }}
       userName={viewer.email?.split("@")[0] ?? "Admin"}
+      userId={viewer.id}
+      tenantId={viewer.tenantId}
     >
       {children}
     </AuthenticatedShell>

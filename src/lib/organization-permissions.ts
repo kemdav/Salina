@@ -13,7 +13,7 @@ export type OrganizationPermission = typeof AVAILABLE_PERMISSIONS[number];
 
 type TemporaryApplicantPermissionViewer = Pick<
   ViewerContext,
-  "isPlatformAdmin" | "tenantRole"
+  "isPlatformAdmin" | "tenantRole" | "customPermissions"
 >;
 
 export function canManageTemporaryApplicants(
@@ -24,6 +24,10 @@ export function canManageTemporaryApplicants(
   }
 
   if (viewer.isPlatformAdmin) {
+    return true;
+  }
+
+  if (viewer.customPermissions.includes("Recruitment reviews")) {
     return true;
   }
 
@@ -42,6 +46,10 @@ export function canManageEvents(
   }
 
   if (viewer.isPlatformAdmin) {
+    return true;
+  }
+
+  if (viewer.customPermissions.includes("Event management")) {
     return true;
   }
 

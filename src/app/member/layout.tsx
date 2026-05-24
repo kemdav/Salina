@@ -69,6 +69,9 @@ export default async function MemberLayout({
             : undefined
         }
         userName={viewer.email?.split("@")[0] ?? "Member"}
+        customPermissions={viewer.customPermissions}
+        userId={viewer.id}
+        tenantId={viewer.tenantId}
       >
         {children}
       </AuthenticatedShell>
