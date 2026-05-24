@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { resolveCurrentTenant } from "@/lib/supabase/server";
 import { SelfInitiateApplicationForm } from "./client";
 
 export default async function ApplyPage({
@@ -7,21 +8,11 @@ export default async function ApplyPage({
 }: {
   params: Promise<{ role: string; entryId: string }>;
 }) {
-  const { role: tenantSlug, entryId } = await params;
+  const { entryId } = await params;
   const adminClient = createSupabaseAdminClient("tenant-apply-view");
+  const tenantContext = await resolveCurrentTenant();
 
-  if (!adminClient) {
-    return notFound();
-  }
-
-  // Find tenant
-  const { data: tenant, error: tenantErr } = await adminClient
-    .from("organizations")
-    .select("id")
-    .eq("slug", tenantSlug)
-    .single();
-
-  if (tenantErr || !tenant) {
+  if (!adminClient || !tenantContext.tenant) {
     return notFound();
   }
 
@@ -30,7 +21,7 @@ export default async function ApplyPage({
     .from("recruitment_entries")
     .select("title, description, status")
     .eq("id", entryId)
-    .eq("tenant_id", tenant.id)
+    .eq("tenant_id", tenantContext.tenant.id)
     .single();
 
   if (entryErr || !entry || entry.status !== "published") {
@@ -47,7 +38,7 @@ export default async function ApplyPage({
   return (
     <div className="min-h-screen bg-slate-50">
       <SelfInitiateApplicationForm 
-        tenantSlug={tenantSlug} 
+        tenantSlug={tenantContext.tenant.slug} 
         entryId={entryId} 
         entryTitle={entry.title}
         entryDescription={entry.description}
