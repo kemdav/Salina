@@ -157,15 +157,30 @@ Open **<http://salina.localhost:3000/login>** to sign in with the shared local a
 
 ### Seeded Demo Tenants
 
-The `supabase/seed.sql` file pre-populates three tenants for local development:
+The `supabase/seed.sql` file pre-populates three tenants for local development, each with accounts spanning every role:
 
-| Tenant | Slug | Local URL | Email | Password |
-| --- | --- | --- | --- | --- |
-| System Admin | `system-admin` | <http://system-admin.salina.localhost:3000> | `system-admin@salina.dev` | `SalinaPreview123!` |
-| Acme | `acme` | <http://acme.salina.localhost:3000> | `acme-admin@salina.dev` | `SalinaPreview123!` |
-| ICPEP.SE - CIT University | `icpep-se` | <http://icpep-se.salina.localhost:3000> | `icpep-se-admin@salina.dev` | `SalinaPreview123!` |
+| Tenant | Role | Email | Password |
+| --- | --- | --- | --- |
+| System Admin | System Admin | `system-admin@salina.dev` | `SalinaPreview123!` |
+| System Admin | Officer | `system-officer@salina.dev` | `SalinaPreview123!` |
+| System Admin | Member | `system-member@salina.dev` | `SalinaPreview123!` |
+| System Admin | Viewer | `system-viewer@salina.dev` | `SalinaPreview123!` |
+| Acme | Owner | `acme-admin@salina.dev` | `SalinaPreview123!` |
+| Acme | Officer | `acme-officer@salina.dev` | `SalinaPreview123!` |
+| Acme | Member | `acme-member@salina.dev` | `SalinaPreview123!` |
+| Acme | Viewer | `acme-viewer@salina.dev` | `SalinaPreview123!` |
+| ICPEP.SE - CIT University | Owner | `icpep-se-admin@salina.dev` | `SalinaPreview123!` |
+| ICPEP.SE - CIT University | Officer | `icpep-se-officer@salina.dev` | `SalinaPreview123!` |
+| ICPEP.SE - CIT University | Member | `icpep-se-member@salina.dev` | `SalinaPreview123!` |
+| ICPEP.SE - CIT University | Viewer | `icpep-se-viewer@salina.dev` | `SalinaPreview123!` |
 
-> These credentials are **local/preview only**. They are committed to the repo intentionally for development convenience.
+| Tenant | Slug | Local URL |
+| --- | --- | --- |
+| System Admin | `system-admin` | <http://system-admin.salina.localhost:3000> |
+| Acme | `acme` | <http://acme.salina.localhost:3000> |
+| ICPEP.SE - CIT University | `icpep-se` | <http://icpep-se.salina.localhost:3000> |
+
+> These credentials are **local/preview only**. They are committed intentionally for development convenience.
 
 ---
 
