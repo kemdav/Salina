@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { SalinaLogo } from "@/components/atoms/salina-logo";
 import type { UserRole } from "@/lib/navigation-config";
 import { NotificationBell } from "@/components/organisms/notification-bell";
@@ -26,6 +26,8 @@ interface AuthenticatedTopBarProps {
   onSignOut?: () => void;
   tenantBranding?: AuthenticatedTenantBranding;
   userName?: string;
+  /** Roles the current user is permitted to preview. Only shown when 2+. */
+  viewableRoles?: UserRole[];
 }
 
 function getInitials(name: string) {
@@ -45,8 +47,10 @@ export function AuthenticatedTopBar({
   onSignOut,
   tenantBranding,
   userName = "Jane Doe",
+  viewableRoles,
 }: AuthenticatedTopBarProps) {
   const pathname = usePathname() || "";
+  const router = useRouter();
   const segments = pathname.split("/").filter(Boolean);
   const roleSegment = segments[0] || "";
   const lastSegment = segments[segments.length - 1] || "dashboard";
@@ -95,6 +99,16 @@ export function AuthenticatedTopBar({
           .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
           .join(" ");
 
+  const switchableRoles = (viewableRoles ?? []).filter((r) => r !== role);
+  const handleRoleSwitch = useCallback(
+    (targetRole: UserRole) => {
+      const suffix = segments.slice(1).join("/") || "dashboard";
+      const targetPath = `/${targetRole.toLowerCase()}/${suffix}`;
+      router.replace(targetPath);
+    },
+    [router, segments],
+  );
+
   return (
     <header className="sticky top-0 z-30 flex h-20 shrink-0 items-center justify-between gap-4 border-b border-slate-200 bg-white/95 px-6 shadow-sm backdrop-blur sm:px-8">
       <div className="flex min-w-0 items-center gap-4">
@@ -134,6 +148,17 @@ export function AuthenticatedTopBar({
             <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">
               {role}
             </span>
+            {switchableRoles.map((switchRole) => (
+              <button
+                key={switchRole}
+                type="button"
+                onClick={() => handleRoleSwitch(switchRole)}
+                className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-600 transition-colors hover:bg-blue-100 hover:border-blue-300"
+                title={`Switch to ${switchRole} view`}
+              >
+                {switchRole}
+              </button>
+            ))}
             {isTemporaryApplicant ? (
               <span className="rounded-full border border-amber-500/30 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-amber-800">
                 Temporary UI

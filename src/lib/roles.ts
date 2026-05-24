@@ -1,4 +1,4 @@
-import type { VisibilityRole } from "@/lib/navigation-config";
+import type { UserRole, VisibilityRole } from "@/lib/navigation-config";
 
 /**
  * All valid organization membership roles, ordered from highest to lowest privilege.
@@ -38,6 +38,43 @@ export function isRoleAtLeast(
   }
 
   return userRank <= requiredRank;
+}
+
+/**
+ * Returns the list of UI roles the given tenant role is permitted to view,
+ * excluding the role that matches the current route group.
+ *
+ * An admin (DB role "admin" / "owner" / "system_admin") can visit all three route groups.
+ * An officer can visit officer and member.
+ * Members can only visit member pages.
+ */
+export function getSwitchableRoles(
+  tenantRole: string | null | undefined,
+  currentRouteRole: UserRole,
+): UserRole[] {
+  if (!tenantRole) {
+    return [];
+  }
+
+  // Determine which UI roles this viewer is allowed to visit.
+  let allowedUiRoles: UserRole[];
+
+  if (
+    tenantRole === "system_admin" ||
+    tenantRole === "owner" ||
+    tenantRole === "admin"
+  ) {
+    allowedUiRoles = ["Admin", "Officer", "Member"];
+  } else if (tenantRole === "officer") {
+    allowedUiRoles = ["Officer", "Member"];
+  } else if (tenantRole === "member" || tenantRole === "viewer") {
+    allowedUiRoles = ["Member"];
+  } else {
+    return [];
+  }
+
+  // Return everything except the route group the user is currently viewing.
+  return allowedUiRoles.filter((r) => r !== currentRouteRole);
 }
 
 /**

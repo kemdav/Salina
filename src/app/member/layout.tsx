@@ -5,7 +5,8 @@ import { AuthenticatedShell } from "@/components/templates/authenticated-shell";
 import { TemporaryApplicantRouteGuard } from "@/components/providers/temporary-applicant-route-guard";
 import { TemporaryApplicantProvider } from "@/components/providers/temporary-applicant-provider";
 import { getCurrentViewer, resolveCurrentTenant } from "@/lib/supabase/server";
-import { isRoleAtLeast } from "@/lib/roles";
+import { getSwitchableRoles, isRoleAtLeast } from "@/lib/roles";
+import type { UserRole } from "@/lib/navigation-config";
 
 function isInvalidRefreshTokenError(error: unknown) {
   const message =
@@ -60,11 +61,16 @@ export default async function MemberLayout({
     redirect("/login");
   }
 
+  // Compute switchable roles from the viewer's actual DB role.
+  // Admin/Officer accessing member pages will see their higher-role chips to switch back.
+  const switchableRoles: UserRole[] = getSwitchableRoles(viewer.tenantRole, "Member");
+
   return (
     <TemporaryApplicantProvider value={viewer.isTemporaryApplicant ?? false}>
       <TemporaryApplicantRouteGuard />
       <AuthenticatedShell
         role="Member"
+        viewableRoles={switchableRoles}
         tenantBranding={
           tenantContext.tenant
             ? {
