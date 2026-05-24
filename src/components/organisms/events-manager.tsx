@@ -7,6 +7,7 @@ import {
   updateAttendanceStatus,
   getAttendanceRecords,
 } from "@/lib/actions/attendance";
+import { QRScannerModal } from "@/components/organisms/qr-scanner-modal";
 
 type View = "list" | "calendar";
 
@@ -17,6 +18,8 @@ interface OrgEvent {
   location: string;
   start_time: string;
   end_time: string;
+  qr_attendance_enabled?: boolean;
+  require_check_out?: boolean;
 }
 
 export function EventsManager({
@@ -34,6 +37,7 @@ export function EventsManager({
       id: string;
       status: string;
       checkIn: string;
+      checkOut: string | null;
       member: string;
       memberId: string;
       eventId: string;
@@ -50,6 +54,10 @@ export function EventsManager({
   const [location, setLocation] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
+  const [qrAttendanceEnabled, setQrAttendanceEnabled] = useState(false);
+  const [requireCheckOut, setRequireCheckOut] = useState(false);
+
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   async function loadAttendance(eventId: string) {
     try {
@@ -75,8 +83,12 @@ export function EventsManager({
         location,
         start_time: new Date(startTime).toISOString(),
         end_time: new Date(endTime).toISOString(),
+        qr_attendance_enabled: qrAttendanceEnabled,
+        require_check_out: requireCheckOut,
       });
       setIsCreating(false);
+      setQrAttendanceEnabled(false);
+      setRequireCheckOut(false);
       const updated = await getEvents();
       setEvents(updated);
     } catch (err) {
@@ -228,6 +240,30 @@ export function EventsManager({
                   className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-2 border"
                 />
               </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={qrAttendanceEnabled}
+                  onChange={(e) => setQrAttendanceEnabled(e.target.checked)}
+                />
+                <span className="text-sm font-medium text-slate-700">
+                  Enable QR Attendance
+                </span>
+              </label>
+              {qrAttendanceEnabled && (
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={requireCheckOut}
+                    onChange={(e) => setRequireCheckOut(e.target.checked)}
+                  />
+                  <span className="text-sm font-medium text-slate-700">
+                    Require Check-Out Scan
+                  </span>
+                </label>
+              )}
             </div>
             <div className="flex justify-end gap-2">
               <Button
@@ -403,16 +439,16 @@ export function EventsManager({
                   const escapeCSV = (str: string | null | undefined) => {
                     if (!str) return '""';
                     const escaped = str.replace(/"/g, '""');
-                    const sanitized = escaped.match(/^[=+\-@\t\r]/) ? "'" + escaped : escaped;
+                    const sanitized = escaped.match(/^[=+\-@\t\r]/)
+                      ? "'" + escaped
+                      : escaped;
                     return `"${sanitized}"`;
                   };
                   const csv = [
-                    ["Member", "Status", "Check-in Time"].map(escapeCSV),
-                    ...attendanceRecords.map((r) => [
-                      r.member,
-                      r.status,
-                      r.checkIn,
-                    ].map(escapeCSV)),
+                    ["Member", "Status", "Check-in Time", "Check-out Time"].map(escapeCSV),
+                    ...attendanceRecords.map((r) =>
+                      [r.member, r.status, r.checkIn, r.checkOut || ""].map(escapeCSV),
+                    ),
                   ]
                     .map((e) => e.join(","))
                     .join("\n");
@@ -427,13 +463,18 @@ export function EventsManager({
               >
                 Export CSV
               </Button>
+              {selectedEvent.qr_attendance_enabled && (
+                <Button onClick={() => setIsScannerOpen(true)}>
+                  Scan QR Code
+                </Button>
+              )}
             </div>
           </div>
           <div className="overflow-hidden rounded-xl border border-border">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-slate-50/50">
-                  {["Member", "Check-in", "Status", "Actions"].map((col) => (
+                  {["Member", "Check-in", "Check-out", "Status", "Actions"].map((col) => (
                     <th
                       key={col}
                       className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500"
@@ -447,7 +488,7 @@ export function EventsManager({
                 {attendanceRecords.length === 0 && (
                   <tr>
                     <td
-                      colSpan={4}
+                      colSpan={5}
                       className="px-4 py-3 text-sm text-slate-500 text-center"
                     >
                       No attendees yet.
@@ -464,6 +505,9 @@ export function EventsManager({
                     </td>
                     <td className="px-4 py-3 text-sm text-slate-500">
                       {record.checkIn}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-slate-500">
+                      {record.checkOut || "-"}
                     </td>
                     <td className="px-4 py-3">
                       <span
@@ -518,6 +562,16 @@ export function EventsManager({
             </table>
           </div>
         </div>
+      )}
+
+      {isScannerOpen && selectedEvent && (
+        <QRScannerModal
+          eventId={selectedEvent.id}
+          onClose={() => {
+            setIsScannerOpen(false);
+            loadAttendance(selectedEvent.id);
+          }}
+        />
       )}
     </div>
   );

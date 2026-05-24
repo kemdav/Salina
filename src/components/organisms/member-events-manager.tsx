@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { participateInEvent } from "@/lib/actions/attendance";
 import { Button } from "@/components/atoms/button";
+import QRCode from "react-qr-code";
 
 type View = "list" | "calendar";
 
@@ -13,6 +14,7 @@ interface OrgEvent {
   location: string;
   start_time: string;
   end_time: string;
+  qr_attendance_enabled?: boolean;
 }
 
 interface MemberAttendance {
@@ -23,9 +25,11 @@ interface MemberAttendance {
 export function MemberEventsManager({
   events,
   initialAttendance,
+  memberId,
 }: {
   events: OrgEvent[];
   initialAttendance: MemberAttendance[];
+  memberId: string;
 }) {
   const [view, setView] = useState<View>("list");
   const [selectedEvent, setSelectedEvent] = useState<OrgEvent | null>(null);
@@ -318,7 +322,7 @@ export function MemberEventsManager({
 
       {/* Details Modal */}
       {selectedEvent && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/40 backdrop-blur-sm">
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6 bg-slate-900/40 backdrop-blur-sm">
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
             <div className="px-6 py-8 relative shrink-0 bg-primary text-primary-foreground">
               <div className="relative z-10 pr-8">
@@ -416,6 +420,27 @@ export function MemberEventsManager({
                   {selectedEvent.description}
                 </p>
               </div>
+              {selectedEvent.qr_attendance_enabled &&
+                attendance.some((a) => a.event_id === selectedEvent.id) &&
+                memberId && (
+                  <div className="pt-4 border-t border-slate-100 flex flex-col items-center justify-center">
+                    <h3 className="text-[11px] uppercase tracking-wider font-bold text-slate-400 mb-4">
+                      Your Attendance QR Code
+                    </h3>
+                    <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                      <QRCode
+                        value={JSON.stringify({
+                          eventId: selectedEvent.id,
+                          memberId,
+                        })}
+                        size={200}
+                      />
+                    </div>
+                    <p className="mt-4 text-xs text-slate-500 text-center max-w-xs">
+                      Present this code to an officer to check in or out.
+                    </p>
+                  </div>
+                )}
             </div>
             <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 shrink-0">
               <Button
