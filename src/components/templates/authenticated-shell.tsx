@@ -22,6 +22,8 @@ interface AuthenticatedShellProps {
   customPermissions?: string[];
   userId?: string;
   tenantId?: string | null;
+  /** Roles the current user is permitted to preview. Passed to the top bar role switcher. */
+  viewableRoles?: UserRole[];
 }
 
 function ShellEmptyState({ role }: { role: UserRole }) {
@@ -65,6 +67,7 @@ export function AuthenticatedShell({
   customPermissions = [],
   userId,
   tenantId,
+  viewableRoles,
 }: AuthenticatedShellProps) {
   const temporaryApplicantFromContext = useTemporaryApplicant();
   const temporaryApplicant =
@@ -94,6 +97,7 @@ export function AuthenticatedShell({
           role={role}
           tenantBranding={tenantBranding}
           userName={userName}
+          viewableRoles={viewableRoles}
         />
 
         <div className="flex-1 p-6 lg:p-8">
