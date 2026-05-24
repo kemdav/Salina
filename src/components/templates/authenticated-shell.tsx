@@ -18,6 +18,8 @@ interface AuthenticatedShellProps {
   isTemporaryApplicant?: boolean;
   tenantBranding?: AuthenticatedTenantBranding;
   userName?: string;
+  /** Roles the current user is permitted to preview. Passed to the top bar role switcher. */
+  viewableRoles?: UserRole[];
 }
 
 function ShellEmptyState({ role }: { role: UserRole }) {
@@ -58,6 +60,7 @@ export function AuthenticatedShell({
   role,
   tenantBranding,
   userName,
+  viewableRoles,
 }: AuthenticatedShellProps) {
   const temporaryApplicantFromContext = useTemporaryApplicant();
   const temporaryApplicant =
@@ -82,6 +85,7 @@ export function AuthenticatedShell({
           role={role}
           tenantBranding={tenantBranding}
           userName={userName}
+          viewableRoles={viewableRoles}
         />
 
         <div className="flex-1 p-6 lg:p-8">
