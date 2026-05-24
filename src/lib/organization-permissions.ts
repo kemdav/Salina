@@ -7,6 +7,7 @@ export const AVAILABLE_PERMISSIONS = [
   "Event management",
   "Announcement posting",
   "Settings access",
+  "Temporary role assignment",
 ] as const;
 
 export type OrganizationPermission = typeof AVAILABLE_PERMISSIONS[number];
@@ -57,5 +58,26 @@ export function canManageEvents(
     viewer.tenantRole === "owner" ||
     viewer.tenantRole === "admin" ||
     viewer.tenantRole === "officer"
+  );
+}
+
+export function canAssignTemporaryRoles(
+  viewer: TemporaryApplicantPermissionViewer | null | undefined
+) {
+  if (!viewer) {
+    return false;
+  }
+
+  if (viewer.isPlatformAdmin) {
+    return true;
+  }
+
+  if (viewer.customPermissions.includes("Temporary role assignment")) {
+    return true;
+  }
+
+  return (
+    viewer.tenantRole === "owner" ||
+    viewer.tenantRole === "admin"
   );
 }

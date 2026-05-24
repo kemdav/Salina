@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { Badge } from "@/components/atoms/badge";
 import { Input } from "@/components/atoms/input";
 import { Button } from "@/components/atoms/button";
@@ -10,12 +10,22 @@ import type { OrganizationRole } from "@/lib/actions/roles";
 export default function MembersTable({
   members,
   roles,
+  canAssignRoles,
 }: {
   members: Member[];
   roles: OrganizationRole[];
+  canAssignRoles?: boolean;
 }) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [now, setNow] = useState<number>(0);
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setNow(Date.now());
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   const filtered = members.filter((m) => {
     const q = searchQuery.toLowerCase();
@@ -26,7 +36,28 @@ export default function MembersTable({
 
   const handleRoleChange = (membershipId: string, roleId: string) => {
     startTransition(() => {
-      assignCustomRole(membershipId, roleId === "none" ? null : roleId);
+      assignCustomRole(membershipId, roleId === "none" ? null : roleId, null);
+    });
+  };
+
+  const handleExpirationChange = (
+    membershipId: string,
+    roleId: string,
+    value: string,
+  ) => {
+    let expiresAt = null;
+    if (value === "24h") {
+      const tomorrow = new Date();
+      tomorrow.setHours(tomorrow.getHours() + 24);
+      expiresAt = tomorrow.toISOString();
+    } else if (value === "7d") {
+      const nextWeek = new Date();
+      nextWeek.setDate(nextWeek.getDate() + 7);
+      expiresAt = nextWeek.toISOString();
+    }
+
+    startTransition(() => {
+      assignCustomRole(membershipId, roleId, expiresAt);
     });
   };
 
@@ -111,23 +142,66 @@ export default function MembersTable({
                       <span className="text-xs text-slate-400 italic">
                         Full Access
                       </span>
+                    ) : canAssignRoles ? (
+                      <div className="flex flex-col gap-2">
+                        <select
+                          value={member.roleId || "none"}
+                          onChange={(e) =>
+                            handleRoleChange(member.id, e.target.value)
+                          }
+                          disabled={isPending}
+                          className="h-8 rounded-(--radius) border border-border bg-white px-2 text-xs text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+                        >
+                          <option value="none">None</option>
+                          {roles
+                            .filter((r) => r.is_assignable_to_members)
+                            .map((role) => (
+                              <option key={role.id} value={role.id}>
+                                {role.name}
+                              </option>
+                            ))}
+                        </select>
+                        {member.roleId && (
+                          <select
+                            value={
+                              member.roleExpiresAt &&
+                              new Date(member.roleExpiresAt).getTime() > now
+                                ? "temp"
+                                : "perm"
+                            }
+                            onChange={(e) =>
+                              handleExpirationChange(
+                                member.id,
+                                member.roleId!,
+                                e.target.value,
+                              )
+                            }
+                            disabled={isPending}
+                            className="h-7 w-full rounded-(--radius) border border-border bg-slate-50 px-2 text-[10px] text-slate-500 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+                          >
+                            <option value="perm">Permanent</option>
+                            <option value="24h">Expires in 24h</option>
+                            <option value="7d">Expires in 7 days</option>
+                            {member.roleExpiresAt &&
+                              new Date(member.roleExpiresAt).getTime() >
+                                now && (
+                                <option value="temp">Active (Temporary)</option>
+                              )}
+                          </select>
+                        )}
+                      </div>
                     ) : (
-                      <select
-                        value={member.roleId || "none"}
-                        onChange={(e) =>
-                          handleRoleChange(member.id, e.target.value)
-                        }
-                        disabled={isPending}
-                        className="h-8 rounded-(--radius) border border-border bg-white px-2 text-xs text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
-                      >
-                        <option value="none">None</option>
-                        {roles.map((role) => (
-                          <option key={role.id} value={role.id}>
-                            {role.name}
-                          </option>
-                        ))}
-                      </select>
+                      <span className="text-xs text-slate-600 font-medium">
+                        {roles.find((r) => r.id === member.roleId)?.name ||
+                          "None"}
+                      </span>
                     )}
+                    {member.roleExpiresAt &&
+                      new Date(member.roleExpiresAt).getTime() <= now && (
+                        <div className="mt-1 text-[10px] font-semibold text-red-500">
+                          Expired
+                        </div>
+                      )}
                   </td>
                   <td className="px-4 py-3 text-xs text-slate-500">
                     {new Date(member.joinedAt).toLocaleDateString()}

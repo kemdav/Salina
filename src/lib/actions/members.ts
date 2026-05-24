@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { resolveCurrentTenant, getCurrentViewer, createSupabaseUserClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { canAssignTemporaryRoles } from "@/lib/organization-permissions";
 
 export interface Member {
   id: string; // The membership id
@@ -11,6 +12,7 @@ export interface Member {
   email: string;
   role: string;
   roleId: string | null;
+  roleExpiresAt: string | null;
   joinedAt: string;
 }
 
@@ -26,7 +28,7 @@ export async function getMembers(): Promise<Member[]> {
 
   const { data, error } = await userClient
     .from("organization_memberships")
-    .select("id, user_id, role, role_id, created_at")
+    .select("id, user_id, role, role_id, role_expires_at, created_at")
     .eq("tenant_id", tenant.id)
     .order("created_at", { ascending: true });
 
@@ -53,6 +55,7 @@ export async function getMembers(): Promise<Member[]> {
         email,
         role: membership.role,
         roleId: membership.role_id,
+        roleExpiresAt: membership.role_expires_at,
         joinedAt: membership.created_at,
       };
     })
@@ -61,23 +64,25 @@ export async function getMembers(): Promise<Member[]> {
   return members;
 }
 
-export async function assignCustomRole(membershipId: string, roleId: string | null) {
+export async function assignCustomRole(membershipId: string, roleId: string | null, expiresAt?: string | null) {
   const { tenant } = await resolveCurrentTenant();
   const viewer = await getCurrentViewer();
   const userClient = await createSupabaseUserClient();
 
-  // Basic check for admin privileges or platform admin
   if (!tenant || !userClient || !viewer) {
     throw new Error("You do not have permission to assign roles.");
   }
 
-  const isTenantAdmin = viewer.tenantRole === "admin" || viewer.tenantRole === "owner" || viewer.isPlatformAdmin;
+  const hasPermission = canAssignTemporaryRoles(viewer);
 
-  if (!isTenantAdmin) {
-    throw new Error("Only organization administrators can assign custom roles.");
+  if (!hasPermission) {
+    throw new Error("You do not have permission to assign custom roles.");
   }
 
-  const updateData = { role_id: roleId };
+  const updateData = { 
+    role_id: roleId,
+    role_expires_at: expiresAt || null,
+  };
 
   const { error } = await userClient
     .from("organization_memberships")

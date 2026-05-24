@@ -207,10 +207,10 @@ export const getCurrentViewer = cache(async (): Promise<ViewerContext | null> =>
     if (claims.tenantId) {
       const { data: membership, error: membershipError } = await client
         .from("organization_memberships")
-        .select("role, organization_roles(permissions)")
+        .select("role, role_expires_at, organization_roles(permissions)")
         .eq("tenant_id", claims.tenantId)
         .eq("user_id", user.id)
-        .maybeSingle<{ role: string; organization_roles: { permissions: string[] } | null }>();
+        .maybeSingle<{ role: string; role_expires_at: string | null; organization_roles: { permissions: string[] } | null }>();
 
       if (membershipError) {
         console.error("Failed to load organization membership:", membershipError);
@@ -220,7 +220,11 @@ export const getCurrentViewer = cache(async (): Promise<ViewerContext | null> =>
 
       tenantRole = membership?.role ?? null;
       if (membership?.organization_roles && Array.isArray(membership.organization_roles.permissions)) {
-        customPermissions = membership.organization_roles.permissions;
+        if (membership.role_expires_at && new Date(membership.role_expires_at).getTime() < Date.now()) {
+          customPermissions = [];
+        } else {
+          customPermissions = membership.organization_roles.permissions;
+        }
       }
     }
 

@@ -1,6 +1,11 @@
 import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
+import { getCurrentViewer } from "@/lib/supabase/server";
+import { canAssignTemporaryRoles } from "@/lib/organization-permissions";
+import { getMembers } from "@/lib/actions/members";
+import { getRoles } from "@/lib/actions/roles";
+import MembersTable from "@/app/admin/members/MembersTable";
 
 const rosterStats = [
   { label: "Active members", value: "142", tone: "emerald" },
@@ -46,7 +51,22 @@ const rosterRows = [
   },
 ];
 
-export default function OfficerRosterPage() {
+export default async function OfficerRosterPage() {
+  const viewer = await getCurrentViewer();
+  const canAssignRoles = canAssignTemporaryRoles(viewer);
+
+  if (canAssignRoles) {
+    const members = await getMembers();
+    const roles = await getRoles();
+    return (
+      <MembersTable
+        members={members}
+        roles={roles}
+        canAssignRoles={canAssignRoles}
+      />
+    );
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 py-8">
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
