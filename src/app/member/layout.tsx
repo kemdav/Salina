@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 
+import { AuthenticatedShell } from "@/components/templates/authenticated-shell";
 import { TemporaryApplicantRouteGuard } from "@/components/providers/temporary-applicant-route-guard";
 import { TemporaryApplicantProvider } from "@/components/providers/temporary-applicant-provider";
-import { getCurrentViewer } from "@/lib/supabase/server";
+import { getCurrentViewer, resolveCurrentTenant } from "@/lib/supabase/server";
 
 function isInvalidRefreshTokenError(error: unknown) {
   const message =
@@ -39,10 +40,37 @@ export default async function MemberLayout({
     redirect("/login");
   }
 
+  const tenantContext = await resolveCurrentTenant();
+
+  const canAccessTenant =
+    viewer.isPlatformAdmin ||
+    (tenantContext.tenant && viewer.tenantId === tenantContext.tenant.id);
+
+  if (!canAccessTenant) {
+    redirect("/login");
+  }
+
   return (
-    <TemporaryApplicantProvider value={viewer?.isTemporaryApplicant ?? false}>
+    <TemporaryApplicantProvider value={viewer.isTemporaryApplicant ?? false}>
       <TemporaryApplicantRouteGuard />
-      {children}
+      <AuthenticatedShell
+        role="Member"
+        tenantBranding={
+          tenantContext.tenant
+            ? {
+                name: tenantContext.tenant.name,
+                primaryColor:
+                  tenantContext.tenant.themeConfig.primaryColor ?? "#c6623e",
+                textColor: "#ffffff",
+                logoUrl:
+                  tenantContext.tenant.themeConfig.logoUrl ?? undefined,
+              }
+            : undefined
+        }
+        userName={viewer.email?.split("@")[0] ?? "Member"}
+      >
+        {children}
+      </AuthenticatedShell>
     </TemporaryApplicantProvider>
   );
 }

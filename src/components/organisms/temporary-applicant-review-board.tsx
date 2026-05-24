@@ -81,7 +81,7 @@ export function TemporaryApplicantReviewBoard({
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-2xl space-y-4">
-            <Badge className="bg-[#c6623e] text-white">Recruitment</Badge>
+            <Badge className="bg-[var(--primary)] text-white">Recruitment</Badge>
             <div>
               <h2
                 className="text-3xl font-bold tracking-tight text-slate-900"

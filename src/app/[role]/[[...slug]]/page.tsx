@@ -35,17 +35,17 @@ export default function UniversalComingSoonPage() {
     return null;
   }
 
-  // Dummy tenant branding
-  const dummyTenant = {
-    name: "Cebu Institute of Technology",
-    primaryColor: "#c6623e",
+  // Fallback tenant branding when no layout provides it
+  const fallbackBranding = {
+    name: "Salina",
+    primaryColor: "var(--primary)",
     textColor: "#ffffff",
   };
 
   return (
     <AuthenticatedShell
       role={formattedRole as UserRole}
-      tenantBranding={dummyTenant}
+      tenantBranding={fallbackBranding}
       emptyState={<ComingSoon moduleName={viewTitle} />}
     ></AuthenticatedShell>
   );

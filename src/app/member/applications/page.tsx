@@ -5,7 +5,6 @@ import { useActionState } from "react";
 import { Button } from "@/components/atoms/button";
 import { StatusBanner } from "@/components/molecules/status-banner";
 import { TextField } from "@/components/molecules/text-field";
-import { AuthenticatedShell } from "@/components/templates/authenticated-shell";
 import {
   submitTemporaryApplicantApplicationAction,
   type TemporaryApplicantApplicationActionState,
@@ -41,7 +40,7 @@ function ApplicationTextAreaField({
         {label}
       </label>
       <textarea
-        className="min-h-32 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition-colors placeholder:text-slate-400 focus:border-[#c6623e] focus:ring-2 focus:ring-[#c6623e]/15"
+        className="min-h-32 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition-colors placeholder:text-slate-400 focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/15"
         defaultValue={defaultValue}
         id={id}
         name={name}
@@ -59,23 +58,22 @@ export default function MemberApplicationsPage() {
   );
 
   return (
-    <AuthenticatedShell role="Member">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 py-8">
-        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
-          <div className="max-w-3xl space-y-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#c6623e]">
-              Temporary applicant
-            </p>
-            <h2
-              className="text-3xl font-bold tracking-tight text-slate-900"
-              style={{ fontFamily: "var(--font-heading)" }}
-            >
-              Complete your application
-            </h2>
-            <p className="text-sm leading-6 text-slate-600">
-              Tell the organization why you are applying, what experience you bring, and what you want to contribute. Your submission will be stored for officer review.
-            </p>
-          </div>
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 py-8">
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
+        <div className="max-w-3xl space-y-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--primary)]">
+            Temporary applicant
+          </p>
+          <h2
+            className="text-3xl font-bold tracking-tight text-slate-900"
+            style={{ fontFamily: "var(--font-heading)" }}
+          >
+            Complete your application
+          </h2>
+          <p className="text-sm leading-6 text-slate-600">
+            Tell the organization why you are applying, what experience you bring, and what you want to contribute. Your submission will be stored for officer review.
+          </p>
+        </div>
 
           <div className="mt-6 rounded-3xl border border-amber-200 bg-amber-50/80 p-5 text-sm leading-6 text-amber-900">
             Finish this form after sign-up to complete your temporary applicant submission.
@@ -122,6 +120,5 @@ export default function MemberApplicationsPage() {
           </form>
         </section>
       </div>
-    </AuthenticatedShell>
   );
 }

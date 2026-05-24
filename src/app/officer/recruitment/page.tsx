@@ -1,8 +1,6 @@
 import { redirect } from "next/navigation";
 
 import { RecruitmentList } from "@/components/organisms/recruitment-list";
-import { AuthenticatedShell } from "@/components/templates/authenticated-shell";
-import { OFFICER_TENANT_BRANDING } from "@/lib/officer-demo-data";
 import { canManageTemporaryApplicants } from "@/lib/organization-permissions";
 import { createSupabaseUserClient } from "@/lib/supabase/server";
 import { getCurrentViewer, resolveCurrentTenant } from "@/lib/supabase/server";
@@ -23,9 +21,7 @@ export default async function OfficerRecruitmentPage() {
 
   if (!tenantContext.tenant || !userClient) {
     return (
-      <AuthenticatedShell role="Officer" tenantBranding={OFFICER_TENANT_BRANDING}>
-        <div className="p-6 text-slate-500">Recruitment is unavailable right now.</div>
-      </AuthenticatedShell>
+      <div className="p-6 text-slate-500">Recruitment is unavailable right now.</div>
     );
   }
 
@@ -40,8 +36,6 @@ export default async function OfficerRecruitmentPage() {
   }
 
   return (
-    <AuthenticatedShell role="Officer" tenantBranding={OFFICER_TENANT_BRANDING}>
-      <RecruitmentList entries={entries || []} isOfficer={true} />
-    </AuthenticatedShell>
+    <RecruitmentList entries={entries || []} isOfficer={true} />
   );
 }

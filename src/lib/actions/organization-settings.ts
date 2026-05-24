@@ -3,17 +3,21 @@
 import { createClient } from '@supabase/supabase-js';
 
 import { getCurrentViewer, resolveCurrentTenant } from '@/lib/supabase/server';
+import { RESERVED_SUBDOMAINS } from '@/lib/reserved-subdomains';
 
 type OrganizationSettingsState = {
     error?: string;
     success?: string;
 };
 
+const ORGANIZATION_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
 const ORGANIZATION_TYPE_OPTIONS = new Set([
-    'Professional',
-    'Academic',
-    'Social',
-    'Civic',
+    'Business / Corporation',
+    'Non-Profit Organization',
+    'Association / Society',
+    'Academic Institution',
+    'Government Agency',
     'Other',
 ]);
 
@@ -89,6 +93,7 @@ export async function updateOrganizationSettings(
     }
 
     const name = getFormValue(formData, 'name');
+    const slug = getFormValue(formData, 'slug').toLowerCase();
     const billingEmail = getFormValue(formData, 'billingEmail');
     const organizationType = getFormValue(formData, 'organizationType');
     const themeConfig = parseThemeConfig(formData.get('themeConfig'));
@@ -97,6 +102,18 @@ export async function updateOrganizationSettings(
 
     if (name) {
         updatePayload.name = name;
+    }
+
+    if (slug && slug !== tenantContext.tenant.slug.toLowerCase()) {
+        if (!ORGANIZATION_SLUG_PATTERN.test(slug)) {
+            return { error: 'Slug must use only lowercase letters, numbers, and single hyphens, and cannot start or end with a hyphen.' };
+        }
+
+        if (RESERVED_SUBDOMAINS.has(slug)) {
+            return { error: 'This subdomain is reserved.' };
+        }
+
+        updatePayload.slug = slug;
     }
 
     if (billingEmail) {

@@ -3,8 +3,6 @@ import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { TextField } from "@/components/molecules/text-field";
 import { StatusBanner } from "@/components/molecules/status-banner";
-import { AuthenticatedShell } from "@/components/templates/authenticated-shell";
-import { OFFICER_TENANT_BRANDING } from "@/lib/officer-demo-data";
 
 const audienceTags = ["Officers", "Members", "Advisers"];
 
@@ -37,11 +35,10 @@ const feedPosts = [
 
 export default function OfficerFeedPage() {
     return (
-        <AuthenticatedShell role="Officer" tenantBranding={OFFICER_TENANT_BRANDING}>
-            <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 py-8">
-                <section className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)]">
-                    <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:p-7">
-                        <Badge className="bg-[#c6623e] text-white">Announcement feed</Badge>
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 py-8">
+            <section className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)]">
+                <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:p-7">
+                    <Badge className="bg-[var(--primary)] text-white">Announcement feed</Badge>
                         <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 font-[family:var(--font-heading)]">
                             Publish organization updates
                         </h2>
@@ -68,7 +65,7 @@ export default function OfficerFeedPage() {
 
                         <div className="mt-5 flex flex-wrap gap-2">
                             {audienceTags.map((tag) => (
-                                <Badge key={tag} className="border border-[#c6623e]/20 bg-[#c6623e]/10 text-[#7c2d12]">
+                                <Badge key={tag} className="border border-[var(--primary)]/20 bg-[var(--primary)]/10 text-[var(--primary)]">
                                     {tag}
                                 </Badge>
                             ))}
@@ -142,6 +139,5 @@ export default function OfficerFeedPage() {
                     ))}
                 </section>
             </div>
-        </AuthenticatedShell>
     );
 }
