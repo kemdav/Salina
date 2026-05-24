@@ -2,14 +2,15 @@
 -- email: system-admin@salina.dev
 -- password: SalinaPreview123!
 
-insert into public.organizations (id, slug, name, plan, billing_email, organization_type)
+insert into public.organizations (id, slug, name, plan, billing_email, organization_type, theme_config)
 values (
   '11111111-1111-1111-1111-111111111111',
   'system-admin',
   'System Admin',
   'system',
   'system-admin@salina.dev',
-  null
+  null,
+  jsonb_build_object('primaryColor', '#020817', 'fontFamily', 'var(--font-heading), sans-serif')
 )
 on conflict (id) do update
 set
@@ -18,6 +19,7 @@ set
   plan = excluded.plan,
   billing_email = excluded.billing_email,
   organization_type = excluded.organization_type,
+  theme_config = excluded.theme_config,
   updated_at = timezone('utc', now());
 
 insert into auth.users (
@@ -173,14 +175,15 @@ on conflict (id) do nothing;
 -- email: acme-admin@salina.dev
 -- password: SalinaPreview123!
 
-insert into public.organizations (id, slug, name, plan, billing_email, organization_type)
+insert into public.organizations (id, slug, name, plan, billing_email, organization_type, theme_config)
 values (
   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
   'acme',
   'Acme',
   'starter',
   'acme-admin@salina.dev',
-  'Business / Corporation'
+  'Business / Corporation',
+  jsonb_build_object('primaryColor', '#1e40af', 'fontFamily', 'var(--font-heading), sans-serif')
 )
 on conflict (id) do update
 set
@@ -189,6 +192,7 @@ set
   plan = excluded.plan,
   billing_email = excluded.billing_email,
   organization_type = excluded.organization_type,
+  theme_config = excluded.theme_config,
   updated_at = timezone('utc', now());
 
 insert into auth.users (
@@ -343,14 +347,15 @@ on conflict (id) do nothing;
 -- email: icpep-se-admin@salina.dev
 -- password: SalinaPreview123!
 
-insert into public.organizations (id, slug, name, plan, billing_email, organization_type)
+insert into public.organizations (id, slug, name, plan, billing_email, organization_type, theme_config)
 values (
   '13131313-1313-1313-1313-131313131313',
   'icpep-se',
   'ICPEP.SE - CIT University',
   'starter',
   'icpep-se-admin@salina.dev',
-  'Academic Institution'
+  'Academic Institution',
+  jsonb_build_object('primaryColor', '#c6623e', 'fontFamily', 'var(--font-heading), sans-serif')
 )
 on conflict (id) do update
 set
@@ -359,6 +364,7 @@ set
   plan = excluded.plan,
   billing_email = excluded.billing_email,
   organization_type = excluded.organization_type,
+  theme_config = excluded.theme_config,
   updated_at = timezone('utc', now());
 
 insert into auth.users (

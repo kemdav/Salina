@@ -36,10 +36,11 @@ const TABS: { id: Tab; label: string }[] = [
 ];
 
 const ORGANIZATION_TYPE_OPTIONS = [
-  "Professional",
-  "Academic",
-  "Social",
-  "Civic",
+  "Business / Corporation",
+  "Non-Profit Organization",
+  "Association / Society",
+  "Academic Institution",
+  "Government Agency",
   "Other",
 ];
 
@@ -144,9 +145,9 @@ export function AdminSettingsPanel({ tenant }: { tenant: TenantSettings }) {
               </Label>
               <Input
                 id="org-slug"
+                name="slug"
                 defaultValue={tenant.slug}
-                readOnly
-                className="cursor-not-allowed opacity-60"
+                placeholder="e.g. acme"
               />
             </div>
 
