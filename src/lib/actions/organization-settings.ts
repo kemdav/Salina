@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 import { getCurrentViewer, resolveCurrentTenant } from '@/lib/supabase/server';
 import { RESERVED_SUBDOMAINS } from '@/lib/reserved-subdomains';
 
-type OrganizationSettingsState = {
+export type OrganizationSettingsState = {
     error?: string;
     success?: string;
 };
@@ -152,5 +152,3 @@ export async function updateOrganizationSettings(
 
     return { success: 'Organization settings saved.' };
 }
-
-export type { OrganizationSettingsState };

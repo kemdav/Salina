@@ -10,7 +10,9 @@ function isInvalidRefreshTokenError(error: unknown) {
   const message =
     typeof error === "string"
       ? error.toLowerCase()
-      : error && typeof error === "object" && "message" in error &&
+      : error &&
+          typeof error === "object" &&
+          "message" in error &&
           typeof (error as { message?: unknown }).message === "string"
         ? (error as { message: string }).message.toLowerCase()
         : "";
@@ -62,8 +64,7 @@ export default async function MemberLayout({
                 primaryColor:
                   tenantContext.tenant.themeConfig.primaryColor ?? "#c6623e",
                 textColor: "#ffffff",
-                logoUrl:
-                  tenantContext.tenant.themeConfig.logoUrl ?? undefined,
+                logoUrl: tenantContext.tenant.themeConfig.logoUrl ?? undefined,
               }
             : undefined
         }

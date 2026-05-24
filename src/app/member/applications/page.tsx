@@ -71,54 +71,57 @@ export default function MemberApplicationsPage() {
             Complete your application
           </h2>
           <p className="text-sm leading-6 text-slate-600">
-            Tell the organization why you are applying, what experience you bring, and what you want to contribute. Your submission will be stored for officer review.
+            Tell the organization why you are applying, what experience you
+            bring, and what you want to contribute. Your submission will be
+            stored for officer review.
           </p>
         </div>
 
-          <div className="mt-6 rounded-3xl border border-amber-200 bg-amber-50/80 p-5 text-sm leading-6 text-amber-900">
-            Finish this form after sign-up to complete your temporary applicant submission.
+        <div className="mt-6 rounded-3xl border border-amber-200 bg-amber-50/80 p-5 text-sm leading-6 text-amber-900">
+          Finish this form after sign-up to complete your temporary applicant
+          submission.
+        </div>
+
+        <form action={formAction} className="mt-6 space-y-5">
+          {state.error ? (
+            <StatusBanner tone="error">{state.error}</StatusBanner>
+          ) : state.notice ? (
+            <StatusBanner tone="success">{state.notice}</StatusBanner>
+          ) : null}
+
+          <ApplicationTextAreaField
+            defaultValue={state.fields.motivation}
+            id="motivation"
+            label="Why are you applying?"
+            name="motivation"
+            placeholder="Share what drew you to this organization."
+          />
+
+          <ApplicationTextAreaField
+            defaultValue={state.fields.experience}
+            id="experience"
+            label="Relevant experience"
+            name="experience"
+            placeholder="Describe leadership, volunteer, academic, or community experience that is relevant."
+          />
+
+          <TextField
+            defaultValue={state.fields.interests}
+            id="interests"
+            label="What do you want to do here?"
+            name="interests"
+            placeholder="Events, outreach, design, operations, or anything else."
+            required
+            type="text"
+          />
+
+          <div className="flex flex-wrap items-center gap-3 pt-1">
+            <Button disabled={pending} type="submit" variant="dark">
+              {pending ? "Saving application..." : "Submit application"}
+            </Button>
           </div>
-
-          <form action={formAction} className="mt-6 space-y-5">
-            {state.error ? (
-              <StatusBanner tone="error">{state.error}</StatusBanner>
-            ) : state.notice ? (
-              <StatusBanner tone="success">{state.notice}</StatusBanner>
-            ) : null}
-
-            <ApplicationTextAreaField
-              defaultValue={state.fields.motivation}
-              id="motivation"
-              label="Why are you applying?"
-              name="motivation"
-              placeholder="Share what drew you to this organization."
-            />
-
-            <ApplicationTextAreaField
-              defaultValue={state.fields.experience}
-              id="experience"
-              label="Relevant experience"
-              name="experience"
-              placeholder="Describe leadership, volunteer, academic, or community experience that is relevant."
-            />
-
-            <TextField
-              defaultValue={state.fields.interests}
-              id="interests"
-              label="What do you want to do here?"
-              name="interests"
-              placeholder="Events, outreach, design, operations, or anything else."
-              required
-              type="text"
-            />
-
-            <div className="flex flex-wrap items-center gap-3 pt-1">
-              <Button disabled={pending} type="submit" variant="dark">
-                {pending ? "Saving application..." : "Submit application"}
-              </Button>
-            </div>
-          </form>
-        </section>
-      </div>
+        </form>
+      </section>
+    </div>
   );
 }

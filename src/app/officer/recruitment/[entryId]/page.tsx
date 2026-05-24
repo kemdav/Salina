@@ -1,7 +1,14 @@
-import { resolveCurrentTenant, getCurrentViewer, createSupabaseUserClient } from "@/lib/supabase/server";
+import {
+  resolveCurrentTenant,
+  getCurrentViewer,
+  createSupabaseUserClient,
+} from "@/lib/supabase/server";
 import { canManageTemporaryApplicants } from "@/lib/organization-permissions";
 import { redirect } from "next/navigation";
-import { ApplicationBoard, BoardStage } from "@/components/organisms/application-board";
+import {
+  ApplicationBoard,
+  BoardStage,
+} from "@/components/organisms/application-board";
 
 export default async function OfficerRecruitmentEntryPage({
   params,
@@ -13,7 +20,12 @@ export default async function OfficerRecruitmentEntryPage({
   const viewer = await getCurrentViewer();
   const userClient = await createSupabaseUserClient();
 
-  if (!tenant || !userClient || !viewer || !canManageTemporaryApplicants(viewer)) {
+  if (
+    !tenant ||
+    !userClient ||
+    !viewer ||
+    !canManageTemporaryApplicants(viewer)
+  ) {
     redirect("/officer/recruitment");
   }
 
@@ -50,6 +62,10 @@ export default async function OfficerRecruitmentEntryPage({
   }));
 
   return (
-    <ApplicationBoard entryTitle={entry.title} applicants={applicants} stages={(entry.settings as { stages?: BoardStage[] })?.stages || []} />
+    <ApplicationBoard
+      entryTitle={entry.title}
+      applicants={applicants}
+      stages={(entry.settings as { stages?: BoardStage[] })?.stages || []}
+    />
   );
 }

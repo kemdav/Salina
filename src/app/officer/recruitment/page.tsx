@@ -21,7 +21,9 @@ export default async function OfficerRecruitmentPage() {
 
   if (!tenantContext.tenant || !userClient) {
     return (
-      <div className="p-6 text-slate-500">Recruitment is unavailable right now.</div>
+      <div className="p-6 text-slate-500">
+        Recruitment is unavailable right now.
+      </div>
     );
   }
 
@@ -35,7 +37,5 @@ export default async function OfficerRecruitmentPage() {
     throw error;
   }
 
-  return (
-    <RecruitmentList entries={entries || []} isOfficer={true} />
-  );
+  return <RecruitmentList entries={entries || []} isOfficer={true} />;
 }
