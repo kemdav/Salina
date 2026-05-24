@@ -19,11 +19,11 @@ interface AuthenticatedShellProps {
   isTemporaryApplicant?: boolean;
   tenantBranding?: AuthenticatedTenantBranding;
   userName?: string;
+  /** Roles the current user is permitted to preview. Passed to the top bar role switcher. */
+  viewableRoles?: UserRole[];
   customPermissions?: string[];
   userId?: string;
   tenantId?: string | null;
-  /** Roles the current user is permitted to preview. Passed to the top bar role switcher. */
-  viewableRoles?: UserRole[];
 }
 
 function ShellEmptyState({ role }: { role: UserRole }) {
