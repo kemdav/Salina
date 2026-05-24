@@ -22,8 +22,9 @@ export default async function OfficerEventsPage() {
         role="Officer"
         tenantBranding={{
           name: tenant.name,
-          primaryColor: "#000",
+          primaryColor: tenant.themeConfig.primaryColor ?? "#c6623e",
           textColor: "#fff",
+          logoUrl: tenant.themeConfig.logoUrl ?? undefined,
         }}
       >
         <div className="w-full max-w-6xl mx-auto py-8">
@@ -41,8 +42,9 @@ export default async function OfficerEventsPage() {
       role="Officer"
       tenantBranding={{
         name: tenant.name,
-        primaryColor: "#000",
+        primaryColor: tenant.themeConfig.primaryColor ?? "#c6623e",
         textColor: "#fff",
+        logoUrl: tenant.themeConfig.logoUrl ?? undefined,
       }}
     >
       <div className="w-full max-w-6xl mx-auto py-8 animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
