@@ -183,11 +183,26 @@ Interactive features use React `useOptimistic` for instant feedback. No SWR, Rea
 
 ### Seeded Demo Tenants (local only)
 
-| Tenant | Slug | URL | Email | Password |
-|---|---|---|---|---|
-| System Admin | `system-admin` | `http://system-admin.salina.localhost:3000` | `system-admin@salina.dev` | `SalinaPreview123!` |
-| Acme | `acme` | `http://acme.salina.localhost:3000` | `acme-admin@salina.dev` | `SalinaPreview123!` |
-| ICPEP.SE - CIT University | `icpep-se` | `http://icpep-se.salina.localhost:3000` | `icpep-se-admin@salina.dev` | `SalinaPreview123!` |
+**System Admin (Platform Management)** — all accounts have the `system_admin` role for managing organizations:
+
+| Tenant | Slug | URL | Email | Password | Role |
+|---|---|---|---|---|---|
+| System Admin | `system-admin` | `http://system-admin.salina.localhost:3000` | `system-admin@salina.dev` | `SalinaPreview123!` | system_admin |
+| System Admin | `system-admin` | `http://system-admin.salina.localhost:3000` | `system-admin-1@salina.dev` | `SalinaPreview123!` | system_admin |
+| System Admin | `system-admin` | `http://system-admin.salina.localhost:3000` | `system-admin-2@salina.dev` | `SalinaPreview123!` | system_admin |
+
+**Tenant Accounts:**
+
+| Tenant | Slug | URL | Email | Password | Role |
+|---|---|---|---|---|---|
+| Acme | `acme` | `http://acme.salina.localhost:3000` | `acme-admin@salina.dev` | `SalinaPreview123!` | owner |
+| Acme | `acme` | `http://acme.salina.localhost:3000` | `acme-officer@salina.dev` | `SalinaPreview123!` | officer |
+| Acme | `acme` | `http://acme.salina.localhost:3000` | `acme-member@salina.dev` | `SalinaPreview123!` | member |
+| Acme | `acme` | `http://acme.salina.localhost:3000` | `acme-viewer@salina.dev` | `SalinaPreview123!` | viewer |
+| ICPEP.SE - CIT University | `icpep-se` | `http://icpep-se.salina.localhost:3000` | `icpep-se-admin@salina.dev` | `SalinaPreview123!` | owner |
+| ICPEP.SE - CIT University | `icpep-se` | `http://icpep-se.salina.localhost:3000` | `icpep-se-officer@salina.dev` | `SalinaPreview123!` | officer |
+| ICPEP.SE - CIT University | `icpep-se` | `http://icpep-se.salina.localhost:3000` | `icpep-se-member@salina.dev` | `SalinaPreview123!` | member |
+| ICPEP.SE - CIT University | `icpep-se` | `http://icpep-se.salina.localhost:3000` | `icpep-se-viewer@salina.dev` | `SalinaPreview123!` | viewer |
 
 These credentials are local-only and committed intentionally.
 

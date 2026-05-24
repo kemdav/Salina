@@ -518,12 +518,13 @@ on conflict (id) do nothing;
 -- ======================================================================
 -- Additional test accounts: one per role for each demo tenant
 -- These accounts belong to existing tenants — no new organizations.
+-- System Admin tenant is special: all accounts are system_admin admins for the dev team.
 -- ======================================================================
 
 -- ===========================
--- system-admin officer
+-- system-admin dev account 1
 -- ===========================
--- email: system-officer@salina.dev / password: SalinaPreview123!
+-- email: system-admin-1@salina.dev / password: SalinaPreview123!
 insert into auth.users (
   id, aud, role, email, encrypted_password, email_confirmed_at,
   raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
@@ -535,14 +536,15 @@ values (
   '22222222-2222-222a-2222-222222222222',
   'authenticated',
   'authenticated',
-  'system-officer@salina.dev',
+  'system-admin-1@salina.dev',
   extensions.crypt('SalinaPreview123!', extensions.gen_salt('bf')),
   timezone('utc', now()),
   jsonb_build_object(
-    'tenant_id', '11111111-1111-1111-1111-111111111111'
+    'tenant_id', '11111111-1111-1111-1111-111111111111',
+    'roles', jsonb_build_array('system_admin')
   ),
   jsonb_build_object(
-    'display_name', 'System Officer',
+    'display_name', 'Salina Dev 1',
     'tenant_slug', 'system-admin'
   ),
   timezone('utc', now()),
@@ -572,11 +574,11 @@ insert into auth.identities (id, user_id, provider_id, provider, identity_data, 
 values (
   '33333333-3333-333a-3333-333333333333',
   '22222222-2222-222a-2222-222222222222',
-  'system-officer@salina.dev',
+  'system-admin-1@salina.dev',
   'email',
   jsonb_build_object(
     'sub', '22222222-2222-222a-2222-222222222222',
-    'email', 'system-officer@salina.dev',
+    'email', 'system-admin-1@salina.dev',
     'email_verified', true
   ),
   timezone('utc', now()),
@@ -595,7 +597,7 @@ values (
   '44444444-4444-444a-4444-444444444444',
   '11111111-1111-1111-1111-111111111111',
   '22222222-2222-222a-2222-222222222222',
-  'officer'
+  'system_admin'
 )
 on conflict (tenant_id, user_id) do update
 set
@@ -603,9 +605,9 @@ set
   updated_at = timezone('utc', now());
 
 -- ===========================
--- system-admin member
+-- system-admin dev account 2
 -- ===========================
--- email: system-member@salina.dev / password: SalinaPreview123!
+-- email: system-admin-2@salina.dev / password: SalinaPreview123!
 insert into auth.users (
   id, aud, role, email, encrypted_password, email_confirmed_at,
   raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
@@ -617,14 +619,15 @@ values (
   '22222222-2222-222b-2222-222222222222',
   'authenticated',
   'authenticated',
-  'system-member@salina.dev',
+  'system-admin-2@salina.dev',
   extensions.crypt('SalinaPreview123!', extensions.gen_salt('bf')),
   timezone('utc', now()),
   jsonb_build_object(
-    'tenant_id', '11111111-1111-1111-1111-111111111111'
+    'tenant_id', '11111111-1111-1111-1111-111111111111',
+    'roles', jsonb_build_array('system_admin')
   ),
   jsonb_build_object(
-    'display_name', 'System Member',
+    'display_name', 'Salina Dev 2',
     'tenant_slug', 'system-admin'
   ),
   timezone('utc', now()),
@@ -654,11 +657,11 @@ insert into auth.identities (id, user_id, provider_id, provider, identity_data, 
 values (
   '33333333-3333-333b-3333-333333333333',
   '22222222-2222-222b-2222-222222222222',
-  'system-member@salina.dev',
+  'system-admin-2@salina.dev',
   'email',
   jsonb_build_object(
     'sub', '22222222-2222-222b-2222-222222222222',
-    'email', 'system-member@salina.dev',
+    'email', 'system-admin-2@salina.dev',
     'email_verified', true
   ),
   timezone('utc', now()),
@@ -677,89 +680,7 @@ values (
   '44444444-4444-444b-4444-444444444444',
   '11111111-1111-1111-1111-111111111111',
   '22222222-2222-222b-2222-222222222222',
-  'member'
-)
-on conflict (tenant_id, user_id) do update
-set
-  role = excluded.role,
-  updated_at = timezone('utc', now());
-
--- ===========================
--- system-admin viewer
--- ===========================
--- email: system-viewer@salina.dev / password: SalinaPreview123!
-insert into auth.users (
-  id, aud, role, email, encrypted_password, email_confirmed_at,
-  raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
-  instance_id, confirmation_token, recovery_token, email_change_token_new,
-  email_change, phone_change, phone_change_token, email_change_token_current,
-  reauthentication_token
-)
-values (
-  '22222222-2222-222c-2222-222222222222',
-  'authenticated',
-  'authenticated',
-  'system-viewer@salina.dev',
-  extensions.crypt('SalinaPreview123!', extensions.gen_salt('bf')),
-  timezone('utc', now()),
-  jsonb_build_object(
-    'tenant_id', '11111111-1111-1111-1111-111111111111'
-  ),
-  jsonb_build_object(
-    'display_name', 'System Viewer',
-    'tenant_slug', 'system-admin'
-  ),
-  timezone('utc', now()),
-  timezone('utc', now()),
-  '00000000-0000-0000-0000-000000000000',
-  '', '', '', '', '', '', '', ''
-)
-on conflict (id) do update
-set
-  aud = excluded.aud, role = excluded.role, email = excluded.email,
-  encrypted_password = excluded.encrypted_password,
-  email_confirmed_at = excluded.email_confirmed_at,
-  raw_app_meta_data = excluded.raw_app_meta_data,
-  raw_user_meta_data = excluded.raw_user_meta_data,
-  instance_id = excluded.instance_id,
-  confirmation_token = excluded.confirmation_token,
-  recovery_token = excluded.recovery_token,
-  email_change_token_new = excluded.email_change_token_new,
-  email_change = excluded.email_change,
-  phone_change = excluded.phone_change,
-  phone_change_token = excluded.phone_change_token,
-  email_change_token_current = excluded.email_change_token_current,
-  reauthentication_token = excluded.reauthentication_token,
-  updated_at = timezone('utc', now());
-
-insert into auth.identities (id, user_id, provider_id, provider, identity_data, last_sign_in_at, created_at, updated_at)
-values (
-  '33333333-3333-333c-3333-333333333333',
-  '22222222-2222-222c-2222-222222222222',
-  'system-viewer@salina.dev',
-  'email',
-  jsonb_build_object(
-    'sub', '22222222-2222-222c-2222-222222222222',
-    'email', 'system-viewer@salina.dev',
-    'email_verified', true
-  ),
-  timezone('utc', now()),
-  timezone('utc', now()),
-  timezone('utc', now())
-)
-on conflict (provider_id, provider) do update
-set
-  user_id = excluded.user_id,
-  identity_data = excluded.identity_data,
-  last_sign_in_at = excluded.last_sign_in_at,
-  updated_at = timezone('utc', now());
-
-insert into public.organization_memberships (id, tenant_id, user_id, role)
-values (
-  '44444444-4444-444c-4444-444444444444',
-  '11111111-1111-1111-1111-111111111111',
-  '22222222-2222-222c-2222-222222222222',
-  'viewer'
+  'system_admin'
 )
 on conflict (tenant_id, user_id) do update
 set
