@@ -25,6 +25,7 @@ export function SalinaLogo({
       height={0}
       priority={priority}
       src={src}
+      style={{ height: "auto" }}
       width={width}
     />
   );
