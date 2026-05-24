@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 
 import { AuthenticatedShell } from "@/components/templates/authenticated-shell";
 import { getCurrentViewer, resolveCurrentTenant } from "@/lib/supabase/server";
+import { getRoleHomePath, getSwitchableRoles, isRoleAtLeast } from "@/lib/roles";
+import type { UserRole } from "@/lib/navigation-config";
 
 export default async function OfficerLayout({
   children,
@@ -23,9 +25,19 @@ export default async function OfficerLayout({
     redirect("/login");
   }
 
+  // Enforce role gate: only officer, admin, owner, and system_admin can access /officer/*
+  if (!viewer.isPlatformAdmin && !isRoleAtLeast(viewer.tenantRole, "officer")) {
+    const homePath = getRoleHomePath(viewer.tenantRole);
+    redirect(homePath);
+  }
+
+  // Compute switchable roles from the viewer's actual DB role (not the route group).
+  const switchableRoles: UserRole[] = getSwitchableRoles(viewer.tenantRole, "Officer");
+
   return (
     <AuthenticatedShell
       role="Officer"
+      viewableRoles={switchableRoles}
       tenantBranding={{
         name: tenantContext.tenant.name,
         primaryColor:

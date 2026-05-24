@@ -11,6 +11,7 @@ import {
 } from "@/lib/actions/recruitment-client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Button } from "../atoms/button";
 
 type RecruitmentEntry = {
   id: string;
@@ -123,13 +124,7 @@ export function RecruitmentList({
           Recruitment Cycles
         </h1>
         {!isOfficer && (
-          <button
-            type="button"
-            onClick={() => setIsCreateOpen(true)}
-            className="inline-flex items-center justify-center rounded-(--radius) bg-primary px-4 py-2 text-sm font-medium text-white transition-all hover:bg-primary-hover"
-          >
-            + New Cycle
-          </button>
+          <Button onClick={() => setIsCreateOpen(true)}>+ New Cycle</Button>
         )}
       </div>
 

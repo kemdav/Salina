@@ -1,5 +1,10 @@
-import MembersPage from "../members/page";
+import { getOrganizations } from "@/lib/actions/organizations";
+import { OrganizationsManager } from "@/components/organisms/organizations-manager";
 
-export default function OrganizationsPage() {
-  return <MembersPage />;
+export const dynamic = "force-dynamic";
+
+export default async function OrganizationsPage() {
+  const organizations = await getOrganizations();
+
+  return <OrganizationsManager initialOrganizations={organizations} />;
 }

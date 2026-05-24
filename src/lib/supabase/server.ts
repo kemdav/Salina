@@ -21,6 +21,7 @@ type OrganizationRecord = {
   organization_type: string | null;
   plan: string;
   slug: string;
+  status: "pending" | "active" | "suspended";
   theme_config: ThemeConfig;
 };
 
@@ -123,7 +124,7 @@ async function getOrganizationById(tenantId: string): Promise<OrganizationRecord
 
   const { data, error } = await client
     .from("organizations")
-    .select("id, slug, name, plan, billing_email, organization_type, theme_config")
+    .select("id, slug, name, plan, billing_email, organization_type, status, theme_config")
     .eq("id", tenantId)
     .maybeSingle<OrganizationRecord>();
 
@@ -143,7 +144,7 @@ export async function getOrganizationBySlug(tenantSlug: string): Promise<Organiz
 
   const { data, error } = await client
     .from("organizations")
-    .select("id, slug, name, plan, billing_email, organization_type, theme_config")
+    .select("id, slug, name, plan, billing_email, organization_type, status, theme_config")
     .eq("slug", tenantSlug)
     .maybeSingle<OrganizationRecord>();
 
@@ -262,6 +263,10 @@ export const resolveCurrentTenant = cache(async (): Promise<TenantContext> => {
       const tenant = await getOrganizationBySlug(tenantSlug);
 
       if (tenant) {
+        if (tenant.status === "suspended") {
+          throw new Error("This organization has been suspended.");
+        }
+
         return {
           host,
           resolutionError: null,
@@ -284,6 +289,10 @@ export const resolveCurrentTenant = cache(async (): Promise<TenantContext> => {
       const tenant = await getOrganizationByHost(host);
 
       if (tenant) {
+        if (tenant.status === "suspended") {
+          throw new Error("This organization has been suspended.");
+        }
+
         return {
           host,
           resolutionError: null,

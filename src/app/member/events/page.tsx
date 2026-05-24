@@ -6,7 +6,6 @@ import {
 } from "@/lib/supabase/server";
 import { MemberEventsManager } from "@/components/organisms/member-events-manager";
 import { notFound } from "next/navigation";
-import { AuthenticatedShell } from "@/components/templates/authenticated-shell";
 
 export default async function MemberEventsPage() {
   const { tenant } = await resolveCurrentTenant();
@@ -37,21 +36,12 @@ export default async function MemberEventsPage() {
   }
 
   return (
-    <AuthenticatedShell
-      role="Member"
-      tenantBranding={{
-        name: tenant.name,
-        primaryColor: tenant.themeConfig.primaryColor ?? "#c6623e",
-        textColor: "#fff",
-        logoUrl: tenant.themeConfig.logoUrl ?? undefined,
-      }}
-    >
-      <div className="w-full max-w-6xl mx-auto py-8 animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
-        <MemberEventsManager
-          events={events}
-          initialAttendance={initialAttendance}
-        />
-      </div>
-    </AuthenticatedShell>
+    <div className="w-full max-w-6xl mx-auto py-8 animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
+      <MemberEventsManager
+        events={events}
+        initialAttendance={initialAttendance}
+        memberId={membership?.id || ""}
+      />
+    </div>
   );
 }
