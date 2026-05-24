@@ -1,11 +1,4 @@
-import type { AuthenticatedTenantBranding } from "@/components/molecules/authenticated-top-bar";
 import { CalendarEvent } from "@/components/molecules/calendar-day";
-
-export const OFFICER_TENANT_BRANDING = {
-  name: "Cebu Institute of Technology - University",
-  primaryColor: "#c6623e",
-  textColor: "#ffffff",
-} satisfies AuthenticatedTenantBranding;
 
 export const upcomingEvents: CalendarEvent[] = [
   {
