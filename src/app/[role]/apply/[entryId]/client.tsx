@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
 import { StatusBanner } from "@/components/molecules/status-banner";
@@ -33,14 +33,11 @@ export function SelfInitiateApplicationForm({
     INITIAL_STATE,
   );
 
-  if (state.inviteUrl) {
-    // Usually redirect happens via router or we can just render a link/button
-    // but the requirement says: "redirects them to the existing sign-up flow (/sign-up?invite={inviteToken})"
-    // We can just use window.location here for simplicity
-    if (typeof window !== "undefined") {
+  useEffect(() => {
+    if (state.inviteUrl && typeof window !== "undefined") {
       window.location.href = state.inviteUrl;
     }
-  }
+  }, [state.inviteUrl]);
 
   return (
     <div className="mx-auto max-w-xl py-12 px-6">

@@ -1,4 +1,4 @@
-async function callRpc(action: string, payload: any) {
+async function callRpc(action: string, payload: unknown) {
   const res = await fetch("/api/recruitment-rpc", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
