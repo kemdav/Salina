@@ -15,14 +15,6 @@ export default async function SuperAdminLayout({
     redirect("/login");
   }
 
-<<<<<<< HEAD
-    return (
-        <AuthenticatedShell role="SuperAdmin" userName={viewer.displayName ?? viewer.email?.split('@')[0] ?? 'System Admin'}>
-            {children}
-        </AuthenticatedShell>
-    );
-}
-=======
   return (
     <AuthenticatedShell
       role="SuperAdmin"
@@ -34,4 +26,3 @@ export default async function SuperAdminLayout({
     </AuthenticatedShell>
   );
 }
->>>>>>> origin
