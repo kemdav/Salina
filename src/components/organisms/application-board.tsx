@@ -166,11 +166,11 @@ export function ApplicationBoard({
           try {
             await updateApplicantDecision(applicantId, status);
             router.refresh();
-          } catch (err: any) {
+          } catch (err) {
             openModal({
               tone: "error",
               title: "Decision Failed",
-              message: err.message || "Failed to log decision. Please try again.",
+              message: err instanceof Error ? err.message : "Failed to log decision. Please try again.",
               confirmText: "Okay",
               showCancel: false,
             });
