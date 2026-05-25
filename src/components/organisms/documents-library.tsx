@@ -10,8 +10,9 @@ import { createPortal } from "react-dom";
 import { 
   uploadDocument, deleteDocument, getDownloadUrl, 
   createFolder, deleteFolder, renameFolder, 
-  renameDocument, moveDocument, getFolders,
-  checkFolderAccess, verifyFolderPassword
+  renameDocument, moveDocument,
+  checkFolderAccess, verifyFolderPassword,
+  copyDocument, copyFolder, moveFolder, getAccessConfig, updateVisibility
 } from "@/lib/actions/documents";
 import { getMembers } from "@/lib/actions/members";
 import { FeedbackModal, type FeedbackTone } from "@/components/organisms/feedback-modal";
@@ -43,6 +44,7 @@ type DocumentsLibraryProps = {
   breadcrumbs: { id: string; name: string }[];
   canManage: boolean;
   canDelete: boolean;
+  canEditAccess: boolean;
 };
 
 function formatBytes(bytes: number, decimals = 2) {
@@ -60,7 +62,8 @@ export function DocumentsLibrary({
   currentFolderId, 
   breadcrumbs, 
   canManage, 
-  canDelete 
+  canDelete,
+  canEditAccess
 }: DocumentsLibraryProps) {
   const router = useRouter();
 
@@ -77,9 +80,12 @@ export function DocumentsLibrary({
   const [renameTarget, setRenameTarget] = useState<{ id: string, type: "folder" | "document", name: string } | null>(null);
   const [renameValue, setRenameValue] = useState("");
 
-  const [moveTarget, setMoveTarget] = useState<{ id: string, type: "document" } | null>(null);
+  const [moveTarget, setMoveTarget] = useState<{ id: string, type: "folder" | "document" } | null>(null);
   const [unlockTarget, setUnlockTarget] = useState<string | null>(null);
   const [unlockPassword, setUnlockPassword] = useState("");
+
+  const [editVisibilityTarget, setEditVisibilityTarget] = useState<{ id: string, type: "folder" | "document" } | null>(null);
+  const [isEditingVisibility, setIsEditingVisibility] = useState(false);
 
   // Access Control States
   const [visibility, setVisibility] = useState<"public" | "roles" | "members" | "password_protected">("public");
@@ -243,16 +249,55 @@ export function DocumentsLibrary({
     }
   }
 
-  async function handleMove(documentId: string, folderId: string | null) {
+  async function handleMove(id: string, type: "folder" | "document", folderId: string | null) {
     try {
-      await moveDocument(documentId, folderId);
+      if (type === "folder") await moveFolder(id, folderId);
+      else await moveDocument(id, folderId);
       setMoveTarget(null);
     } catch (error: unknown) {
-      setFeedbackConfig({ isOpen: true, title: "Move Failed", message: error instanceof Error ? error.message : "Failed to move document", tone: "error", showCancel: false });
+      setFeedbackConfig({ isOpen: true, title: "Move Failed", message: error instanceof Error ? error.message : "Failed to move", tone: "error", showCancel: false });
     }
   }
 
-  const handleDragStart = (e: React.DragEvent, id: string, type: "document") => {
+  async function handleCopy(id: string, type: "folder" | "document") {
+    try {
+      if (type === "folder") await copyFolder(id);
+      else await copyDocument(id);
+      setFeedbackConfig({ isOpen: true, title: "Copied successfully", message: `${type === "folder" ? "Folder" : "Document"} copied.`, tone: "success", showCancel: false });
+    } catch (error: unknown) {
+      setFeedbackConfig({ isOpen: true, title: "Copy Failed", message: error instanceof Error ? error.message : "Failed to copy", tone: "error", showCancel: false });
+    }
+  }
+
+  async function handleEditAccessClick(id: string, type: "folder" | "document") {
+    try {
+      const config = await getAccessConfig(id, type);
+      setVisibility(config.visibility as "public" | "roles" | "members" | "password_protected");
+      setSelectedRoles(config.allowedRoles);
+      setSelectedMembers(config.allowedMembers);
+      setPassword(""); // clear password input
+      setEditVisibilityTarget({ id, type });
+    } catch (error: unknown) {
+      setFeedbackConfig({ isOpen: true, title: "Error", message: "Failed to fetch access config.", tone: "error", showCancel: false });
+    }
+  }
+
+  async function handleUpdateVisibility(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editVisibilityTarget) return;
+    try {
+      setIsEditingVisibility(true);
+      await updateVisibility(editVisibilityTarget.id, editVisibilityTarget.type, visibility, password, selectedRoles, selectedMembers);
+      setEditVisibilityTarget(null);
+      resetVisibilityState();
+    } catch (error: unknown) {
+      setFeedbackConfig({ isOpen: true, title: "Update Failed", message: error instanceof Error ? error.message : "Failed to update visibility", tone: "error", showCancel: false });
+    } finally {
+      setIsEditingVisibility(false);
+    }
+  }
+
+  const handleDragStart = (e: React.DragEvent, id: string, type: "folder" | "document") => {
     e.dataTransfer.setData("application/json", JSON.stringify({ id, type }));
   };
 
@@ -262,7 +307,7 @@ export function DocumentsLibrary({
     e.preventDefault();
     try {
       const data = JSON.parse(e.dataTransfer.getData("application/json"));
-      if (data.type === "document") await handleMove(data.id, targetFolderId);
+      await handleMove(data.id, data.type, targetFolderId);
     } catch (err) { console.error(err); }
   };
 
@@ -318,7 +363,7 @@ export function DocumentsLibrary({
         <div className="space-y-2">
           <Label>Allowed Roles</Label>
           <div className="flex flex-wrap gap-2">
-            {["admin", "officer", "member", "viewer"].map(role => (
+            {["officer", "member", "viewer"].map(role => (
               <label key={role} className="flex items-center gap-2 cursor-pointer bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-100">
                 <input type="checkbox" checked={selectedRoles.includes(role)} onChange={() => toggleRole(role)} className="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
                 <span className="text-sm font-medium capitalize">{role}</span>
@@ -432,6 +477,9 @@ export function DocumentsLibrary({
                       {activeDropdown === folder.id && (
                         <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-100 rounded-xl shadow-lg z-50 overflow-hidden">
                           <button onClick={() => { setRenameTarget({id: folder.id, type: "folder", name: folder.name}); setRenameValue(folder.name); setActiveDropdown(null); }} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 text-slate-700">Rename</button>
+                          <button onClick={() => { handleCopy(folder.id, "folder"); setActiveDropdown(null); }} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 text-slate-700">Copy</button>
+                          <button onClick={() => { setMoveTarget({id: folder.id, type: "folder"}); setActiveDropdown(null); }} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 text-slate-700">Move To...</button>
+                          {canEditAccess && <button onClick={() => { handleEditAccessClick(folder.id, "folder"); setActiveDropdown(null); }} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 text-slate-700">Edit Access</button>}
                           {canDelete && <button onClick={() => { handleDeleteClick(folder.id, "folder"); setActiveDropdown(null); }} className="w-full text-left px-4 py-2 text-sm hover:bg-red-50 text-red-600">Delete</button>}
                         </div>
                       )}
@@ -469,7 +517,9 @@ export function DocumentsLibrary({
                           {activeDropdown === doc.id && (
                             <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-100 rounded-xl shadow-lg z-50 overflow-hidden">
                               <button onClick={() => { setRenameTarget({id: doc.id, type: "document", name: doc.title}); setRenameValue(doc.title); setActiveDropdown(null); }} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 text-slate-700">Rename</button>
+                              <button onClick={() => { handleCopy(doc.id, "document"); setActiveDropdown(null); }} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 text-slate-700">Copy</button>
                               <button onClick={() => { setMoveTarget({id: doc.id, type: "document"}); setActiveDropdown(null); }} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 text-slate-700">Move To...</button>
+                              {canEditAccess && <button onClick={() => { handleEditAccessClick(doc.id, "document"); setActiveDropdown(null); }} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 text-slate-700">Edit Access</button>}
                               {canDelete && <button onClick={() => { handleDeleteClick(doc.id, "document"); setActiveDropdown(null); }} className="w-full text-left px-4 py-2 text-sm hover:bg-red-50 text-red-600">Delete</button>}
                             </div>
                           )}
@@ -517,7 +567,9 @@ export function DocumentsLibrary({
                           {activeDropdown === doc.id && (
                             <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-100 rounded-xl shadow-lg z-50 overflow-hidden">
                               <button onClick={() => { setRenameTarget({id: doc.id, type: "document", name: doc.title}); setRenameValue(doc.title); setActiveDropdown(null); }} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 text-slate-700">Rename</button>
+                              <button onClick={() => { handleCopy(doc.id, "document"); setActiveDropdown(null); }} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 text-slate-700">Copy</button>
                               <button onClick={() => { setMoveTarget({id: doc.id, type: "document"}); setActiveDropdown(null); }} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 text-slate-700">Move To...</button>
+                              {canEditAccess && <button onClick={() => { handleEditAccessClick(doc.id, "document"); setActiveDropdown(null); }} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 text-slate-700">Edit Access</button>}
                               {canDelete && <button onClick={() => { handleDeleteClick(doc.id, "document"); setActiveDropdown(null); }} className="w-full text-left px-4 py-2 text-sm hover:bg-red-50 text-red-600">Delete</button>}
                             </div>
                           )}
@@ -653,17 +705,17 @@ export function DocumentsLibrary({
           <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" aria-hidden onClick={() => setMoveTarget(null)} />
           <div role="dialog" aria-modal="true" className="relative flex w-full max-w-md flex-col rounded-2xl border border-border bg-white shadow-2xl">
             <div className="p-6 pb-0">
-              <h2 className="mb-4 text-xl font-bold">Move Document</h2>
+              <h2 className="mb-4 text-xl font-bold">Move {moveTarget.type === "folder" ? "Folder" : "Document"}</h2>
               <p className="text-sm text-slate-500 mb-4">Choose a destination folder. You can also drag and drop documents directly into folders.</p>
               <div className="space-y-2 max-h-[300px] overflow-y-auto">
                 {currentFolderId !== null && (
-                  <button onClick={() => handleMove(moveTarget.id, null)} className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50 text-left transition-colors">
+                  <button onClick={() => handleMove(moveTarget.id, moveTarget.type, null)} className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50 text-left transition-colors">
                     <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
                     <span className="font-medium text-slate-900">Root Directory</span>
                   </button>
                 )}
                 {initialFolders.map(folder => (
-                  <button key={folder.id} onClick={() => handleMove(moveTarget.id, folder.id)} className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50 text-left transition-colors">
+                  <button key={folder.id} onClick={() => handleMove(moveTarget.id, moveTarget.type, folder.id)} className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50 text-left transition-colors">
                     <svg className="w-6 h-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
                     <span className="font-medium text-slate-900">{folder.name}</span>
                   </button>
@@ -676,6 +728,27 @@ export function DocumentsLibrary({
             <div className="mt-8 flex justify-end gap-3 rounded-b-2xl border-t border-slate-100 bg-slate-50 p-4">
               <Button type="button" variant="ghost" onClick={() => setMoveTarget(null)}>Cancel</Button>
             </div>
+          </div>
+        </div>,
+        document.body,
+      )}
+
+      {editVisibilityTarget && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" aria-hidden onClick={() => !isEditingVisibility && setEditVisibilityTarget(null)} />
+          <div role="dialog" aria-modal="true" className="relative flex w-full max-w-md flex-col rounded-2xl border border-border bg-white shadow-2xl max-h-[90vh] overflow-y-auto">
+            <form onSubmit={handleUpdateVisibility} className="flex flex-col">
+              <div className="p-6 pb-0">
+                <h2 className="mb-4 text-xl font-bold">Edit Access Configuration</h2>
+                <div className="space-y-4">
+                  {renderVisibilityOptions()}
+                </div>
+              </div>
+              <div className="mt-8 flex justify-end gap-3 rounded-b-2xl border-t border-slate-100 bg-slate-50 p-4">
+                <Button type="button" variant="ghost" onClick={() => { setEditVisibilityTarget(null); resetVisibilityState(); }} disabled={isEditingVisibility}>Cancel</Button>
+                <Button type="submit" disabled={isEditingVisibility}>{isEditingVisibility ? "Saving..." : "Save"}</Button>
+              </div>
+            </form>
           </div>
         </div>,
         document.body,

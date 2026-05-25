@@ -29,6 +29,7 @@ export default async function AdminDocumentsPage({
         breadcrumbs={breadcrumbs}
         canManage={true}
         canDelete={true}
+        canEditAccess={true}
       />
     </div>
   );

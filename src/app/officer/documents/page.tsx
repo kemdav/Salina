@@ -13,8 +13,8 @@ export default async function OfficerDocumentsPage({
 }) {
   const { folder } = await searchParams;
   const folderId = folder || null;
-  const documents = await getDocuments(undefined, folderId);
-  const folders = await getFolders(folderId);
+  const documents = await getDocuments(undefined, folderId, "officer");
+  const folders = await getFolders(folderId, "officer");
   let breadcrumbs: { id: string; name: string }[] = [];
   if (folderId) {
     breadcrumbs = await getFolderBreadcrumbs(folderId);
@@ -29,6 +29,7 @@ export default async function OfficerDocumentsPage({
         breadcrumbs={breadcrumbs}
         canManage={true}
         canDelete={false}
+        canEditAccess={false}
       />
     </div>
   );

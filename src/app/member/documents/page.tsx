@@ -13,8 +13,8 @@ export default async function MemberDocumentsPage({
 }) {
   const { folder } = await searchParams;
   const folderId = folder || null;
-  const documents = await getDocuments(undefined, folderId);
-  const folders = await getFolders(folderId);
+  const documents = await getDocuments(undefined, folderId, "member");
+  const folders = await getFolders(folderId, "member");
 
   let breadcrumbs: { id: string; name: string }[] = [];
   if (folderId) {
@@ -30,6 +30,7 @@ export default async function MemberDocumentsPage({
         breadcrumbs={breadcrumbs}
         canManage={false}
         canDelete={false}
+        canEditAccess={false}
       />
     </div>
   );
