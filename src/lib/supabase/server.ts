@@ -1,8 +1,7 @@
 import "server-only";
 
 import { cache } from "react";
-import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
+import type { User } from "@supabase/supabase-js";
 import { createClient } from "@supabase/supabase-js";
 
 import { getAuthSessionClaims } from "@/lib/auth-policy";
