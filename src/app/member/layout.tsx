@@ -54,6 +54,17 @@ export default async function MemberLayout({
     redirect("/login");
   }
 
+  const status = tenantContext.tenant?.status;
+  if (status === "pending") {
+    redirect("/pending");
+  } else if (status === "suspended") {
+    redirect("/suspended");
+  } else if (status === "rejected") {
+    redirect("/rejected");
+  } else if (status === "inactive") {
+    redirect("/inactive");
+  }
+
   // Enforce role gate: only member, viewer, and higher roles can access /member/*
   // Temporary applicants can access /member/* (they are guarded client-side to only access /member/applications).
   // Officers and above can preview member content (permeable upward).

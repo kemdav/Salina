@@ -29,6 +29,17 @@ export default async function OfficerLayout({
     redirect("/login");
   }
 
+  const status = tenantContext.tenant.status;
+  if (status === "pending") {
+    redirect("/pending");
+  } else if (status === "suspended") {
+    redirect("/suspended");
+  } else if (status === "rejected") {
+    redirect("/rejected");
+  } else if (status === "inactive") {
+    redirect("/inactive");
+  }
+
   // Enforce role gate: only officer, admin, owner, and system_admin can access /officer/*
   // Also allow Members who have custom permissions assigned, since individual pages check specific permissions.
   const hasCustomPermissions = (viewer.customPermissions ?? []).length > 0;

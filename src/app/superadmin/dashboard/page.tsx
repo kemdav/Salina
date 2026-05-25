@@ -217,7 +217,7 @@ export default function SuperAdminDashboardPage() {
                 </div>
               </div>
               <Link
-                href="/superadmin/review"
+                href="/superadmin/accreditations"
                 className="text-xs font-semibold uppercase tracking-widest text-primary transition-colors hover:underline"
               >
                 Review

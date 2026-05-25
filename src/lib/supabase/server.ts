@@ -1,8 +1,7 @@
 import "server-only";
 
 import { cache } from "react";
-import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
+import type { User } from "@supabase/supabase-js";
 import { createClient } from "@supabase/supabase-js";
 
 import { getAuthSessionClaims } from "@/lib/auth-policy";
@@ -21,7 +20,7 @@ type OrganizationRecord = {
   organization_type: string | null;
   plan: string;
   slug: string;
-  status: "pending" | "active" | "suspended";
+  status: "pending" | "active" | "suspended" | "rejected" | "inactive";
   theme_config: ThemeConfig;
 };
 
@@ -49,6 +48,7 @@ export type TenantContext = {
     organizationType: string | null;
     plan: string;
     slug: string;
+    status: "pending" | "active" | "suspended" | "rejected" | "inactive";
     themeConfig: ThemeConfig;
   } | null;
   tenantSlug: string | null;
@@ -90,32 +90,10 @@ function isInvalidRefreshTokenError(error: unknown) {
   );
 }
 
+import { createUserClient } from "@/lib/supabase/user-server";
+
 export async function createSupabaseUserClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!url || !anonKey) {
-    return null;
-  }
-
-  const cookieStore = await cookies();
-
-  return createServerClient(url, anonKey, {
-    cookies: {
-      getAll() {
-        return cookieStore.getAll();
-      },
-      setAll(cookiesToSet) {
-        try {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options);
-          });
-        } catch {
-          // Ignore cookie writes when Next.js disallows mutation in the current render path.
-        }
-      },
-    },
-  });
+  return createUserClient();
 }
 
 async function getOrganizationById(tenantId: string): Promise<OrganizationRecord | null> {
@@ -285,9 +263,7 @@ export const resolveCurrentTenant = cache(async (): Promise<TenantContext> => {
       const tenant = await getOrganizationBySlug(tenantSlug);
 
       if (tenant) {
-        if (tenant.status === "suspended") {
-          throw new Error("This organization has been suspended.");
-        }
+
 
         return {
           host,
@@ -300,6 +276,7 @@ export const resolveCurrentTenant = cache(async (): Promise<TenantContext> => {
             organizationType: tenant.organization_type,
             plan: tenant.plan,
             slug: tenant.slug,
+            status: tenant.status,
             themeConfig: tenant.theme_config,
           },
           tenantSlug,
@@ -311,9 +288,7 @@ export const resolveCurrentTenant = cache(async (): Promise<TenantContext> => {
       const tenant = await getOrganizationByHost(host);
 
       if (tenant) {
-        if (tenant.status === "suspended") {
-          throw new Error("This organization has been suspended.");
-        }
+
 
         return {
           host,
@@ -326,6 +301,7 @@ export const resolveCurrentTenant = cache(async (): Promise<TenantContext> => {
             organizationType: tenant.organization_type,
             plan: tenant.plan,
             slug: tenant.slug,
+            status: tenant.status,
             themeConfig: tenant.theme_config,
           },
           tenantSlug,
