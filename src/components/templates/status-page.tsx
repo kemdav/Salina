@@ -51,24 +51,24 @@ export function StatusPageTemplate({
           <div className={`h-8 w-8 ${style.iconColor}`}>{icon}</div>
         </div>
         <h1
-          className="mb-3 text-3xl font-bold text-foreground"
+          className="mb-3 text-3xl font-bold text-zinc-100"
           style={{ fontFamily: "var(--font-heading, sans-serif)" }}
         >
           {title}
         </h1>
-        <p className="mb-6 text-sm text-muted-foreground leading-relaxed">
+        <p className="mb-6 text-sm text-zinc-400 leading-relaxed">
           {description.split("{tenantName}").map((part, i, arr) => (
             <span key={i}>
               {part}
               {i < arr.length - 1 && (
-                <strong className="font-semibold text-foreground">
+                <strong className="font-semibold text-zinc-100">
                   {tenantName}
                 </strong>
               )}
             </span>
           ))}
         </p>
-        <div className="rounded-xl bg-background/50 p-4 text-xs text-muted-foreground border border-border/50">
+        <div className="rounded-xl bg-zinc-900/50 p-4 text-xs text-zinc-400 border border-zinc-800">
           {supportMessage}
         </div>
       </div>

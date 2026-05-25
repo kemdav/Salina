@@ -27,68 +27,109 @@ function createSupabaseAdminClient() {
   });
 }
 
-export async function approveApplication(orgId: string) {
+export async function approveApplication(requestId: string) {
   const userClient = await createUserClient();
-  if (!userClient) {
-    return { ok: false, error: "Unauthorized" };
-  }
+  if (!userClient) return { ok: false, error: "Unauthorized" };
 
   try {
     await verifyPlatformAdmin(userClient);
-  } catch (error) {
+  } catch {
     return { ok: false, error: "Unauthorized: Requires platform admin privileges." };
   }
 
   const adminClient = createSupabaseAdminClient();
-  if (!adminClient) {
-    return { ok: false, error: "Server configuration error" };
-  }
+  if (!adminClient) return { ok: false, error: "Server configuration error" };
 
-  const { error } = await adminClient
-    .from("organizations")
-    .update({ status: "active" })
-    .eq("id", orgId)
+  // 1. Mark request as approved
+  const { data: request, error: updateReqError } = await adminClient
+    .from("accreditation_requests")
+    .update({ status: "approved" })
+    .eq("id", requestId)
     .eq("status", "pending")
     .select()
     .single();
 
-  if (error) {
-    console.error("Failed to approve application:", error);
-    return { ok: false, error: "Failed to approve application: Organization not found or no longer pending" };
+  if (updateReqError || !request) {
+    return { ok: false, error: "Failed to approve: Request not found or no longer pending" };
+  }
+
+  // 2. Provision the organization
+  const { data: organization, error: orgError } = await adminClient
+    .from("organizations")
+    .insert({
+      billing_email: request.contact_email,
+      name: request.org_name,
+      organization_type: request.org_type,
+      plan: "standard",
+      slug: request.org_slug,
+      status: "active",
+      theme_config: {},
+    })
+    .select("id")
+    .single();
+
+  if (orgError) {
+    // Note: If this fails, we have an orphaned approved request. 
+    // In a real app we'd use a postgres function/RPC for transactions.
+    return { ok: false, error: "Failed to create organization" };
+  }
+
+  // 3. Make user the owner
+  await adminClient.from("organization_memberships").insert({
+    role: "owner",
+    tenant_id: organization.id,
+    user_id: request.user_id,
+  });
+
+  // 4. Update user metadata
+  const { data: userRecord } = await adminClient.auth.admin.getUserById(request.user_id);
+  if (userRecord?.user) {
+    const user = userRecord.user;
+    const currentAppMetadata = typeof user.app_metadata === "object" ? user.app_metadata : {};
+    const currentUserMetadata = typeof user.user_metadata === "object" ? user.user_metadata : {};
+
+    await adminClient.auth.admin.updateUserById(user.id, {
+      app_metadata: {
+        ...currentAppMetadata,
+        tenant_id: organization.id,
+        tenant_slug: request.org_slug,
+        has_pending_request: false,
+      },
+      user_metadata: {
+        ...currentUserMetadata,
+        tenant_id: organization.id,
+        tenant_slug: request.org_slug,
+      },
+    });
   }
 
   revalidatePath("/superadmin/accreditations");
   return { ok: true };
 }
 
-export async function rejectApplication(orgId: string) {
+export async function rejectApplication(requestId: string) {
   const userClient = await createUserClient();
-  if (!userClient) {
-    return { ok: false, error: "Unauthorized" };
-  }
+  if (!userClient) return { ok: false, error: "Unauthorized" };
 
   try {
     await verifyPlatformAdmin(userClient);
-  } catch (error) {
+  } catch {
     return { ok: false, error: "Unauthorized: Requires platform admin privileges." };
   }
 
   const adminClient = createSupabaseAdminClient();
-  if (!adminClient) {
-    return { ok: false, error: "Server configuration error" };
-  }
+  if (!adminClient) return { ok: false, error: "Server configuration error" };
 
   const { error } = await adminClient
-    .from("organizations")
+    .from("accreditation_requests")
     .update({ status: "rejected" })
-    .eq("id", orgId)
+    .eq("id", requestId)
     .eq("status", "pending")
     .select()
     .single();
 
   if (error) {
-    console.error("Failed to reject application:", error);
-    return { ok: false, error: "Failed to reject application: Organization not found or no longer pending" };
+    return { ok: false, error: "Failed to reject: Request not found or no longer pending" };
   }
 
   revalidatePath("/superadmin/accreditations");

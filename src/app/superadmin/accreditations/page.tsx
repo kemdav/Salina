@@ -20,12 +20,10 @@ export default async function AccreditationsPage() {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  const { data: organizations, error } = await adminClient
-    .from("organizations")
-    .select("id, name, organization_type, created_at")
+  const { data: requests, error } = await adminClient
+    .from("accreditation_requests")
+    .select("id, org_name, org_type, created_at")
     .eq("status", "pending")
-    .neq("slug", "salina")
-    .neq("slug", "system-admin") // exclude the root platform admin tenant
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -39,12 +37,12 @@ export default async function AccreditationsPage() {
   }
 
   // Map to the format expected by AccreditationReviewWorkspace
-  const mappedOrgs = (organizations || []).map((org) => ({
-    id: org.id,
-    name: org.name,
-    type: org.organization_type || "Unknown Type",
+  const mappedOrgs = (requests || []).map((req) => ({
+    id: req.id,
+    name: req.org_name,
+    type: req.org_type || "Unknown Type",
     priority: "STANDARD", // Can be dynamic if needed
-    time: new Date(org.created_at).toLocaleDateString(), // Basic formatting
+    time: new Date(req.created_at).toLocaleDateString(), // Basic formatting
   }));
 
   return <AccreditationReviewWorkspace initialOrgs={mappedOrgs} />;
