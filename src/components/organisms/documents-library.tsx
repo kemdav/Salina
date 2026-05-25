@@ -12,6 +12,7 @@ import {
   createFolder, deleteFolder, renameFolder, 
   renameDocument, moveDocument,
   checkFolderAccess, verifyFolderPassword,
+  checkDocumentAccess, verifyDocumentPassword,
   copyDocument, copyFolder, moveFolder, getAccessConfig, updateVisibility
 } from "@/lib/actions/documents";
 import { getMembers } from "@/lib/actions/members";
@@ -83,6 +84,9 @@ export function DocumentsLibrary({
   const [moveTarget, setMoveTarget] = useState<{ id: string, type: "folder" | "document" } | null>(null);
   const [unlockTarget, setUnlockTarget] = useState<string | null>(null);
   const [unlockPassword, setUnlockPassword] = useState("");
+
+  const [unlockDocTarget, setUnlockDocTarget] = useState<string | null>(null);
+  const [unlockDocPassword, setUnlockDocPassword] = useState("");
 
   const [editVisibilityTarget, setEditVisibilityTarget] = useState<{ id: string, type: "folder" | "document" } | null>(null);
   const [isEditingVisibility, setIsEditingVisibility] = useState(false);
@@ -176,10 +180,33 @@ export function DocumentsLibrary({
 
   async function handleDownload(id: string) {
     try {
+      const access = await checkDocumentAccess(id);
+      if (access === 'password_required') {
+        setUnlockDocTarget(id);
+        return;
+      }
+      if (access === 'denied') {
+        setFeedbackConfig({ isOpen: true, title: "Access Denied", message: "You do not have permission to download this document.", tone: "error", showCancel: false });
+        return;
+      }
       const url = await getDownloadUrl(id);
       window.open(url, "_blank");
     } catch (error: unknown) {
       setFeedbackConfig({ isOpen: true, title: "Download Failed", message: error instanceof Error ? error.message : "Failed to get download URL.", tone: "error", showCancel: false });
+    }
+  }
+
+  async function handleDocUnlockSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!unlockDocTarget || !unlockDocPassword) return;
+    try {
+      await verifyDocumentPassword(unlockDocTarget, unlockDocPassword);
+      const url = await getDownloadUrl(unlockDocTarget);
+      setUnlockDocTarget(null);
+      setUnlockDocPassword("");
+      window.open(url, "_blank");
+    } catch (err: unknown) {
+      setFeedbackConfig({ isOpen: true, title: "Unlock Failed", message: err instanceof Error ? err.message : "Incorrect password.", tone: "error", showCancel: false });
     }
   }
 
@@ -668,6 +695,34 @@ export function DocumentsLibrary({
               </div>
               <div className="mt-8 flex justify-end gap-3 rounded-b-2xl border-t border-slate-100 bg-slate-50 p-4">
                 <Button type="button" variant="ghost" onClick={() => { setUnlockTarget(null); setUnlockPassword(""); }}>Cancel</Button>
+                <Button type="submit">Unlock</Button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body,
+      )}
+
+      {unlockDocTarget && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" aria-hidden onClick={() => { setUnlockDocTarget(null); setUnlockDocPassword(""); }} />
+          <div role="dialog" aria-modal="true" className="relative flex w-full max-w-md flex-col rounded-2xl border border-border bg-white shadow-2xl">
+            <form onSubmit={handleDocUnlockSubmit} className="flex flex-col">
+              <div className="p-6 pb-0">
+                <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                  <svg className="w-6 h-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                </div>
+                <h2 className="mb-2 text-xl font-bold">Unlock Document</h2>
+                <p className="text-sm text-slate-500 mb-4">This document is password protected. Please enter the password to download it.</p>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="unlock-doc-password">Password</Label>
+                    <Input id="unlock-doc-password" type="password" required autoFocus value={unlockDocPassword} onChange={(e) => setUnlockDocPassword(e.target.value)} />
+                  </div>
+                </div>
+              </div>
+              <div className="mt-8 flex justify-end gap-3 rounded-b-2xl border-t border-slate-100 bg-slate-50 p-4">
+                <Button type="button" variant="ghost" onClick={() => { setUnlockDocTarget(null); setUnlockDocPassword(""); }}>Cancel</Button>
                 <Button type="submit">Unlock</Button>
               </div>
             </form>

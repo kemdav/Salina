@@ -100,6 +100,77 @@ export async function verifyFolderPassword(folderId: string, passwordAttempt: st
   return true;
 }
 
+export async function checkDocumentAccess(documentId: string): Promise<'granted' | 'password_required' | 'denied'> {
+  const { tenant } = await resolveCurrentTenant();
+  const viewer = await getCurrentViewer();
+  const userClient = await createSupabaseUserClient();
+  if (!tenant || !userClient || !viewer) return 'denied';
+
+  const { data: doc } = await userClient
+    .from("documents")
+    .select("visibility, folder_id")
+    .eq("id", documentId)
+    .eq("tenant_id", tenant.id)
+    .single();
+  if (!doc) return 'denied';
+
+  // Check parent folder access first
+  const canViewFolder = await isFolderAccessible(doc.folder_id);
+  if (!canViewFolder) return 'denied';
+
+  const isOfficerOrAdmin = ["owner", "admin", "officer", "system_admin"].includes(viewer.tenantRole ?? "");
+  if (isOfficerOrAdmin || viewer.isPlatformAdmin) return 'granted';
+
+  if (doc.visibility === 'public') return 'granted';
+
+  if (doc.visibility === 'password_protected') {
+    const cookieStore = await cookies();
+    const isUnlocked = cookieStore.get(`document_unlock_${documentId}`)?.value === "true";
+    return isUnlocked ? 'granted' : 'password_required';
+  }
+
+  if (doc.visibility === 'roles') {
+    const { data: roles } = await userClient.from("document_access_roles").select("role").eq("document_id", documentId);
+    const allowedRoles = roles?.map(r => r.role) || [];
+    return allowedRoles.includes(viewer.tenantRole ?? "") ? 'granted' : 'denied';
+  }
+
+  if (doc.visibility === 'members') {
+    const { data: members } = await userClient.from("document_access_members").select("user_id").eq("document_id", documentId);
+    const allowedMembers = members?.map(m => m.user_id) || [];
+    return allowedMembers.includes(viewer.id) ? 'granted' : 'denied';
+  }
+
+  return 'denied';
+}
+
+export async function verifyDocumentPassword(documentId: string, passwordAttempt: string) {
+  const { tenant } = await resolveCurrentTenant();
+  const userClient = await createSupabaseUserClient();
+
+  if (!tenant || !userClient) throw new Error("Unauthorized");
+
+  const { data: doc } = await userClient
+    .from("documents")
+    .select("password_hash")
+    .eq("id", documentId)
+    .eq("tenant_id", tenant.id)
+    .single();
+
+  if (!doc || !doc.password_hash) throw new Error("Document is not password protected");
+
+  const isValid = await bcrypt.compare(passwordAttempt, doc.password_hash);
+  if (!isValid) throw new Error("Incorrect password");
+
+  const cookieStore = await cookies();
+  cookieStore.set(`document_unlock_${documentId}`, "true", { path: "/", maxAge: 60 * 60 * 24 });
+
+  revalidatePath(`/admin/documents`);
+  revalidatePath(`/officer/documents`);
+  revalidatePath(`/member/documents`);
+  return true;
+}
+
 function getUniqueName(desiredName: string, existingNames: Set<string>, isFile: boolean = false, isCopy: boolean = false): string {
   if (!existingNames.has(desiredName)) return desiredName;
   
@@ -292,7 +363,7 @@ export async function getDocuments(category?: string, folderId?: string | null, 
     if (doc.visibility === "public") {
       filtered.push(doc);
     } else if (doc.visibility === "password_protected") {
-      const isUnlocked = cookieStore.get(`folder_unlock_${doc.id}`)?.value === "true"; // using same cookie prefix for doc if needed, but docs can also be pwd protected?
+      const isUnlocked = cookieStore.get(`document_unlock_${doc.id}`)?.value === "true";
       if (isUnlocked || isOfficerOrAdmin || isPlatformAdmin) filtered.push(doc);
     } else if (doc.visibility === "roles") {
       const { data: roles } = await userClient.from("document_access_roles").select("role").eq("document_id", doc.id);
@@ -334,7 +405,7 @@ export async function getDownloadUrl(documentId: string) {
   const isAdmin = ["owner", "admin", "system_admin"].includes(viewer.tenantRole ?? "");
   
   if (doc.visibility === "password_protected") {
-    const isUnlocked = cookieStore.get(`folder_unlock_${doc.id}`)?.value === "true";
+    const isUnlocked = cookieStore.get(`document_unlock_${doc.id}`)?.value === "true";
     if (!isUnlocked && !isOfficerOrAdmin && !viewer.isPlatformAdmin) throw new Error("Password required");
   } else if (doc.visibility === "roles") {
     const { data: roles } = await userClient.from("document_access_roles").select("role").eq("document_id", doc.id);
