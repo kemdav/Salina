@@ -1,16 +1,21 @@
 import { resolveCurrentTenant } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 import { StatusPageTemplate } from "@/components/templates/status-page";
 
-export default async function PendingPage() {
+export default async function InactivePage() {
   const { tenant } = await resolveCurrentTenant();
+
+  if (tenant?.status !== "inactive") {
+    redirect("/");
+  }
 
   return (
     <StatusPageTemplate
-      title="Under Review"
+      title="Account Inactive"
       tenantName={tenant?.name}
-      description="Your organization {tenantName} is currently pending accreditation approval."
-      supportMessage="We will send you an email notification as soon as a system administrator has reviewed your application."
-      variant="warning"
+      description="The account for {tenantName} is currently inactive."
+      supportMessage="If you are the owner, please contact support to reactivate your workspace."
+      variant="muted"
       icon={
         <svg
           fill="none"
@@ -22,7 +27,7 @@ export default async function PendingPage() {
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
           />
         </svg>
       }

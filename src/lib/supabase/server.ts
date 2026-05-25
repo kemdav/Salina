@@ -251,9 +251,7 @@ export const resolveCurrentTenant = cache(async (): Promise<TenantContext> => {
       const tenant = await getOrganizationBySlug(tenantSlug);
 
       if (tenant) {
-        if (tenant.status === "suspended") {
-          throw new Error("This organization has been suspended.");
-        }
+
 
         return {
           host,
@@ -278,9 +276,7 @@ export const resolveCurrentTenant = cache(async (): Promise<TenantContext> => {
       const tenant = await getOrganizationByHost(host);
 
       if (tenant) {
-        if (tenant.status === "suspended") {
-          throw new Error("This organization has been suspended.");
-        }
+
 
         return {
           host,

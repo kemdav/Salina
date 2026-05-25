@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 
 import { createUserClient } from "@/lib/supabase/user-server";
+import { verifyPlatformAdmin } from "./organizations";
 
 function createSupabaseAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -31,10 +32,11 @@ export async function approveApplication(orgId: string) {
   if (!userClient) {
     return { ok: false, error: "Unauthorized" };
   }
-  const { data: { user }, error: authError } = await userClient.auth.getUser();
 
-  if (authError || !user) {
-    return { ok: false, error: "Unauthorized" };
+  try {
+    await verifyPlatformAdmin(userClient);
+  } catch (error) {
+    return { ok: false, error: "Unauthorized: Requires platform admin privileges." };
   }
 
   const adminClient = createSupabaseAdminClient();
@@ -42,17 +44,17 @@ export async function approveApplication(orgId: string) {
     return { ok: false, error: "Server configuration error" };
   }
 
-  // Optionally verify if user is super admin here, but typically super admins are checked via RLS or logic
-  // Update organization status to active
   const { error } = await adminClient
     .from("organizations")
     .update({ status: "active" })
     .eq("id", orgId)
-    .eq("status", "pending");
+    .eq("status", "pending")
+    .select()
+    .single();
 
   if (error) {
     console.error("Failed to approve application:", error);
-    return { ok: false, error: "Failed to approve application" };
+    return { ok: false, error: "Failed to approve application: Organization not found or no longer pending" };
   }
 
   revalidatePath("/superadmin/accreditations");
@@ -64,10 +66,11 @@ export async function rejectApplication(orgId: string) {
   if (!userClient) {
     return { ok: false, error: "Unauthorized" };
   }
-  const { data: { user }, error: authError } = await userClient.auth.getUser();
 
-  if (authError || !user) {
-    return { ok: false, error: "Unauthorized" };
+  try {
+    await verifyPlatformAdmin(userClient);
+  } catch (error) {
+    return { ok: false, error: "Unauthorized: Requires platform admin privileges." };
   }
 
   const adminClient = createSupabaseAdminClient();
@@ -79,11 +82,13 @@ export async function rejectApplication(orgId: string) {
     .from("organizations")
     .update({ status: "rejected" })
     .eq("id", orgId)
-    .eq("status", "pending");
+    .eq("status", "pending")
+    .select()
+    .single();
 
   if (error) {
     console.error("Failed to reject application:", error);
-    return { ok: false, error: "Failed to reject application" };
+    return { ok: false, error: "Failed to reject application: Organization not found or no longer pending" };
   }
 
   revalidatePath("/superadmin/accreditations");

@@ -406,6 +406,7 @@ export function AccreditationReviewWorkspace({
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState("");
   const [decision, setDecision] = useState<Decision>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const noteIdRef = useRef(0);
 
@@ -837,37 +838,58 @@ export function AccreditationReviewWorkspace({
                   Add Internal Note
                 </button>
                 <div className="flex gap-3">
-                  <Button
-                    variant="secondary"
-                    disabled={isPending}
-                    onClick={() => {
-                      startTransition(async () => {
-                        await rejectApplication(selectedOrg);
-                        setDecision("rejected");
-                      });
-                    }}
-                  >
-                    {isPending ? "Rejecting..." : "Reject"}
-                  </Button>
-                  <span
-                    title={
-                      !canApprove
-                        ? "Review all documents before approving"
-                        : undefined
-                    }
-                  >
+                  <div className="flex items-center gap-4">
+                    {errorMsg && (
+                      <span className="text-sm text-destructive">
+                        {errorMsg}
+                      </span>
+                    )}
                     <Button
-                      disabled={!canApprove || isPending}
+                      variant="secondary"
+                      disabled={isPending}
                       onClick={() => {
+                        setErrorMsg(null);
                         startTransition(async () => {
-                          await approveApplication(selectedOrg);
-                          setDecision("approved");
+                          const res = await rejectApplication(selectedOrg);
+                          if (res.ok) {
+                            setDecision("rejected");
+                          } else {
+                            setErrorMsg(
+                              res.error || "Failed to reject application",
+                            );
+                          }
                         });
                       }}
                     >
-                      {isPending ? "Approving..." : "Approve Accreditation"}
+                      {isPending ? "Rejecting..." : "Reject"}
                     </Button>
-                  </span>
+                    <span
+                      title={
+                        !canApprove
+                          ? "Review all documents before approving"
+                          : undefined
+                      }
+                    >
+                      <Button
+                        disabled={!canApprove || isPending}
+                        onClick={() => {
+                          setErrorMsg(null);
+                          startTransition(async () => {
+                            const res = await approveApplication(selectedOrg);
+                            if (res.ok) {
+                              setDecision("approved");
+                            } else {
+                              setErrorMsg(
+                                res.error || "Failed to approve application",
+                              );
+                            }
+                          });
+                        }}
+                      >
+                        {isPending ? "Approving..." : "Approve Accreditation"}
+                      </Button>
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

@@ -54,8 +54,15 @@ export default async function MemberLayout({
     redirect("/login");
   }
 
-  if (tenantContext.tenant?.status === "pending") {
+  const status = tenantContext.tenant?.status;
+  if (status === "pending") {
     redirect("/pending");
+  } else if (status === "suspended") {
+    redirect("/suspended");
+  } else if (status === "rejected") {
+    redirect("/rejected");
+  } else if (status === "inactive") {
+    redirect("/inactive");
   }
 
   // Enforce role gate: only member, viewer, and higher roles can access /member/*

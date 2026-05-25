@@ -1,16 +1,21 @@
 import { resolveCurrentTenant } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 import { StatusPageTemplate } from "@/components/templates/status-page";
 
-export default async function PendingPage() {
+export default async function RejectedPage() {
   const { tenant } = await resolveCurrentTenant();
+
+  if (tenant?.status !== "rejected") {
+    redirect("/");
+  }
 
   return (
     <StatusPageTemplate
-      title="Under Review"
+      title="Accreditation Rejected"
       tenantName={tenant?.name}
-      description="Your organization {tenantName} is currently pending accreditation approval."
-      supportMessage="We will send you an email notification as soon as a system administrator has reviewed your application."
-      variant="warning"
+      description="The accreditation application for {tenantName} has been rejected."
+      supportMessage="Unfortunately, your organization does not meet the requirements at this time. Please contact support if you believe this was in error."
+      variant="destructive"
       icon={
         <svg
           fill="none"
@@ -22,7 +27,7 @@ export default async function PendingPage() {
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
           />
         </svg>
       }
