@@ -181,22 +181,7 @@ export default function MembersTable({
                         >
                           <option value="none">None</option>
                           {roles
-                            .filter((r) => {
-                              if (!r.is_assignable_to_members) return false;
-                              // For officers, only show roles that grant EXACTLY "Temporary role assignment"
-                              // and nothing else, to avoid redundancy with their inherent permissions.
-                              if (member.role === "officer") {
-                                if (
-                                  r.permissions.length !== 1 ||
-                                  !r.permissions.includes(
-                                    "Temporary role assignment",
-                                  )
-                                ) {
-                                  return false;
-                                }
-                              }
-                              return true;
-                            })
+                            .filter((r) => r.is_assignable_to_members)
                             .map((role) => (
                               <option key={role.id} value={role.id}>
                                 {role.name}
