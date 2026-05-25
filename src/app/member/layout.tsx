@@ -82,10 +82,12 @@ export default async function MemberLayout({
                   tenantContext.tenant.themeConfig.primaryColor ?? "#c6623e",
                 textColor: "#ffffff",
                 logoUrl: tenantContext.tenant.themeConfig.logoUrl ?? undefined,
+                fontFamily:
+                  tenantContext.tenant.themeConfig.fontFamily ?? undefined,
               }
             : undefined
         }
-        userName={viewer.email?.split("@")[0] ?? "Member"}
+        userName={viewer.displayName ?? viewer.email?.split("@")[0] ?? "Member"}
         customPermissions={viewer.customPermissions}
         userId={viewer.id}
         tenantId={viewer.tenantId}

@@ -18,6 +18,7 @@ export interface AuthenticatedTenantBranding {
   textColor: string;
   logo?: string;
   logoUrl?: string;
+  fontFamily?: string;
 }
 
 interface AuthenticatedTopBarProps {

@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import {
@@ -522,6 +523,8 @@ export async function updateProfileAction(
 
   // Refresh session so the new metadata is reflected immediately
   await supabase.auth.refreshSession();
+
+  revalidatePath("/", "layout");
 
   return { success: "Profile updated successfully." };
 }

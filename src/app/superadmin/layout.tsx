@@ -18,7 +18,7 @@ export default async function SuperAdminLayout({
   return (
     <AuthenticatedShell
       role="SuperAdmin"
-      userName={viewer.email?.split("@")[0] ?? "System Admin"}
+      userName={viewer.displayName ?? viewer.email?.split("@")[0] ?? "System Admin"}
       userId={viewer.id}
       tenantId={viewer.tenantId}
     >
