@@ -423,3 +423,119 @@ export async function signOut() {
 
   redirect("/login");
 }
+
+export type UpdateProfileActionState = {
+  error?: string;
+  success?: string;
+};
+
+const updateProfileSchema = z.object({
+  displayName: z.string().min(1, "Display name is required"),
+  avatarUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+});
+
+export async function updateProfileAction(
+  _prevState: UpdateProfileActionState,
+  formData: FormData
+): Promise<UpdateProfileActionState> {
+  const displayName = String(formData.get("displayName") ?? "").trim();
+  const avatarUrlRaw = formData.get("avatarUrl");
+  const avatarUrl = avatarUrlRaw ? String(avatarUrlRaw).trim() : undefined;
+
+  const parsed = updateProfileSchema.safeParse({ displayName, avatarUrl });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0].message };
+  }
+
+  const supabase = await createUserClient(LOCAL_COOKIE_DOMAIN);
+  if (!supabase) return { error: "Supabase auth environment is not configured." };
+
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  
+  if (userError || !user) {
+    return { error: "You must be logged in to update your profile." };
+  }
+
+  const adminClient = createSupabaseAdminClient("update-profile");
+  if (!adminClient) {
+    return { error: "Admin client not configured." };
+  }
+
+  const currentMetadata = getCurrentUserMetadata(user);
+  
+  const { error: updateError } = await adminClient.auth.admin.updateUserById(
+    user.id,
+    {
+      user_metadata: {
+        ...currentMetadata,
+        display_name: parsed.data.displayName,
+        avatar_url: parsed.data.avatarUrl,
+      }
+    }
+  );
+
+  if (updateError) {
+    return { error: updateError.message };
+  }
+
+  // Refresh session so the new metadata is reflected immediately
+  await supabase.auth.refreshSession();
+
+  return { success: "Profile updated successfully." };
+}
+
+export type ChangePasswordActionState = {
+  error?: string;
+  success?: string;
+};
+
+const changePasswordSchema = z
+  .object({
+    newPassword: z
+      .string()
+      .min(
+        AUTH_PASSWORD_MIN_LENGTH,
+        `Minimum ${AUTH_PASSWORD_MIN_LENGTH} characters.`
+      )
+      .regex(AUTH_PASSWORD_REQUIREMENTS_PATTERN, AUTH_PASSWORD_HELP_TEXT),
+    confirmPassword: z.string().min(1, "Please confirm your password."),
+  })
+  .superRefine((value, ctx) => {
+    if (value.confirmPassword !== value.newPassword) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Passwords do not match.",
+        path: ["confirmPassword"],
+      });
+    }
+  });
+
+export async function changePasswordAction(
+  _prevState: ChangePasswordActionState,
+  formData: FormData
+): Promise<ChangePasswordActionState> {
+  const newPassword = String(formData.get("newPassword") ?? "");
+  const confirmPassword = String(formData.get("confirmPassword") ?? "");
+
+  const parsed = changePasswordSchema.safeParse({ newPassword, confirmPassword });
+
+  if (!parsed.success) {
+    return { 
+      error: parsed.error.issues[0].message,
+    };
+  }
+
+  const supabase = await createUserClient(LOCAL_COOKIE_DOMAIN);
+  if (!supabase) return { error: "Supabase auth environment is not configured." };
+
+  const { error: updateError } = await supabase.auth.updateUser({
+    password: parsed.data.newPassword
+  });
+
+  if (updateError) {
+    return { error: updateError.message };
+  }
+
+  return { success: "Password changed successfully." };
+}

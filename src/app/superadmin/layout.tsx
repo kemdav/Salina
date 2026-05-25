@@ -12,7 +12,7 @@ export default async function SuperAdminLayout({ children }: { children: ReactNo
     }
 
     return (
-        <AuthenticatedShell role="SuperAdmin" userName={viewer.email?.split('@')[0] ?? 'System Admin'}>
+        <AuthenticatedShell role="SuperAdmin" userName={viewer.displayName ?? viewer.email?.split('@')[0] ?? 'System Admin'}>
             {children}
         </AuthenticatedShell>
     );

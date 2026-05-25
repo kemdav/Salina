@@ -63,7 +63,10 @@ export default async function MemberLayout({
 
   // Compute switchable roles from the viewer's actual DB role.
   // Admin/Officer accessing member pages will see their higher-role chips to switch back.
-  const switchableRoles: UserRole[] = getSwitchableRoles(viewer.tenantRole, "Member");
+  const switchableRoles: UserRole[] = getSwitchableRoles(
+    viewer.tenantRole,
+    "Member",
+  );
 
   return (
     <TemporaryApplicantProvider value={viewer.isTemporaryApplicant ?? false}>
@@ -82,7 +85,7 @@ export default async function MemberLayout({
               }
             : undefined
         }
-        userName={viewer.email?.split("@")[0] ?? "Member"}
+        userName={viewer.displayName ?? viewer.email?.split("@")[0] ?? "Member"}
       >
         {children}
       </AuthenticatedShell>

@@ -33,6 +33,8 @@ export type ViewerContext = {
   tenantRole: string | null;
   tenantId: string | null;
   tenantSlug: string | null;
+  displayName: string | null;
+  avatarUrl: string | null;
 };
 
 export type TenantContext = {
@@ -232,6 +234,16 @@ export const getCurrentViewer = cache(async (): Promise<ViewerContext | null> =>
           : typeof user.app_metadata?.tenant_slug === "string"
             ? user.app_metadata.tenant_slug
             : null,
+      displayName:
+        typeof userMetadata?.display_name === "string" && userMetadata.display_name
+          ? userMetadata.display_name
+          : typeof userMetadata?.full_name === "string" && userMetadata.full_name
+            ? userMetadata.full_name
+            : null,
+      avatarUrl:
+        typeof userMetadata?.avatar_url === "string" && userMetadata.avatar_url
+          ? userMetadata.avatar_url
+          : null,
     };
   } catch (error) {
     if (isInvalidRefreshTokenError(error)) {

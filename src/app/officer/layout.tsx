@@ -45,7 +45,7 @@ export default async function OfficerLayout({
         textColor: "#ffffff",
         logoUrl: tenantContext.tenant.themeConfig.logoUrl ?? undefined,
       }}
-      userName={viewer.email?.split("@")[0] ?? "Officer"}
+      userName={viewer.displayName ?? viewer.email?.split("@")[0] ?? "Officer"}
     >
       {children}
     </AuthenticatedShell>
