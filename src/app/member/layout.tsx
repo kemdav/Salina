@@ -54,6 +54,10 @@ export default async function MemberLayout({
     redirect("/login");
   }
 
+  if (tenantContext.tenant?.status === "pending") {
+    redirect("/pending");
+  }
+
   // Enforce role gate: only member, viewer, and higher roles can access /member/*
   // Officers and above can preview member content (permeable upward).
   // Users without a recognized role are redirected to login.
@@ -63,7 +67,10 @@ export default async function MemberLayout({
 
   // Compute switchable roles from the viewer's actual DB role.
   // Admin/Officer accessing member pages will see their higher-role chips to switch back.
-  const switchableRoles: UserRole[] = getSwitchableRoles(viewer.tenantRole, "Member");
+  const switchableRoles: UserRole[] = getSwitchableRoles(
+    viewer.tenantRole,
+    "Member",
+  );
 
   return (
     <TemporaryApplicantProvider value={viewer.isTemporaryApplicant ?? false}>

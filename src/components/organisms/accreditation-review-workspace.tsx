@@ -1,8 +1,26 @@
 "use client";
 
-import { useCallback, useRef, useState, type MouseEvent } from "react";
+import {
+  useCallback,
+  useRef,
+  useState,
+  useTransition,
+  type MouseEvent,
+} from "react";
 
 import { Button } from "@/components/atoms/button";
+import {
+  approveApplication,
+  rejectApplication,
+} from "@/lib/actions/accreditation";
+
+export interface AccreditationOrg {
+  id: string;
+  name: string;
+  type: string;
+  priority: string;
+  time: string;
+}
 
 type DocStatus = "VALID" | "REVIEWING" | "DISCREPANCY" | null;
 type Decision = "approved" | "rejected" | null;
@@ -284,12 +302,29 @@ const ORG_DETAILS: Record<number, OrgDetail> = {
   },
 };
 
-function initialStatuses(orgId: number): Record<string, DocStatus> {
+function getOrgDetail(orgId: string | number, orgName: string): OrgDetail {
+  const mockDetail = ORG_DETAILS[Number(orgId)];
+  if (mockDetail) return mockDetail;
+
+  return {
+    name: orgName,
+    submissionId: `ACC-${String(orgId).substring(0, 8).toUpperCase()}`,
+    submittedBy: "Unknown Applicant",
+    adviser: "Pending Assignment",
+    dueDate: "N/A",
+    documents: [
+      {
+        name: "Initial Application",
+        meta: "System Generated",
+        status: "REVIEWING",
+      },
+    ],
+  };
+}
+
+function initialStatuses(detail: OrgDetail): Record<string, DocStatus> {
   return Object.fromEntries(
-    ORG_DETAILS[orgId].documents.map((document) => [
-      document.name,
-      document.status,
-    ]),
+    detail.documents.map((document) => [document.name, document.status]),
   );
 }
 
@@ -354,29 +389,45 @@ interface NoteEntry {
   timestamp: string;
 }
 
-export function AccreditationReviewWorkspace() {
-  const [selectedOrg, setSelectedOrg] = useState(0);
+export function AccreditationReviewWorkspace({
+  initialOrgs = [],
+}: {
+  initialOrgs?: AccreditationOrg[];
+}) {
+  const displayOrgs =
+    initialOrgs.length > 0
+      ? initialOrgs
+      : (ORGS as unknown as AccreditationOrg[]);
+  const [selectedOrg, setSelectedOrg] = useState<string>(
+    String(displayOrgs[0]?.id || "0"),
+  );
   const [currentNote, setCurrentNote] = useState("");
   const [notes, setNotes] = useState<NoteEntry[]>([]);
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState("");
   const [decision, setDecision] = useState<Decision>(null);
+  const [isPending, startTransition] = useTransition();
   const noteIdRef = useRef(0);
 
+  const selectedOrgData =
+    displayOrgs.find((o) => String(o.id) === selectedOrg) || displayOrgs[0];
+  const detail = selectedOrgData
+    ? getOrgDetail(selectedOrg, selectedOrgData.name)
+    : ORG_DETAILS[0];
+
   const [docStatuses, setDocStatuses] = useState<Record<string, DocStatus>>(
-    () => initialStatuses(0),
+    () => initialStatuses(detail),
   );
   const [docNotes, setDocNotes] = useState<Record<string, string>>({});
   const [expandedDoc, setExpandedDoc] = useState<string | null>(null);
   const [downloadingDoc, setDownloadingDoc] = useState<string | null>(null);
 
-  const detail = ORG_DETAILS[selectedOrg];
   const reviewedCount = detail.documents.filter(
     (document) => docStatuses[document.name] !== document.status,
   ).length;
-  const canApprove = reviewedCount >= 3;
+  const canApprove = detail.documents.length === 1 ? true : reviewedCount >= 3;
 
-  function selectOrg(id: number) {
+  function selectOrg(id: string, name: string) {
     setSelectedOrg(id);
     setDecision(null);
     setCurrentNote("");
@@ -384,7 +435,7 @@ export function AccreditationReviewWorkspace() {
     setEditingNoteId(null);
     setEditingText("");
     setExpandedDoc(null);
-    setDocStatuses(initialStatuses(id));
+    setDocStatuses(initialStatuses(getOrgDetail(id, name)));
     setDocNotes({});
   }
 
@@ -471,17 +522,17 @@ export function AccreditationReviewWorkspace() {
             <div className="border-b border-border lg:border-b-0 lg:border-r">
               <div className="border-b border-border px-4 py-3">
                 <span className="text-xs font-semibold uppercase tracking-widest text-slate-500">
-                  {ORGS.length} Organizations Pending
+                  {displayOrgs.length} Organizations Pending
                 </span>
               </div>
-              {ORGS.map((org) => {
-                const isSelected = selectedOrg === org.id;
+              {displayOrgs.map((org) => {
+                const isSelected = selectedOrg === String(org.id);
 
                 return (
                   <button
                     key={org.id}
                     type="button"
-                    onClick={() => selectOrg(org.id)}
+                    onClick={() => selectOrg(String(org.id), org.name)}
                     className={`block w-full border-b border-border px-4 py-4 text-left transition-colors last:border-0 ${
                       isSelected
                         ? "border-l-2 border-l-primary bg-primary/5"
@@ -746,16 +797,22 @@ export function AccreditationReviewWorkspace() {
                   type="button"
                   className="text-sm transition-colors hover:text-foreground"
                   style={{ color: "var(--muted)" }}
-                  onClick={(handleAddNote)}
+                  onClick={handleAddNote}
                 >
                   Add Internal Note
                 </button>
                 <div className="flex gap-3">
                   <Button
                     variant="secondary"
-                    onClick={() => setDecision("rejected")}
+                    disabled={isPending}
+                    onClick={() => {
+                      startTransition(async () => {
+                        await rejectApplication(selectedOrg);
+                        setDecision("rejected");
+                      });
+                    }}
                   >
-                    Reject
+                    {isPending ? "Rejecting..." : "Reject"}
                   </Button>
                   <span
                     title={
@@ -765,10 +822,15 @@ export function AccreditationReviewWorkspace() {
                     }
                   >
                     <Button
-                      disabled={!canApprove}
-                      onClick={() => setDecision("approved")}
+                      disabled={!canApprove || isPending}
+                      onClick={() => {
+                        startTransition(async () => {
+                          await approveApplication(selectedOrg);
+                          setDecision("approved");
+                        });
+                      }}
                     >
-                      Approve Accreditation
+                      {isPending ? "Approving..." : "Approve Accreditation"}
                     </Button>
                   </span>
                 </div>

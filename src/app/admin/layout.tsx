@@ -41,6 +41,10 @@ export default async function AdminLayout({
     redirect("/login");
   }
 
+  if (tenantContext.tenant.status === "pending") {
+    redirect("/pending");
+  }
+
   const canAccessTenant =
     viewer.isPlatformAdmin || viewer.tenantId === tenantContext.tenant.id;
 
