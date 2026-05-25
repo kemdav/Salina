@@ -22,7 +22,8 @@ export type RouteSlug =
   | "settings"
   | "review"
   | "accreditations"
-  | "advisers";
+  | "advisers"
+  | "documents";
 
 export interface NavRoute {
   label: string;
@@ -273,6 +274,21 @@ const NAV_ITEM_DEFINITIONS: Array<{
       </IconWrapper>
     ),
   },
+  {
+    label: "Documents",
+    slug: "documents",
+    visibleTo: ["Owner", "Admin", "Officer", "Member"],
+    icon: (
+      <IconWrapper>
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+        />
+      </IconWrapper>
+    ),
+  },
 ];
 
 const ROLE_ROUTE_SLUGS: Record<UserRole, RouteSlug[]> = {
@@ -292,9 +308,10 @@ const ROLE_ROUTE_SLUGS: Record<UserRole, RouteSlug[]> = {
     "events",
     "roles",
     "settings",
+    "documents",
   ],
-  Officer: ["feed", "members"],
-  Member: ["feed", "applications", "events", "id"],
+  Officer: ["feed", "members", "documents"],
+  Member: ["feed", "applications", "events", "id", "documents"],
 };
 
 function getRolePath(role: UserRole) {

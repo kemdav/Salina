@@ -213,7 +213,7 @@ export const getCurrentViewer = cache(async (): Promise<ViewerContext | null> =>
         .maybeSingle<{ role: string; role_expires_at: string | null; organization_roles: { permissions: string[] } | null }>();
 
       if (membershipError) {
-        console.error("Failed to load organization membership:", membershipError);
+        console.error("Failed to load organization membership:", membershipError.message, membershipError);
         // Throwing here will be caught by call sites handling getCurrentViewer appropriately
         throw membershipError;
       }
