@@ -316,13 +316,17 @@ export async function updateApplicantDecision(
         const { data: authUser } = await adminClient.auth.admin.getUserById(finalUserId);
         
         if (authUser?.user) {
-           const newAppMetadata = { ...authUser.user.app_metadata };
-           delete newAppMetadata.temporary_applicant;
-           delete newAppMetadata.temporary_applicant_id;
+           const newAppMetadata = { 
+             ...authUser.user.app_metadata,
+             temporary_applicant: null,
+             temporary_applicant_id: null
+           };
 
-           const newUserMetadata = { ...authUser.user.user_metadata };
-           delete newUserMetadata.temporary_applicant;
-           delete newUserMetadata.temporary_applicant_id;
+           const newUserMetadata = { 
+             ...authUser.user.user_metadata,
+             temporary_applicant: null,
+             temporary_applicant_id: null
+           };
 
            await adminClient.auth.admin.updateUserById(finalUserId, {
              app_metadata: newAppMetadata,
