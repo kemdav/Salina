@@ -54,13 +54,7 @@ export function ApplicationBoard({
     useState<BoardApplicant | null>(null);
   const [isSendLinkOpen, setIsSendLinkOpen] = useState(false);
   const [pendingStage, setPendingStage] = useState<string | null>(null);
-  const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
-
-  useEffect(() => {
-    if (stages.length === 0) {
-      setIsSetupModalOpen(true);
-    }
-  }, [stages]);
+  const [isSetupModalOpen, setIsSetupModalOpen] = useState(stages.length === 0);
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean;
     tone: "error" | "warning" | "success" | "info";
@@ -195,6 +189,14 @@ export function ApplicationBoard({
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
+              <Button 
+                variant="ghost" 
+                className="h-6 px-2 text-slate-400 hover:text-slate-600 -ml-2" 
+                onClick={() => router.push(isAdmin ? '/admin/recruitment' : '/member')}
+              >
+                <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                Back
+              </Button>
               <p className="text-sm font-semibold uppercase tracking-wider text-slate-500">
                 Pipeline
               </p>
@@ -228,6 +230,15 @@ export function ApplicationBoard({
             />
             {entryId && tenantSlug && (
               <div className="flex items-center gap-2">
+                {isAdmin && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => router.push(`/admin/recruitment/${entryId}/settings`)}
+                  >
+                    <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    Settings
+                  </Button>
+                )}
                 <Button
                   variant="secondary"
                   disabled={entryStatus !== undefined && entryStatus !== "published"}

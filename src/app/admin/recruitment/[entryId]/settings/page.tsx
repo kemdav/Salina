@@ -67,6 +67,12 @@ export default async function RecruitmentSettingsPage({
   return (
     <div className="mx-auto max-w-4xl p-6 sm:p-8" style={{ fontFamily: "var(--font-body)" }}>
       <div className="mb-8">
+        <div className="mb-4">
+          <a href={`/admin/recruitment/${entry.id}`} className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">
+            <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            Back to Pipeline
+          </a>
+        </div>
         <h1 className="text-3xl font-bold tracking-tight text-foreground" style={{ fontFamily: "var(--font-heading)" }}>
           Settings: {entry.title}
         </h1>
