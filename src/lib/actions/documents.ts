@@ -7,6 +7,7 @@ import { z } from "zod";
 const uploadDocumentSchema = z.object({
   title: z.string().min(1, "Title is required"),
   category: z.enum(["constitution", "minutes", "forms", "guides", "other"]),
+  folder_id: z.string().uuid().optional().nullable(),
 });
 
 export async function uploadDocument(formData: FormData) {
@@ -35,6 +36,7 @@ export async function uploadDocument(formData: FormData) {
   const rawData = {
     title: formData.get("title"),
     category: formData.get("category"),
+    folder_id: formData.get("folder_id") || null,
   };
 
   const input = uploadDocumentSchema.parse(rawData);
@@ -67,6 +69,7 @@ export async function uploadDocument(formData: FormData) {
       file_size: file.size,
       storage_path: storagePath,
       uploaded_by: viewer.id,
+      folder_id: input.folder_id,
     })
     .select()
     .single();
@@ -83,7 +86,7 @@ export async function uploadDocument(formData: FormData) {
   return data;
 }
 
-export async function getDocuments(category?: string) {
+export async function getDocuments(category?: string, folderId?: string | null) {
   const { tenant } = await resolveCurrentTenant();
   const userClient = await createSupabaseUserClient();
 
@@ -97,6 +100,12 @@ export async function getDocuments(category?: string) {
 
   if (category && category !== "all") {
     query = query.eq("category", category);
+  }
+
+  if (folderId === null) {
+    query = query.is("folder_id", null);
+  } else if (folderId) {
+    query = query.eq("folder_id", folderId);
   }
 
   const { data, error } = await query;
@@ -183,4 +192,187 @@ export async function deleteDocument(documentId: string) {
   revalidatePath(`/officer/documents`);
   revalidatePath(`/member/documents`);
   return true;
+}
+
+export async function createFolder(name: string, parentId?: string | null) {
+  const { tenant } = await resolveCurrentTenant();
+  const viewer = await getCurrentViewer();
+  const userClient = await createSupabaseUserClient();
+
+  if (!tenant || !userClient || !viewer) throw new Error("Unauthorized");
+  const isOfficerOrAdmin = ["owner", "admin", "officer", "system_admin"].includes(viewer.tenantRole ?? "");
+  if (!viewer.isPlatformAdmin && !isOfficerOrAdmin) throw new Error("Unauthorized");
+
+  const { data, error } = await userClient
+    .from("document_folders")
+    .insert({
+      tenant_id: tenant.id,
+      name,
+      parent_id: parentId || null,
+    })
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/admin/documents`);
+  revalidatePath(`/officer/documents`);
+  revalidatePath(`/member/documents`);
+  return data;
+}
+
+export async function getFolders(parentId?: string | null) {
+  const { tenant } = await resolveCurrentTenant();
+  const userClient = await createSupabaseUserClient();
+  if (!tenant || !userClient) return [];
+
+  let query = userClient
+    .from("document_folders")
+    .select("*")
+    .eq("tenant_id", tenant.id)
+    .order("name", { ascending: true });
+
+  if (parentId === null) {
+    query = query.is("parent_id", null);
+  } else if (parentId) {
+    query = query.eq("parent_id", parentId);
+  }
+
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function renameFolder(folderId: string, newName: string) {
+  const { tenant } = await resolveCurrentTenant();
+  const viewer = await getCurrentViewer();
+  const userClient = await createSupabaseUserClient();
+
+  if (!tenant || !userClient || !viewer) throw new Error("Unauthorized");
+  const isOfficerOrAdmin = ["owner", "admin", "officer", "system_admin"].includes(viewer.tenantRole ?? "");
+  if (!viewer.isPlatformAdmin && !isOfficerOrAdmin) throw new Error("Unauthorized");
+
+  const { error } = await userClient
+    .from("document_folders")
+    .update({ name: newName })
+    .eq("id", folderId)
+    .eq("tenant_id", tenant.id);
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/admin/documents`);
+  revalidatePath(`/officer/documents`);
+  revalidatePath(`/member/documents`);
+}
+
+export async function deleteFolder(folderId: string) {
+  const { tenant } = await resolveCurrentTenant();
+  const viewer = await getCurrentViewer();
+  const userClient = await createSupabaseUserClient();
+
+  if (!tenant || !userClient || !viewer) throw new Error("Unauthorized");
+  const isAdmin = ["owner", "admin", "system_admin"].includes(viewer.tenantRole ?? "");
+  if (!viewer.isPlatformAdmin && !isAdmin) throw new Error("Unauthorized");
+
+  // cascade delete will handle documents inside, but we need to delete files from storage.
+  // Actually, we must fetch all nested documents to delete from storage first. 
+  // For simplicity, let's just delete the DB record. Storage deletion for folder cascade requires a more complex Edge Function or recursive fetch.
+  // We'll recursively fetch all document storage paths in this folder tree.
+  // To avoid complex recursion, we can fetch all documents in the tenant and filter by folder in TS.
+  const { data: allDocs } = await userClient.from("documents").select("id, folder_id, storage_path").eq("tenant_id", tenant.id);
+  const { data: allFolders } = await userClient.from("document_folders").select("id, parent_id").eq("tenant_id", tenant.id);
+  
+  if (allDocs && allFolders) {
+    const foldersToDelete = new Set<string>([folderId]);
+    let added = true;
+    while (added) {
+      added = false;
+      for (const f of allFolders) {
+        if (f.parent_id && foldersToDelete.has(f.parent_id) && !foldersToDelete.has(f.id)) {
+          foldersToDelete.add(f.id);
+          added = true;
+        }
+      }
+    }
+    const pathsToDelete = allDocs.filter(d => d.folder_id && foldersToDelete.has(d.folder_id)).map(d => d.storage_path);
+    if (pathsToDelete.length > 0) {
+      await userClient.storage.from("org-documents").remove(pathsToDelete);
+    }
+  }
+
+  const { error } = await userClient
+    .from("document_folders")
+    .delete()
+    .eq("id", folderId)
+    .eq("tenant_id", tenant.id);
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/admin/documents`);
+  revalidatePath(`/officer/documents`);
+  revalidatePath(`/member/documents`);
+}
+
+export async function renameDocument(documentId: string, newTitle: string) {
+  const { tenant } = await resolveCurrentTenant();
+  const viewer = await getCurrentViewer();
+  const userClient = await createSupabaseUserClient();
+
+  if (!tenant || !userClient || !viewer) throw new Error("Unauthorized");
+  const isOfficerOrAdmin = ["owner", "admin", "officer", "system_admin"].includes(viewer.tenantRole ?? "");
+  if (!viewer.isPlatformAdmin && !isOfficerOrAdmin) throw new Error("Unauthorized");
+
+  const { error } = await userClient
+    .from("documents")
+    .update({ title: newTitle })
+    .eq("id", documentId)
+    .eq("tenant_id", tenant.id);
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/admin/documents`);
+  revalidatePath(`/officer/documents`);
+  revalidatePath(`/member/documents`);
+}
+
+export async function moveDocument(documentId: string, targetFolderId: string | null) {
+  const { tenant } = await resolveCurrentTenant();
+  const viewer = await getCurrentViewer();
+  const userClient = await createSupabaseUserClient();
+
+  if (!tenant || !userClient || !viewer) throw new Error("Unauthorized");
+  const isOfficerOrAdmin = ["owner", "admin", "officer", "system_admin"].includes(viewer.tenantRole ?? "");
+  if (!viewer.isPlatformAdmin && !isOfficerOrAdmin) throw new Error("Unauthorized");
+
+  const { error } = await userClient
+    .from("documents")
+    .update({ folder_id: targetFolderId })
+    .eq("id", documentId)
+    .eq("tenant_id", tenant.id);
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/admin/documents`);
+  revalidatePath(`/officer/documents`);
+  revalidatePath(`/member/documents`);
+}
+
+export async function getFolderBreadcrumbs(folderId: string) {
+  const { tenant } = await resolveCurrentTenant();
+  const userClient = await createSupabaseUserClient();
+  if (!tenant || !userClient) return [];
+
+  const { data: allFolders } = await userClient
+    .from("document_folders")
+    .select("id, name, parent_id")
+    .eq("tenant_id", tenant.id);
+
+  if (!allFolders) return [];
+
+  const breadcrumbs: { id: string; name: string }[] = [];
+  let currentId: string | null = folderId;
+
+  while (currentId) {
+    const folder = allFolders.find((f: { id: string; name: string; parent_id: string | null }) => f.id === currentId);
+    if (!folder) break;
+    breadcrumbs.unshift({ id: folder.id, name: folder.name });
+    currentId = folder.parent_id;
+  }
+
+  return breadcrumbs;
 }
