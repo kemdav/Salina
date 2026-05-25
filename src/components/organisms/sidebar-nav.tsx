@@ -51,7 +51,7 @@ export function SidebarNav({
 
   // Inject additional nav items based on custom permissions if the user is a Member
   const navItems = [...baseNavItems];
-  if (role === "Member") {
+  if (role === "Member" || role === "Officer") {
     const extraRoutes = [];
     if (customPermissions.includes("Event management")) {
       extraRoutes.push({
@@ -74,7 +74,7 @@ export function SidebarNav({
             />
           </svg>
         ),
-        visibleTo: ["Member" as const],
+        visibleTo: ["Member" as const, "Officer" as const],
       });
       extraRoutes.push({
         label: "Attendance",
@@ -96,7 +96,7 @@ export function SidebarNav({
             />
           </svg>
         ),
-        visibleTo: ["Member" as const],
+        visibleTo: ["Member" as const, "Officer" as const],
       });
     }
     if (customPermissions.includes("Recruitment reviews")) {
@@ -120,7 +120,7 @@ export function SidebarNav({
             />
           </svg>
         ),
-        visibleTo: ["Member" as const],
+        visibleTo: ["Member" as const, "Officer" as const],
       });
     }
     if (customPermissions.includes("Temporary role assignment")) {
@@ -144,7 +144,7 @@ export function SidebarNav({
             />
           </svg>
         ),
-        visibleTo: ["Member" as const],
+        visibleTo: ["Member" as const, "Officer" as const],
       });
     }
 

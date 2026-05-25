@@ -293,7 +293,7 @@ const ROLE_ROUTE_SLUGS: Record<UserRole, RouteSlug[]> = {
     "roles",
     "settings",
   ],
-  Officer: ["feed", "members", "attendance", "recruitment", "events"],
+  Officer: ["feed", "members"],
   Member: ["feed", "applications", "events", "id"],
 };
 
