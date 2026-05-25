@@ -1,72 +1,40 @@
+import { getMembers } from "@/lib/actions/members";
 import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 
-const rosterStats = [
-  { label: "Active members", value: "142", tone: "emerald" },
-  { label: "On leave", value: "7", tone: "amber" },
-  { label: "Committees", value: "5", tone: "blue" },
-];
+export default async function OfficerRosterPage() {
+  const members = await getMembers();
 
-const rosterRows = [
-  {
-    name: "Excel Santos",
-    role: "Human Resources Officer",
-    status: "Active",
-    committee: "Executive",
-    attendance: "94%",
-  },
-  {
-    name: "Camille Reyes",
-    role: "Secretary",
-    status: "Active",
-    committee: "Documentation",
-    attendance: "97%",
-  },
-  {
-    name: "Andrei Cruz",
-    role: "Treasurer",
-    status: "On leave",
-    committee: "Finance",
-    attendance: "81%",
-  },
-  {
-    name: "Mika Delgado",
-    role: "Public Relations",
-    status: "Active",
-    committee: "Events",
-    attendance: "89%",
-  },
-  {
-    name: "Jules Navarro",
-    role: "Member",
-    status: "Pending",
-    committee: "Outreach",
-    attendance: "73%",
-  },
-];
+  // Dynamic statistics
+  const activeMembers = members.filter(m => m.status === 'Active').length;
+  const onLeave = members.filter(m => m.status === 'Alumni' || m.status === 'Probation' || m.status === 'Suspended').length;
+  const officersCount = members.filter(m => m.role === 'officer' || m.tags?.includes('Officer')).length;
 
-export default function OfficerRosterPage() {
+  const rosterStats = [
+    { label: "Active members", value: activeMembers.toString(), tone: "emerald" },
+    { label: "On leave/Probation", value: onLeave.toString(), tone: "amber" },
+    { label: "Officers", value: officersCount.toString(), tone: "blue" },
+  ];
+
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 py-8">
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-2xl space-y-4">
-            <Badge className="bg-[var(--primary)] text-white">Roster</Badge>
+            <Badge className="bg-[var(--primary)] text-white border-transparent">Roster</Badge>
             <div>
               <h2 className="text-3xl font-bold tracking-tight text-slate-900 font-[family:var(--font-heading)]">
                 Organization members
               </h2>
               <p className="mt-3 text-sm leading-6 text-slate-500">
-                Track current members, committee assignments, and attendance
-                levels in a single data table.
+                Track current members, assignments, and levels in a single data table.
               </p>
             </div>
           </div>
 
           <div className="flex flex-wrap gap-3">
             <Button variant="secondary">Export CSV</Button>
-            <Button variant="dark">Add member</Button>
           </div>
         </div>
 
@@ -97,7 +65,7 @@ export default function OfficerRosterPage() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <Input
               className="max-w-md"
-              placeholder="Search name, role, or committee"
+              placeholder="Search name, role, or tags"
               aria-label="Search roster"
             />
             <Button variant="secondary">Filter roster</Button>
@@ -110,44 +78,49 @@ export default function OfficerRosterPage() {
                   <th className="px-4 py-3 text-left font-medium">Name</th>
                   <th className="px-4 py-3 text-left font-medium">Role</th>
                   <th className="px-4 py-3 text-left font-medium">Status</th>
-                  <th className="px-4 py-3 text-left font-medium">Committee</th>
-                  <th className="px-4 py-3 text-left font-medium">
-                    Attendance
-                  </th>
+                  <th className="px-4 py-3 text-left font-medium">Dues</th>
                   <th className="px-4 py-3 text-left font-medium">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 bg-white">
-                {rosterRows.map((member) => (
-                  <tr key={member.name} className="align-top">
+                {members.map((member) => (
+                  <tr key={member.membership_id} className="align-top hover:bg-slate-50 transition-colors">
                     <td className="px-4 py-4 font-medium text-slate-900">
-                      {member.name}
+                      {member.name || 'Unnamed Member'}
                     </td>
-                    <td className="px-4 py-4 text-slate-600">{member.role}</td>
+                    <td className="px-4 py-4 text-slate-600 capitalize">{member.role}</td>
                     <td className="px-4 py-4">
                       <Badge
                         className={
                           member.status === "Active"
-                            ? "bg-emerald-50 text-emerald-700"
-                            : member.status === "On leave"
-                              ? "bg-amber-50 text-amber-700"
-                              : "bg-blue-50 text-blue-700"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                            : "bg-amber-50 text-amber-700 border-amber-200"
                         }
                       >
                         {member.status}
                       </Badge>
                     </td>
                     <td className="px-4 py-4 text-slate-600">
-                      {member.committee}
-                    </td>
-                    <td className="px-4 py-4 text-slate-600">
-                      {member.attendance}
+                      <Badge
+                        className={
+                          member.dues === "Paid"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                            : "bg-rose-50 text-rose-700 border-rose-200"
+                        }
+                      >
+                        {member.dues}
+                      </Badge>
                     </td>
                     <td className="px-4 py-4">
-                      <Button variant="secondary">View</Button>
+                      <Button variant="secondary" className="h-8 px-3 text-xs">View</Button>
                     </td>
                   </tr>
                 ))}
+                {members.length === 0 && (
+                   <tr>
+                       <td colSpan={5} className="px-4 py-6 text-center text-slate-500">No members found.</td>
+                   </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -162,22 +135,8 @@ export default function OfficerRosterPage() {
               <p>
                 • Sync membership changes from onboarding and admin approvals.
               </p>
-              <p>• Export a filtered committee view before officer meetings.</p>
+              <p>• Export a filtered view before officer meetings.</p>
               <p>• Keep attendance history ready for event planning.</p>
-            </div>
-          </article>
-
-          <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-slate-900">
-              Committee snapshot
-            </h3>
-            <div className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
-              <div className="rounded-2xl bg-slate-50 p-4">
-                Documentation team is fully staffed.
-              </div>
-              <div className="rounded-2xl bg-slate-50 p-4">
-                Outreach committee still needs one backup volunteer.
-              </div>
             </div>
           </article>
         </aside>

@@ -13,6 +13,11 @@ interface FeedbackModalProps {
     onConfirm?: () => void;
     showCancel?: boolean;
     primaryColor?: string;
+    actions?: {
+        label: string;
+        onClick: () => void;
+        isPrimary?: boolean;
+    }[];
 }
 
 export function FeedbackModal({
@@ -25,7 +30,8 @@ export function FeedbackModal({
     cancelText = "Cancel",
     onConfirm,
     showCancel = false,
-    primaryColor
+    primaryColor,
+    actions
 }: FeedbackModalProps) {
     if (!isOpen) return null;
 
@@ -95,7 +101,7 @@ export function FeedbackModal({
                 </div>
 
                 {/* Footer Actions */}
-                <div className="px-6 py-5 bg-slate-50 border-t border-slate-100 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+                <div className="px-6 py-5 bg-slate-50 border-t border-slate-100 flex flex-col-reverse sm:flex-row sm:justify-end gap-3 flex-wrap">
                     {showCancel && (
                         <button
                             type="button"
@@ -105,14 +111,28 @@ export function FeedbackModal({
                             {cancelText}
                         </button>
                     )}
-                    <button
-                        type="button"
-                        onClick={handleConfirm}
-                        className={cn("px-6 py-2.5 rounded-xl text-sm font-bold w-full sm:w-auto", config.buttonClass)}
-                        style={isBrandThemed ? { backgroundColor: primaryColor } : {}}
-                    >
-                        {confirmText}
-                    </button>
+                    {actions ? (
+                        actions.map((action, i) => (
+                            <button
+                                key={i}
+                                type="button"
+                                onClick={() => { action.onClick(); onClose(); }}
+                                className={cn("px-6 py-2.5 rounded-xl text-sm font-bold w-full sm:w-auto transition-colors", action.isPrimary ? config.buttonClass : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50")}
+                                style={action.isPrimary && isBrandThemed ? { backgroundColor: primaryColor } : {}}
+                            >
+                                {action.label}
+                            </button>
+                        ))
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={handleConfirm}
+                            className={cn("px-6 py-2.5 rounded-xl text-sm font-bold w-full sm:w-auto", config.buttonClass)}
+                            style={isBrandThemed ? { backgroundColor: primaryColor } : {}}
+                        >
+                            {confirmText}
+                        </button>
+                    )}
                 </div>
             </div>
         </div>
