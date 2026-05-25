@@ -1,7 +1,7 @@
 import { getMembers } from "@/lib/actions/members";
 import { getRoles } from "@/lib/actions/roles";
-import { getCurrentViewer } from "@/lib/supabase/server";
 import { canAssignTemporaryRoles } from "@/lib/organization-permissions";
+import { getCurrentViewer } from "@/lib/supabase/server";
 import MembersTable from "./MembersTable";
 
 export default async function MembersPage() {
@@ -11,7 +11,8 @@ export default async function MembersPage() {
   const canAssignRoles = canAssignTemporaryRoles(viewer);
 
   const canManageSystemRoles = viewer
-    ? ["admin", "owner", "system_admin"].includes(viewer.tenantRole || "")
+    ? ["admin", "owner", "system_admin"].includes(viewer.tenantRole || "") ||
+      viewer.isPlatformAdmin
     : false;
 
   return (
