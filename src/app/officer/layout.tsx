@@ -29,6 +29,17 @@ export default async function OfficerLayout({
     redirect("/login");
   }
 
+  const status = tenantContext.tenant.status;
+  if (status === "pending") {
+    redirect("/pending");
+  } else if (status === "suspended") {
+    redirect("/suspended");
+  } else if (status === "rejected") {
+    redirect("/rejected");
+  } else if (status === "inactive") {
+    redirect("/inactive");
+  }
+
   // Enforce role gate: only officer, admin, owner, and system_admin can access /officer/*
   // Also allow Members who have custom permissions assigned, since individual pages check specific permissions.
   const hasCustomPermissions = (viewer.customPermissions ?? []).length > 0;
@@ -59,8 +70,9 @@ export default async function OfficerLayout({
           tenantContext.tenant.themeConfig.primaryColor ?? "#c6623e",
         textColor: "#ffffff",
         logoUrl: tenantContext.tenant.themeConfig.logoUrl ?? undefined,
+        fontFamily: tenantContext.tenant.themeConfig.fontFamily ?? undefined,
       }}
-      userName={viewer.email?.split("@")[0] ?? "Officer"}
+      userName={viewer.displayName ?? viewer.email?.split("@")[0] ?? "Officer"}
       customPermissions={viewer.customPermissions}
       userId={viewer.id}
       tenantId={viewer.tenantId}

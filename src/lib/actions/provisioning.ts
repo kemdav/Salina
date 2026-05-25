@@ -181,6 +181,7 @@ export async function provisionOrganization(
         organization_type: organizationType,
         plan: "standard",
         slug,
+        status: "pending",
         theme_config: themeConfig ?? {},
       })
       .select("id")

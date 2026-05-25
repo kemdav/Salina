@@ -20,7 +20,6 @@ export type RouteSlug =
   | "id"
   | "roles"
   | "settings"
-  | "review"
   | "accreditations"
   | "advisers"
   | "documents";
@@ -205,7 +204,7 @@ const NAV_ITEM_DEFINITIONS: Array<{
   {
     label: "Settings",
     slug: "settings",
-    visibleTo: ["Owner", "Admin", "Officer"],
+    visibleTo: ["Owner", "Admin", "Officer", "Member"],
     icon: (
       <IconWrapper>
         <path
@@ -223,27 +222,7 @@ const NAV_ITEM_DEFINITIONS: Array<{
       </IconWrapper>
     ),
   },
-  {
-    label: "Accreditation Review",
-    slug: "review",
-    visibleTo: ["Owner"],
-    icon: (
-      <IconWrapper>
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M9 3h6l4 4v10a2 2 0 01-2 2H9a2 2 0 01-2-2V5a2 2 0 012-2z"
-        />
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M9 12l2 2 4-4"
-        />
-      </IconWrapper>
-    ),
-  },
+
   {
     label: "Accreditations",
     slug: "accreditations",
@@ -295,7 +274,6 @@ const ROLE_ROUTE_SLUGS: Record<UserRole, RouteSlug[]> = {
   SuperAdmin: [
     "dashboard",
     "members",
-    "review",
     "accreditations",
     "advisers",
     "settings",
@@ -311,7 +289,7 @@ const ROLE_ROUTE_SLUGS: Record<UserRole, RouteSlug[]> = {
     "documents",
   ],
   Officer: ["feed", "members", "documents"],
-  Member: ["feed", "applications", "events", "id", "documents"],
+  Member: ["feed", "applications", "events", "id", "settings", "documents"],
 };
 
 function getRolePath(role: UserRole) {

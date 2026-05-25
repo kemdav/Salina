@@ -19,26 +19,18 @@ export default async function AdminLayout({
   const viewer = await getCurrentViewer();
 
   if (!viewer || !tenantContext.tenant) {
-    if (
-      tenantContext.resolutionError === "This organization has been suspended."
-    ) {
-      return (
-        <div className="flex min-h-screen items-center justify-center bg-stone-950 text-stone-50">
-          <div className="text-center p-8 border border-red-900/30 rounded-xl bg-red-950/10">
-            <h1 className="mb-4 text-3xl font-bold text-red-500">
-              Organization Suspended
-            </h1>
-            <p className="text-stone-300">
-              Your organization&apos;s access has been temporarily suspended.
-            </p>
-            <p className="mt-2 text-stone-500 text-sm">
-              Please contact the platform administrator for assistance.
-            </p>
-          </div>
-        </div>
-      );
-    }
     redirect("/login");
+  }
+
+  const status = tenantContext.tenant.status;
+  if (status === "pending") {
+    redirect("/pending");
+  } else if (status === "suspended") {
+    redirect("/suspended");
+  } else if (status === "rejected") {
+    redirect("/rejected");
+  } else if (status === "inactive") {
+    redirect("/inactive");
   }
 
   const canAccessTenant =
@@ -70,8 +62,9 @@ export default async function AdminLayout({
           tenantContext.tenant.themeConfig.primaryColor ?? "#c6623e",
         textColor: "#ffffff",
         logoUrl: tenantContext.tenant.themeConfig.logoUrl ?? undefined,
+        fontFamily: tenantContext.tenant.themeConfig.fontFamily ?? undefined,
       }}
-      userName={viewer.email?.split("@")[0] ?? "Admin"}
+      userName={viewer.displayName ?? viewer.email?.split("@")[0] ?? "Admin"}
       userId={viewer.id}
       tenantId={viewer.tenantId}
     >

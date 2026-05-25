@@ -54,16 +54,35 @@ export default async function MemberLayout({
     redirect("/login");
   }
 
+  const status = tenantContext.tenant?.status;
+  if (status === "pending") {
+    redirect("/pending");
+  } else if (status === "suspended") {
+    redirect("/suspended");
+  } else if (status === "rejected") {
+    redirect("/rejected");
+  } else if (status === "inactive") {
+    redirect("/inactive");
+  }
+
   // Enforce role gate: only member, viewer, and higher roles can access /member/*
+  // Temporary applicants can access /member/* (they are guarded client-side to only access /member/applications).
   // Officers and above can preview member content (permeable upward).
   // Users without a recognized role are redirected to login.
-  if (!viewer.isPlatformAdmin && !isRoleAtLeast(viewer.tenantRole, "viewer")) {
+  if (
+    !viewer.isPlatformAdmin &&
+    !viewer.isTemporaryApplicant &&
+    !isRoleAtLeast(viewer.tenantRole, "viewer")
+  ) {
     redirect("/login");
   }
 
   // Compute switchable roles from the viewer's actual DB role.
   // Admin/Officer accessing member pages will see their higher-role chips to switch back.
-  const switchableRoles: UserRole[] = getSwitchableRoles(viewer.tenantRole, "Member");
+  const switchableRoles: UserRole[] = getSwitchableRoles(
+    viewer.tenantRole,
+    "Member",
+  );
 
   return (
     <TemporaryApplicantProvider value={viewer.isTemporaryApplicant ?? false}>
@@ -79,10 +98,12 @@ export default async function MemberLayout({
                   tenantContext.tenant.themeConfig.primaryColor ?? "#c6623e",
                 textColor: "#ffffff",
                 logoUrl: tenantContext.tenant.themeConfig.logoUrl ?? undefined,
+                fontFamily:
+                  tenantContext.tenant.themeConfig.fontFamily ?? undefined,
               }
             : undefined
         }
-        userName={viewer.email?.split("@")[0] ?? "Member"}
+        userName={viewer.displayName ?? viewer.email?.split("@")[0] ?? "Member"}
         customPermissions={viewer.customPermissions}
         userId={viewer.id}
         tenantId={viewer.tenantId}

@@ -14,7 +14,7 @@ export interface Organization {
   updated_at: string;
 }
 
-async function verifyPlatformAdmin(client: SupabaseClient) {
+export async function verifyPlatformAdmin(client: SupabaseClient) {
   const { data: { user }, error: userError } = await client.auth.getUser();
   if (userError || !user) {
     throw new Error("Unauthorized");
@@ -49,6 +49,8 @@ export async function getOrganizations(): Promise<Organization[]> {
       created_at,
       updated_at
     `)
+    .neq("slug", "salina")
+    .neq("slug", "system-admin")
     .order("created_at", { ascending: false });
 
   if (error) {
