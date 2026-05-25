@@ -4,17 +4,23 @@ import { useState, useTransition, useEffect } from "react";
 import { Badge } from "@/components/atoms/badge";
 import { Input } from "@/components/atoms/input";
 import { Button } from "@/components/atoms/button";
-import { assignCustomRole, type Member } from "@/lib/actions/members";
+import {
+  assignCustomRole,
+  updateSystemRole,
+  type Member,
+} from "@/lib/actions/members";
 import type { OrganizationRole } from "@/lib/actions/roles";
 
 export default function MembersTable({
   members,
   roles,
   canAssignRoles,
+  canManageSystemRoles,
 }: {
   members: Member[];
   roles: OrganizationRole[];
   canAssignRoles?: boolean;
+  canManageSystemRoles?: boolean;
 }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [now, setNow] = useState<number>(0);
@@ -37,6 +43,12 @@ export default function MembersTable({
   const handleRoleChange = (membershipId: string, roleId: string) => {
     startTransition(() => {
       assignCustomRole(membershipId, roleId === "none" ? null : roleId, null);
+    });
+  };
+
+  const handleSystemRoleChange = (membershipId: string, newRole: string) => {
+    startTransition(() => {
+      updateSystemRole(membershipId, newRole);
     });
   };
 
@@ -133,9 +145,24 @@ export default function MembersTable({
                     {member.email}
                   </td>
                   <td className="px-4 py-3">
-                    <Badge variant="secondary" className="rounded-full">
-                      {member.role}
-                    </Badge>
+                    {canManageSystemRoles &&
+                    (member.role === "member" || member.role === "officer") ? (
+                      <select
+                        className="h-8 rounded-md border border-input bg-transparent px-3 py-1 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        value={member.role}
+                        onChange={(e) =>
+                          handleSystemRoleChange(member.id, e.target.value)
+                        }
+                        disabled={isPending}
+                      >
+                        <option value="member">Member</option>
+                        <option value="officer">Officer</option>
+                      </select>
+                    ) : (
+                      <Badge variant="secondary" className="rounded-full">
+                        {member.role}
+                      </Badge>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     {member.role === "owner" || member.role === "admin" ? (
@@ -154,7 +181,22 @@ export default function MembersTable({
                         >
                           <option value="none">None</option>
                           {roles
-                            .filter((r) => r.is_assignable_to_members)
+                            .filter((r) => {
+                              if (!r.is_assignable_to_members) return false;
+                              // For officers, only show roles that grant EXACTLY "Temporary role assignment"
+                              // and nothing else, to avoid redundancy with their inherent permissions.
+                              if (member.role === "officer") {
+                                if (
+                                  r.permissions.length !== 1 ||
+                                  !r.permissions.includes(
+                                    "Temporary role assignment",
+                                  )
+                                ) {
+                                  return false;
+                                }
+                              }
+                              return true;
+                            })
                             .map((role) => (
                               <option key={role.id} value={role.id}>
                                 {role.name}

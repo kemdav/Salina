@@ -63,6 +63,13 @@ export default async function OfficerRosterPage() {
         members={members}
         roles={roles}
         canAssignRoles={canAssignRoles}
+        canManageSystemRoles={
+          viewer
+            ? ["admin", "owner", "system_admin"].includes(
+                viewer.tenantRole || "",
+              )
+            : false
+        }
       />
     );
   }

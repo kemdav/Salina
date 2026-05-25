@@ -47,9 +47,11 @@ export default async function OfficerLayout({
     "Officer",
   );
 
+  const displayRole = viewer.tenantRole === "member" ? "Member" : "Officer";
+
   return (
     <AuthenticatedShell
-      role="Officer"
+      role={displayRole}
       viewableRoles={switchableRoles}
       tenantBranding={{
         name: tenantContext.tenant.name,

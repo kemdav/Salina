@@ -96,3 +96,35 @@ export async function assignCustomRole(membershipId: string, roleId: string | nu
 
   revalidatePath("/", "layout");
 }
+
+export async function updateSystemRole(membershipId: string, newRole: string) {
+  const { tenant } = await resolveCurrentTenant();
+  const viewer = await getCurrentViewer();
+  const userClient = await createSupabaseUserClient();
+
+  if (!tenant || !userClient || !viewer) {
+    throw new Error("You do not have permission to modify roles.");
+  }
+
+  const isAdmin = ["admin", "owner", "system_admin"].includes(viewer.tenantRole || "");
+  
+  if (!isAdmin) {
+    throw new Error("You do not have permission to update system roles.");
+  }
+
+  if (!["member", "officer"].includes(newRole)) {
+    throw new Error("Invalid system role. Can only assign member or officer roles through this interface.");
+  }
+
+  const { error } = await userClient
+    .from("organization_memberships")
+    .update({ role: newRole })
+    .eq("id", membershipId)
+    .eq("tenant_id", tenant.id);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/", "layout");
+}
