@@ -129,14 +129,20 @@ export function DocumentsLibrary({
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   useEffect(() => {
-    const handleClickOutside = () => setActiveDropdown(null);
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.dropdown-container')) {
+        setActiveDropdown(null);
+      }
+    };
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
   const toggleDropdown = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    setActiveDropdown(activeDropdown === id ? null : id);
+    e.preventDefault();
+    setActiveDropdown(prev => prev === id ? null : id);
   };
 
   const filteredFolders = useMemo(() => {
@@ -419,7 +425,7 @@ export function DocumentsLibrary({
                   </div>
                   
                   {canManage && (
-                    <div className="relative" onClick={(e) => e.stopPropagation()}>
+                    <div className="relative dropdown-container" onClick={(e) => e.stopPropagation()}>
                       <button onClick={(e) => toggleDropdown(e, folder.id)} className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors">
                         <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" /></svg>
                       </button>
@@ -456,7 +462,7 @@ export function DocumentsLibrary({
                         )}
                       </div>
                       {canManage && (
-                        <div className="relative">
+                        <div className="relative dropdown-container" onClick={(e) => e.stopPropagation()}>
                           <button onClick={(e) => toggleDropdown(e, doc.id)} className="p-1 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors">
                             <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" /></svg>
                           </button>
@@ -504,7 +510,7 @@ export function DocumentsLibrary({
                     <div className="flex items-center gap-2 shrink-0">
                       <Button variant="secondary" onClick={() => handleDownload(doc.id)} className="px-3 py-1.5 h-auto">Download</Button>
                       {canManage && (
-                        <div className="relative">
+                        <div className="relative dropdown-container" onClick={(e) => e.stopPropagation()}>
                           <button onClick={(e) => toggleDropdown(e, doc.id)} className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors">
                             <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" /></svg>
                           </button>
