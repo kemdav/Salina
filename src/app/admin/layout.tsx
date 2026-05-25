@@ -3,7 +3,11 @@ import { redirect } from "next/navigation";
 
 import { AuthenticatedShell } from "@/components/templates/authenticated-shell";
 import { getCurrentViewer, resolveCurrentTenant } from "@/lib/supabase/server";
-import { getRoleHomePath, getSwitchableRoles, isRoleAtLeast } from "@/lib/roles";
+import {
+  getRoleHomePath,
+  getSwitchableRoles,
+  isRoleAtLeast,
+} from "@/lib/roles";
 import type { UserRole } from "@/lib/navigation-config";
 
 export default async function AdminLayout({
@@ -51,7 +55,10 @@ export default async function AdminLayout({
   }
 
   // Compute switchable roles from the viewer's actual DB role (not the route group).
-  const switchableRoles: UserRole[] = getSwitchableRoles(viewer.tenantRole, "Admin");
+  const switchableRoles: UserRole[] = getSwitchableRoles(
+    viewer.tenantRole,
+    "Admin",
+  );
 
   return (
     <AuthenticatedShell
@@ -65,6 +72,8 @@ export default async function AdminLayout({
         logoUrl: tenantContext.tenant.themeConfig.logoUrl ?? undefined,
       }}
       userName={viewer.email?.split("@")[0] ?? "Admin"}
+      userId={viewer.id}
+      tenantId={viewer.tenantId}
     >
       {children}
     </AuthenticatedShell>

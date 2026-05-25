@@ -244,6 +244,47 @@ export async function signUpAction(
     };
   }
 
+  // Handle users who were invited and try to sign up with the generic form to set their password
+  // When a user already exists (e.g. they were invited), Supabase signUp returns success but with an empty identities array.
+  if (data.user.identities?.length === 0) {
+    if (adminClient) {
+      // Check if they are already in organization_memberships
+      const { data: memberships } = await adminClient
+        .from("organization_memberships")
+        .select("id")
+        .eq("user_id", data.user.id);
+        
+      if (memberships && memberships.length > 0) {
+        // They are an invited member. Set their password and confirm their email so they can log in.
+        await adminClient.auth.admin.updateUserById(data.user.id, {
+          password: parsed.data.password,
+          email_confirm: true,
+        });
+
+        // Sign them in
+        const signInResult = await supabase.auth.signInWithPassword({
+          email: parsed.data.email,
+          password: parsed.data.password,
+        });
+
+        if (signInResult.data.session) {
+          const { tenantId } = getAuthSessionClaims(signInResult.data.user);
+          if (tenantId) {
+            const { data: tenant } = await adminClient.from("organizations").select("slug").eq("id", tenantId).single<{slug: string}>();
+            if (tenant) {
+               redirect(await getTenantAppUrl(tenant.slug));
+            }
+          }
+        }
+      } else {
+        return {
+           errors: {}, fields: { email: values.email, fullName: values.fullName },
+           formError: "User already registered. Please sign in or reset your password."
+        };
+      }
+    }
+  }
+
   if (parsed.data.inviteToken) {
     if (!adminClient) {
       return {
