@@ -70,8 +70,9 @@ export default async function AdminLayout({
           tenantContext.tenant.themeConfig.primaryColor ?? "#c6623e",
         textColor: "#ffffff",
         logoUrl: tenantContext.tenant.themeConfig.logoUrl ?? undefined,
+        fontFamily: tenantContext.tenant.themeConfig.fontFamily ?? undefined,
       }}
-      userName={viewer.email?.split("@")[0] ?? "Admin"}
+      userName={viewer.displayName ?? viewer.email?.split("@")[0] ?? "Admin"}
       userId={viewer.id}
       tenantId={viewer.tenantId}
     >

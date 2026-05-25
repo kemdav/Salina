@@ -59,8 +59,9 @@ export default async function OfficerLayout({
           tenantContext.tenant.themeConfig.primaryColor ?? "#c6623e",
         textColor: "#ffffff",
         logoUrl: tenantContext.tenant.themeConfig.logoUrl ?? undefined,
+        fontFamily: tenantContext.tenant.themeConfig.fontFamily ?? undefined,
       }}
-      userName={viewer.email?.split("@")[0] ?? "Officer"}
+      userName={viewer.displayName ?? viewer.email?.split("@")[0] ?? "Officer"}
       customPermissions={viewer.customPermissions}
       userId={viewer.id}
       tenantId={viewer.tenantId}

@@ -68,7 +68,10 @@ export default async function MemberLayout({
 
   // Compute switchable roles from the viewer's actual DB role.
   // Admin/Officer accessing member pages will see their higher-role chips to switch back.
-  const switchableRoles: UserRole[] = getSwitchableRoles(viewer.tenantRole, "Member");
+  const switchableRoles: UserRole[] = getSwitchableRoles(
+    viewer.tenantRole,
+    "Member",
+  );
 
   return (
     <TemporaryApplicantProvider value={viewer.isTemporaryApplicant ?? false}>
@@ -84,10 +87,12 @@ export default async function MemberLayout({
                   tenantContext.tenant.themeConfig.primaryColor ?? "#c6623e",
                 textColor: "#ffffff",
                 logoUrl: tenantContext.tenant.themeConfig.logoUrl ?? undefined,
+                fontFamily:
+                  tenantContext.tenant.themeConfig.fontFamily ?? undefined,
               }
             : undefined
         }
-        userName={viewer.email?.split("@")[0] ?? "Member"}
+        userName={viewer.displayName ?? viewer.email?.split("@")[0] ?? "Member"}
         customPermissions={viewer.customPermissions}
         userId={viewer.id}
         tenantId={viewer.tenantId}
