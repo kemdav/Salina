@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useOptimistic, startTransition, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 import { Button } from "@/components/atoms/button";
 import {
@@ -47,10 +47,20 @@ export function ApplicationBoard({
   entryStatus?: string;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const isAdmin = pathname?.startsWith("/admin");
+
   const [selectedApplicant, setSelectedApplicant] =
     useState<BoardApplicant | null>(null);
   const [isSendLinkOpen, setIsSendLinkOpen] = useState(false);
   const [pendingStage, setPendingStage] = useState<string | null>(null);
+  const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (stages.length === 0) {
+      setIsSetupModalOpen(true);
+    }
+  }, [stages]);
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean;
     tone: "error" | "warning" | "success" | "info";
@@ -165,20 +175,13 @@ export function ApplicationBoard({
     });
   }
 
-  const effectiveStages = stages.length > 0 
-    ? stages 
-    : [
-        { id: "application", name: "Application", type: "form" },
-        { id: "screening", name: "Screening", type: "form" },
-        { id: "interview", name: "Interview", type: "interview" },
-        { id: "deliberation", name: "Deliberation", type: "deliberation" },
-      ];
+  const effectiveStages = stages;
 
   // Pre-process applicants per column
   const cols = effectiveStages.map((stage) => ({
     ...stage,
     applicants: filteredApplicants.filter(
-      (a) => (a.stage || effectiveStages[0].id) === stage.id,
+      (a) => (a.stage || effectiveStages[0]?.id) === stage.id,
     ),
   }));
 
@@ -310,50 +313,82 @@ export function ApplicationBoard({
         </div>
 
         {/* Columns grid view */}
-        <div className="flex gap-4 overflow-x-auto pb-4">
-          {cols.map((col) => (
-            <div
-              key={col.id}
-              className="w-80 shrink-0 rounded-2xl border border-border bg-slate-50 p-4"
+        {stages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 border border-slate-200 rounded-3xl bg-slate-50/50">
+            <svg
+              className="w-12 h-12 text-slate-400 mb-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <div className="mb-4 flex items-center justify-between">
-                <span className="text-sm font-semibold text-foreground">
-                  {col.name}
-                </span>
-                <span className="rounded-full border border-border bg-white px-2 py-0.5 text-xs text-slate-500">
-                  {col.applicants.length}
-                </span>
-              </div>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 10h16M4 14h16M4 18h16"
+              />
+            </svg>
+            <h3 className="text-lg font-semibold text-slate-800">Pipeline not configured</h3>
+            <p className="text-sm text-slate-500 mt-1 max-w-md text-center">
+              {isAdmin 
+                ? "This recruitment cycle has no stages configured. Please head to settings to design your pipeline."
+                : "This recruitment cycle has no stages configured. Please contact an administrator to set up the pipeline."}
+            </p>
+            {isAdmin && entryId && (
+              <Button
+                className="mt-4"
+                onClick={() => router.push(`/admin/recruitment/${entryId}/settings`)}
+              >
+                Go to Settings
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="flex gap-4 overflow-x-auto pb-4">
+            {cols.map((col) => (
+              <div
+                key={col.id}
+                className="w-80 shrink-0 rounded-2xl border border-border bg-slate-50 p-4"
+              >
+                <div className="mb-4 flex items-center justify-between">
+                  <span className="text-sm font-semibold text-foreground">
+                    {col.name}
+                  </span>
+                  <span className="rounded-full border border-border bg-white px-2 py-0.5 text-xs text-slate-500">
+                    {col.applicants.length}
+                  </span>
+                </div>
 
-              <div className="space-y-3 min-h-[500px]">
-                {col.applicants.map((a) => (
-                  <div
-                    key={a.id}
-                    onClick={() => {
-                      setSelectedApplicant(
-                        selectedApplicant?.id === a.id ? null : a,
-                      );
-                      setPendingStage(null);
-                    }}
-                    className={`cursor-pointer rounded-xl border p-4 shadow-sm transition-colors hover:border-primary/30 ${selectedApplicant?.id === a.id ? "border-primary ring-1 ring-primary/20 bg-primary/5" : "border-border bg-white"}`}
-                  >
-                    <div className="mb-2 flex items-center gap-2">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-600">
-                        {a.name.slice(0, 2).toUpperCase()}
+                <div className="space-y-3 min-h-[500px]">
+                  {col.applicants.map((a) => (
+                    <div
+                      key={a.id}
+                      onClick={() => {
+                        setSelectedApplicant(
+                          selectedApplicant?.id === a.id ? null : a,
+                        );
+                        setPendingStage(null);
+                      }}
+                      className={`cursor-pointer rounded-xl border p-4 shadow-sm transition-colors hover:border-primary/30 ${selectedApplicant?.id === a.id ? "border-primary ring-1 ring-primary/20 bg-primary/5" : "border-border bg-white"}`}
+                    >
+                      <div className="mb-2 flex items-center gap-2">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-600">
+                          {a.name.slice(0, 2).toUpperCase()}
+                        </div>
+                        <span className="text-sm font-semibold text-foreground truncate">
+                          {a.name}
+                        </span>
                       </div>
-                      <span className="text-sm font-semibold text-foreground truncate">
-                        {a.name}
-                      </span>
+                      <p className="mb-2 text-xs text-slate-500 truncate">
+                        {a.email}
+                      </p>
                     </div>
-                    <p className="mb-2 text-xs text-slate-500 truncate">
-                      {a.email}
-                    </p>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Detail Panel */}
@@ -558,6 +593,25 @@ export function ApplicationBoard({
         cancelText={modalConfig.cancelText}
         showCancel={modalConfig.showCancel}
         onConfirm={modalConfig.onConfirm}
+      />
+
+      <FeedbackModal
+        isOpen={isSetupModalOpen}
+        onClose={() => setIsSetupModalOpen(false)}
+        tone="warning"
+        title="Pipeline Setup Required"
+        message={
+          isAdmin
+            ? "This recruitment cycle has no stages configured. You need to set up the pipeline first in settings."
+            : "This recruitment cycle has no stages configured. Please contact an administrator to set up the pipeline."
+        }
+        confirmText={isAdmin ? "Go to Settings" : "Okay"}
+        showCancel={isAdmin}
+        onConfirm={() => {
+          if (isAdmin && entryId) {
+            router.push(`/admin/recruitment/${entryId}/settings`);
+          }
+        }}
       />
     </div>
   );
