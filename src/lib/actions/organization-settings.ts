@@ -2,8 +2,11 @@
 
 import { createClient } from '@supabase/supabase-js';
 
+import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 import { getCurrentViewer, resolveCurrentTenant } from '@/lib/supabase/server';
 import { RESERVED_SUBDOMAINS } from '@/lib/reserved-subdomains';
+import { getTenantAppUrl } from '@/lib/root-domain';
 
 export type OrganizationSettingsState = {
     error?: string;
@@ -149,6 +152,13 @@ export async function updateOrganizationSettings(
     if (error) {
         return { error: error.message };
     }
+
+    if (updatePayload.slug) {
+        // Slug changed, redirect to the new domain
+        redirect(`${await getTenantAppUrl(updatePayload.slug as string)}/admin/settings`);
+    }
+
+    revalidatePath('/', 'layout');
 
     return { success: 'Organization settings saved.' };
 }

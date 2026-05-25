@@ -75,8 +75,24 @@ export function AuthenticatedShell({
       ? isTemporaryApplicant
       : temporaryApplicantFromContext;
 
+  const themeStyles = tenantBranding
+    ? ({
+        "--primary": tenantBranding.primaryColor,
+        "--color-primary": tenantBranding.primaryColor,
+        ...(tenantBranding.fontFamily
+          ? {
+              "--font-heading": tenantBranding.fontFamily,
+              "--font-body": tenantBranding.fontFamily,
+            }
+          : {}),
+      } as React.CSSProperties)
+    : undefined;
+
   return (
-    <div className="flex w-full h-dvh overflow-hidden bg-slate-50">
+    <div
+      className="flex w-full h-dvh overflow-hidden bg-slate-50"
+      style={themeStyles}
+    >
       <SidebarNav
         isTemporaryApplicant={temporaryApplicant}
         onSignOut={signOut}

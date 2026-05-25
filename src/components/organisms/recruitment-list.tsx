@@ -8,7 +8,7 @@ import { CreateRecruitmentCycleModal } from "@/components/organisms/create-recru
 import {
   createRecruitmentEntry,
   updateRecruitmentEntry,
-} from "@/lib/actions/recruitment";
+} from "@/lib/actions/recruitment-client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "../atoms/button";
@@ -86,21 +86,22 @@ export function RecruitmentList({
     }
   }
 
-  async function handleStatusChange(
+  function handleStatusChange(
     entry: RecruitmentEntry,
     newStatus: string,
   ) {
-    startTransition(() => {
+    startTransition(async () => {
       dispatchOptimistic({
         type: "update",
         payload: { ...entry, status: newStatus },
       });
+      try {
+        await updateRecruitmentEntry({ id: entry.id, status: newStatus });
+        router.refresh();
+      } catch {
+        alert("Failed to update status.");
+      }
     });
-    try {
-      await updateRecruitmentEntry({ id: entry.id, status: newStatus });
-    } catch {
-      alert("Failed to update status.");
-    }
   }
 
   return (

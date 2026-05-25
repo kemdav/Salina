@@ -5,7 +5,7 @@ import {
 } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { canManageTemporaryApplicants } from "@/lib/organization-permissions";
-import { RecruitmentSettingsEditor } from "./client";
+import { RecruitmentSettingsEditor, RecruitmentSettings } from "./client";
 
 export default async function RecruitmentSettingsPage({
   params,
@@ -39,19 +39,47 @@ export default async function RecruitmentSettingsPage({
 
   // Ensure settings is at least an empty stages array
   const settings = entry.settings && typeof entry.settings === "object"
-    ? entry.settings
+    ? (entry.settings as { stages?: { id: string }[] })
     : { stages: [] };
+
+  // Fetch all temporary applicants to count their current stage assignment
+  const { data: applicants, error: applicantsErr } = await userClient
+    .from("temporary_applicants")
+    .select("id, application_data")
+    .eq("recruitment_entry_id", entryId)
+    .eq("tenant_id", tenant.id);
+
+  if (applicantsErr) {
+    throw applicantsErr;
+  }
+
+  const settingsStages = settings.stages || [];
+  const initialStageId = settingsStages.length > 0 ? settingsStages[0].id : "application";
+
+  const stageCounts: Record<string, number> = {};
+  if (applicants) {
+    for (const app of applicants) {
+      const stageId = (app.application_data as { stage?: string })?.stage || initialStageId;
+      stageCounts[stageId] = (stageCounts[stageId] || 0) + 1;
+    }
+  }
 
   return (
     <div className="mx-auto max-w-4xl p-6 sm:p-8" style={{ fontFamily: "var(--font-body)" }}>
       <div className="mb-8">
+        <div className="mb-4">
+          <a href={`/admin/recruitment/${entry.id}`} className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">
+            <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            Back to Pipeline
+          </a>
+        </div>
         <h1 className="text-3xl font-bold tracking-tight text-foreground" style={{ fontFamily: "var(--font-heading)" }}>
           Settings: {entry.title}
         </h1>
         <p className="mt-2 text-slate-600">Customize the pipeline stages and forms for this recruitment cycle.</p>
       </div>
 
-      <RecruitmentSettingsEditor entryId={entry.id} initialSettings={settings} />
+      <RecruitmentSettingsEditor entryId={entry.id} initialSettings={settings as unknown as RecruitmentSettings} stageCounts={stageCounts} />
     </div>
   );
 }

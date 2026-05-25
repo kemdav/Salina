@@ -203,7 +203,7 @@ const NAV_ITEM_DEFINITIONS: Array<{
   {
     label: "Settings",
     slug: "settings",
-    visibleTo: ["Owner", "Admin", "Officer"],
+    visibleTo: ["Owner", "Admin", "Officer", "Member"],
     icon: (
       <IconWrapper>
         <path
@@ -272,7 +272,7 @@ const ROLE_ROUTE_SLUGS: Record<UserRole, RouteSlug[]> = {
     "settings",
   ],
   Officer: ["feed", "members"],
-  Member: ["feed", "applications", "events", "id"],
+  Member: ["feed", "applications", "events", "id", "settings"],
 };
 
 function getRolePath(role: UserRole) {
