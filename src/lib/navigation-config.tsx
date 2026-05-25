@@ -293,13 +293,8 @@ const ROLE_ROUTE_SLUGS: Record<UserRole, RouteSlug[]> = {
     "roles",
     "settings",
   ],
-<<<<<<< HEAD
-  Officer: ["feed", "members", "attendance", "recruitment", "events"],
-  Member: ["feed", "applications", "events", "id", "settings"],
-=======
   Officer: ["feed", "members"],
   Member: ["feed", "applications", "events", "id"],
->>>>>>> origin
 };
 
 function getRolePath(role: UserRole) {

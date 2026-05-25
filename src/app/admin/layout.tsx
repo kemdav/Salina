@@ -71,13 +71,9 @@ export default async function AdminLayout({
         textColor: "#ffffff",
         logoUrl: tenantContext.tenant.themeConfig.logoUrl ?? undefined,
       }}
-<<<<<<< HEAD
-      userName={viewer.displayName ?? viewer.email?.split("@")[0] ?? "Admin"}
-=======
       userName={viewer.email?.split("@")[0] ?? "Admin"}
       userId={viewer.id}
       tenantId={viewer.tenantId}
->>>>>>> origin
     >
       {children}
     </AuthenticatedShell>
