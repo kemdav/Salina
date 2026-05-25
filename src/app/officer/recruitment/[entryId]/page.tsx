@@ -31,7 +31,7 @@ export default async function OfficerRecruitmentEntryPage({
 
   const { data: entry, error: entryErr } = await userClient
     .from("recruitment_entries")
-    .select("title, settings")
+    .select("title, settings, status")
     .eq("id", entryId)
     .eq("tenant_id", tenant.id)
     .single();
@@ -52,20 +52,26 @@ export default async function OfficerRecruitmentEntryPage({
     throw applicantsErr;
   }
 
+  const settingsStages = (entry.settings as { stages?: BoardStage[] })?.stages || [];
+  const initialStageId = settingsStages.length > 0 ? settingsStages[0].id : "application";
+
   const applicants = (applicantsRaw || []).map((a) => ({
     id: a.id,
     name: a.applicant_name,
     email: a.applicant_email,
     status: a.status,
     created_at: a.created_at,
-    stage: (a.application_data as { stage?: string })?.stage || "application",
+    stage: (a.application_data as { stage?: string })?.stage || initialStageId,
   }));
 
   return (
     <ApplicationBoard
       entryTitle={entry.title}
+      entryStatus={entry.status}
       applicants={applicants}
       stages={(entry.settings as { stages?: BoardStage[] })?.stages || []}
+      entryId={entryId}
+      tenantSlug={tenant.slug}
     />
   );
 }

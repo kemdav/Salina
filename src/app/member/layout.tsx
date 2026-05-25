@@ -55,9 +55,14 @@ export default async function MemberLayout({
   }
 
   // Enforce role gate: only member, viewer, and higher roles can access /member/*
+  // Temporary applicants can access /member/* (they are guarded client-side to only access /member/applications).
   // Officers and above can preview member content (permeable upward).
   // Users without a recognized role are redirected to login.
-  if (!viewer.isPlatformAdmin && !isRoleAtLeast(viewer.tenantRole, "viewer")) {
+  if (
+    !viewer.isPlatformAdmin &&
+    !viewer.isTemporaryApplicant &&
+    !isRoleAtLeast(viewer.tenantRole, "viewer")
+  ) {
     redirect("/login");
   }
 

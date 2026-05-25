@@ -1,4 +1,3 @@
-"use server";
 
 import { revalidatePath } from "next/cache";
 import { resolveCurrentTenant, getCurrentViewer, createSupabaseUserClient } from "@/lib/supabase/server";
@@ -104,6 +103,56 @@ export async function updateRecruitmentSettings(entryId: string, settings: Recor
     );
   }
 
+  // 1. Fetch current settings to see what stages exist right now
+  const { data: currentEntry, error: entryErr } = await userClient
+    .from("recruitment_entries")
+    .select("settings")
+    .eq("id", entryId)
+    .eq("tenant_id", tenant.id)
+    .single();
+
+  if (entryErr || !currentEntry) {
+    throw new Error("Recruitment cycle not found.");
+  }
+
+  const currentSettings = currentEntry.settings as { stages?: { id: string; name: string }[] } | null;
+  const currentStages = currentSettings?.stages || [];
+
+  // 2. Fetch all temporary applicants to count their current stage assignment
+  const { data: applicants, error: appErr } = await userClient
+    .from("temporary_applicants")
+    .select("id, application_data")
+    .eq("recruitment_entry_id", entryId)
+    .eq("tenant_id", tenant.id);
+
+  if (appErr) {
+    throw new Error(`Failed to fetch applicants: ${appErr.message}`);
+  }
+
+  const currentInitialStageId = currentStages.length > 0 ? currentStages[0].id : "application";
+  const stageCounts: Record<string, number> = {};
+  if (applicants) {
+    for (const app of applicants) {
+      const stageId = (app.application_data as { stage?: string })?.stage || currentInitialStageId;
+      stageCounts[stageId] = (stageCounts[stageId] || 0) + 1;
+    }
+  }
+
+  // 3. Find if any stage is deleted in the new settings, and if that stage has applicants
+  const newStages = (settings as { stages?: { id: string }[] })?.stages || [];
+  const newStageIds = new Set(newStages.map((s) => s.id));
+
+  for (const currentStage of currentStages) {
+    if (!newStageIds.has(currentStage.id)) {
+      const count = stageCounts[currentStage.id] || 0;
+      if (count > 0) {
+        throw new Error(
+          `Cannot delete stage "${currentStage.name}" because there are still ${count} applicant(s) assigned to it. Please transfer them to another stage first.`
+        );
+      }
+    }
+  }
+
   const { data, error } = await userClient
     .from("recruitment_entries")
     .update({ settings })
@@ -133,19 +182,36 @@ export async function updateApplicantStage(applicantId: string, stage: string) {
     throw new Error("You do not have permission to manage applicants.");
   }
   
-  // Validation relies on the provided stage matching a configured phase ID 
-  // or a fallback default phase string in the calling components.
-  const parsedStage = stage;
-
   // Fetch current data
   const { data: current, error: fetchErr } = await userClient
     .from("temporary_applicants")
-    .select("application_data")
+    .select("application_data, recruitment_entry_id")
     .eq("id", applicantId)
     .eq("tenant_id", tenant.id)
     .single();
 
   if (fetchErr) throw new Error(fetchErr.message);
+
+  let validStages = ["application", "screening", "interview", "deliberation"];
+  
+  if (current.recruitment_entry_id) {
+    const { data: entryData } = await userClient
+      .from("recruitment_entries")
+      .select("settings")
+      .eq("id", current.recruitment_entry_id)
+      .single();
+      
+    const settingsStages = (entryData?.settings as { stages?: { id: string }[] })?.stages;
+    if (Array.isArray(settingsStages) && settingsStages.length > 0) {
+      validStages = settingsStages.map(s => s.id);
+    }
+  }
+
+  if (!validStages.includes(stage)) {
+    throw new Error(`Invalid stage: ${stage}. Valid stages are: ${validStages.join(", ")}`);
+  }
+
+  const parsedStage = stage;
 
   // Update jsonb safely
   const applicationData = current.application_data && typeof current.application_data === "object" ? current.application_data : {};
