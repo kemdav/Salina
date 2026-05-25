@@ -395,7 +395,7 @@ export function AccreditationReviewWorkspace({
   initialOrgs?: AccreditationOrg[];
 }) {
   const displayOrgs =
-    initialOrgs.length > 0
+    initialOrgs !== undefined
       ? initialOrgs
       : (ORGS as unknown as AccreditationOrg[]);
   const [selectedOrg, setSelectedOrg] = useState<string>(
@@ -496,6 +496,41 @@ export function AccreditationReviewWorkspace({
     e.stopPropagation();
     setDownloadingDoc(name);
     setTimeout(() => setDownloadingDoc(null), 1500);
+  }
+
+  if (displayOrgs.length === 0) {
+    return (
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+        <div>
+          <p className="text-sm font-light uppercase tracking-wide text-slate-500">
+            Super Admin Review
+          </p>
+          <h1
+            className="mt-1 text-4xl font-bold leading-none tracking-tight text-foreground"
+            style={{ fontFamily: "var(--font-heading)" }}
+          >
+            Review Application.
+          </h1>
+          <p className="mt-2 text-sm text-slate-500">
+            Verify organization details and approve or reject the accreditation
+            request.
+          </p>
+        </div>
+        <div className="flex h-64 items-center justify-center rounded-2xl border border-dashed border-border bg-slate-50/50">
+          <div className="text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-2xl">
+              🎉
+            </div>
+            <h3 className="mt-4 text-lg font-semibold text-slate-900">
+              All caught up!
+            </h3>
+            <p className="mt-1 text-sm text-slate-500">
+              There are no pending accreditation requests to review.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

@@ -12,6 +12,8 @@ export default async function AccreditationsPage() {
     .from("organizations")
     .select("id, name, organization_type, created_at")
     .eq("status", "pending")
+    .neq("slug", "salina")
+    .neq("slug", "system-admin") // exclude the root platform admin tenant
     .order("created_at", { ascending: false });
 
   // Map to the format expected by AccreditationReviewWorkspace
