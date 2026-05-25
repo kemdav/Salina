@@ -1,9 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { resolveCurrentTenant } from "@/lib/supabase/server";
+import { resolveCurrentTenant, getCurrentViewer } from "@/lib/supabase/server";
 import { createUserClient } from "@/lib/supabase/user-server";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { canAssignTemporaryRoles } from "@/lib/organization-permissions";
 
 export interface OrganizationRole {
   id: string;
@@ -11,6 +12,7 @@ export interface OrganizationRole {
   name: string;
   description: string | null;
   permissions: string[];
+  is_assignable_to_members: boolean;
   created_at: string;
   updated_at: string;
   member_count?: number;
@@ -20,12 +22,14 @@ export interface CreateRoleInput {
   name: string;
   description?: string;
   permissions?: string[];
+  is_assignable_to_members?: boolean;
 }
 
 export interface UpdateRoleInput {
   name?: string;
   description?: string | null;
   permissions?: string[];
+  is_assignable_to_members?: boolean;
 }
 
 async function verifyAdminStatus(client: SupabaseClient, tenantId: string) {
@@ -67,11 +71,18 @@ export async function getRoles(): Promise<OrganizationRole[]> {
   }
 
   const client = await createUserClient();
-  if (!client) {
-    throw new Error("Could not initialize Supabase client.");
+  const viewer = await getCurrentViewer();
+
+  if (!client || !viewer) {
+    throw new Error("Could not initialize Supabase client or viewer context.");
   }
 
-  await verifyAdminStatus(client, tenant.id);
+  const isTenantAdmin = ["admin", "owner", "system_admin"].includes(viewer.tenantRole || "");
+  const hasTempRolePermission = canAssignTemporaryRoles(viewer);
+
+  if (!isTenantAdmin && !hasTempRolePermission) {
+    throw new Error("Unauthorized: Requires admin privileges or Temporary role assignment permission.");
+  }
 
   const { data, error } = await client
     .from("organization_roles")
@@ -81,6 +92,7 @@ export async function getRoles(): Promise<OrganizationRole[]> {
       name,
       description,
       permissions,
+      is_assignable_to_members,
       created_at,
       updated_at,
       organization_memberships(count)
@@ -122,6 +134,7 @@ export async function createRole(data: CreateRoleInput): Promise<OrganizationRol
       name: data.name,
       description: data.description || null,
       permissions: data.permissions || [],
+      is_assignable_to_members: data.is_assignable_to_members ?? true,
     })
     .select()
     .single();
@@ -152,6 +165,7 @@ export async function updateRole(roleId: string, data: UpdateRoleInput): Promise
   if (data.name !== undefined) updates.name = data.name;
   if (data.description !== undefined) updates.description = data.description;
   if (data.permissions !== undefined) updates.permissions = data.permissions;
+  if (data.is_assignable_to_members !== undefined) updates.is_assignable_to_members = data.is_assignable_to_members;
 
   if (Object.keys(updates).length === 0) {
     throw new Error("No role fields were provided to update.");

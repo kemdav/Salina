@@ -10,6 +10,7 @@ import { SidebarNav } from "@/components/organisms/sidebar-nav";
 import type { UserRole } from "@/lib/navigation-config";
 import { useTemporaryApplicant } from "@/components/providers/temporary-applicant-provider";
 import { signOut } from "@/lib/actions/auth";
+import { RealtimeMembershipListener } from "@/components/organisms/realtime-membership-listener";
 
 interface AuthenticatedShellProps {
   children?: ReactNode;
@@ -20,6 +21,9 @@ interface AuthenticatedShellProps {
   userName?: string;
   /** Roles the current user is permitted to preview. Passed to the top bar role switcher. */
   viewableRoles?: UserRole[];
+  customPermissions?: string[];
+  userId?: string;
+  tenantId?: string | null;
 }
 
 function ShellEmptyState({ role }: { role: UserRole }) {
@@ -60,6 +64,9 @@ export function AuthenticatedShell({
   role,
   tenantBranding,
   userName,
+  customPermissions = [],
+  userId,
+  tenantId,
   viewableRoles,
 }: AuthenticatedShellProps) {
   const temporaryApplicantFromContext = useTemporaryApplicant();
@@ -76,7 +83,12 @@ export function AuthenticatedShell({
         role={role}
         tenant={tenantBranding}
         userName={userName}
+        customPermissions={customPermissions}
       />
+
+      {userId && tenantId && (
+        <RealtimeMembershipListener userId={userId} tenantId={tenantId} />
+      )}
 
       <main className="flex-1 h-full overflow-y-auto relative flex flex-col">
         <AuthenticatedTopBar
@@ -95,7 +107,8 @@ export function AuthenticatedShell({
                 className="border-amber-500/30 bg-amber-50 text-amber-900"
                 tone="info"
               >
-                Temporary UI: this applicant experience is provisional until the final design is ready.
+                Temporary UI: this applicant experience is provisional until the
+                final design is ready.
               </StatusBanner>
             </div>
           ) : null}

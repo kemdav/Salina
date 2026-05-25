@@ -31,6 +31,7 @@ export type ViewerContext = {
   isPlatformAdmin: boolean;
   isTemporaryApplicant: boolean;
   tenantRole: string | null;
+  customPermissions: string[];
   tenantId: string | null;
   tenantSlug: string | null;
   displayName: string | null;
@@ -203,14 +204,15 @@ export const getCurrentViewer = cache(async (): Promise<ViewerContext | null> =>
         ? (user.user_metadata as Record<string, unknown>)
         : undefined;
     let tenantRole: string | null = null;
+    let customPermissions: string[] = [];
 
     if (claims.tenantId) {
       const { data: membership, error: membershipError } = await client
         .from("organization_memberships")
-        .select("role")
+        .select("role, role_expires_at, organization_roles(permissions)")
         .eq("tenant_id", claims.tenantId)
         .eq("user_id", user.id)
-        .maybeSingle<{ role: string }>();
+        .maybeSingle<{ role: string; role_expires_at: string | null; organization_roles: { permissions: string[] } | null }>();
 
       if (membershipError) {
         console.error("Failed to load organization membership:", membershipError);
@@ -219,6 +221,13 @@ export const getCurrentViewer = cache(async (): Promise<ViewerContext | null> =>
       }
 
       tenantRole = membership?.role ?? null;
+      if (membership?.organization_roles && Array.isArray(membership.organization_roles.permissions)) {
+        if (membership.role_expires_at && new Date(membership.role_expires_at).getTime() < Date.now()) {
+          customPermissions = [];
+        } else {
+          customPermissions = membership.organization_roles.permissions;
+        }
+      }
     }
 
     return {
@@ -227,6 +236,7 @@ export const getCurrentViewer = cache(async (): Promise<ViewerContext | null> =>
       isPlatformAdmin: claims.isPlatformAdmin,
       isTemporaryApplicant: claims.isTemporaryApplicant,
       tenantRole,
+      customPermissions,
       tenantId: claims.tenantId,
       tenantSlug:
         typeof userMetadata?.tenant_slug === "string"
