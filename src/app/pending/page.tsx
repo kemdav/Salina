@@ -67,5 +67,5 @@ export default async function PendingPage() {
     );
   }
 
-  redirect("/login");
+  redirect("/onboarding");
 }

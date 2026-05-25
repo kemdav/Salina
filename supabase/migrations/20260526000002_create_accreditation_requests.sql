@@ -1,7 +1,7 @@
 CREATE TYPE public.accreditation_status AS ENUM ('pending', 'approved', 'rejected');
 
 CREATE TABLE public.accreditation_requests (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT extensions.gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     org_name TEXT NOT NULL,
     org_slug TEXT NOT NULL UNIQUE,
@@ -27,30 +27,16 @@ CREATE POLICY "Users can insert their own accreditation requests"
 
 CREATE POLICY "Platform admins can view all accreditation requests" 
     ON public.accreditation_requests 
-    FOR SELECT 
-    USING (
-        (SELECT (auth.jwt() -> 'app_metadata' ->> 'role')::text) = 'system_admin' OR
-        'system_admin' = ANY (SELECT jsonb_array_elements_text(COALESCE(auth.jwt() -> 'app_metadata' -> 'roles', '[]'::jsonb)))
-    );
+    FOR SELECT TO authenticated
+    USING (public.is_platform_admin());
 
 CREATE POLICY "Platform admins can update accreditation requests" 
     ON public.accreditation_requests 
-    FOR UPDATE 
-    USING (
-        (SELECT (auth.jwt() -> 'app_metadata' ->> 'role')::text) = 'system_admin' OR
-        'system_admin' = ANY (SELECT jsonb_array_elements_text(COALESCE(auth.jwt() -> 'app_metadata' -> 'roles', '[]'::jsonb)))
-    );
+    FOR UPDATE TO authenticated
+    USING (public.is_platform_admin());
 
 -- Trigger for updated_at
-CREATE OR REPLACE FUNCTION public.handle_accreditation_updated_at()
-RETURNS trigger AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER on_accreditation_updated
+CREATE TRIGGER set_accreditation_requests_updated_at
   BEFORE UPDATE ON public.accreditation_requests
   FOR EACH ROW
-  EXECUTE PROCEDURE public.handle_accreditation_updated_at();
+  EXECUTE FUNCTION public.set_current_timestamp();

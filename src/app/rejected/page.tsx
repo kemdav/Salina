@@ -67,5 +67,5 @@ export default async function RejectedPage() {
     );
   }
 
-  redirect("/login");
+  redirect("/onboarding");
 }

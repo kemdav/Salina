@@ -68,18 +68,29 @@ export async function approveApplication(requestId: string) {
     .select("id")
     .single();
 
-  if (orgError) {
-    // Note: If this fails, we have an orphaned approved request. 
-    // In a real app we'd use a postgres function/RPC for transactions.
+  if (orgError || !organization) {
+    await adminClient
+      .from("accreditation_requests")
+      .update({ status: "pending" })
+      .eq("id", requestId);
     return { ok: false, error: "Failed to create organization" };
   }
 
   // 3. Make user the owner
-  await adminClient.from("organization_memberships").insert({
+  const { error: membershipError } = await adminClient.from("organization_memberships").insert({
     role: "owner",
     tenant_id: organization.id,
     user_id: request.user_id,
   });
+
+  if (membershipError) {
+    await adminClient.from("organizations").delete().eq("id", organization.id);
+    await adminClient
+      .from("accreditation_requests")
+      .update({ status: "pending" })
+      .eq("id", requestId);
+    return { ok: false, error: "Failed to assign organization owner" };
+  }
 
   // 4. Update user metadata
   const { data: userRecord } = await adminClient.auth.admin.getUserById(request.user_id);

@@ -199,14 +199,16 @@ export async function getUserPendingRequest() {
   const userClient = await createUserClient();
   if (!userClient) return null;
   
-  const { data: { user } } = await userClient.auth.getUser();
+  const { data: { user }, error: authError } = await userClient.auth.getUser();
   
-  if (!user) return null;
+  if (authError || !user) {
+    return null;
+  }
   
   const client = createSupabaseAdminClient();
   if (!client) return null;
   
-  const { data } = await client
+  const { data, error } = await client
     .from("accreditation_requests")
     .select("*")
     .eq("user_id", user.id)
@@ -214,6 +216,11 @@ export async function getUserPendingRequest() {
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
+    
+  if (error) {
+    console.error("getUserPendingRequest database error:", error);
+    return null;
+  }
     
   return data;
 }

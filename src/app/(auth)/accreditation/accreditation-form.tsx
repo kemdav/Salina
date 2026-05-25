@@ -42,8 +42,9 @@ function validate(fields: Fields): Errors {
   if (!fields.orgName.trim()) errors.orgName = "Organization name is required.";
   if (!fields.orgSlug.trim()) {
     errors.orgSlug = "Slug is required.";
-  } else if (!/^[a-z0-9-]+$/.test(fields.orgSlug)) {
-    errors.orgSlug = "Only lowercase letters, numbers, and hyphens allowed.";
+  } else if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(fields.orgSlug)) {
+    errors.orgSlug =
+      "Slug must use only lowercase letters, numbers, and single hyphens, and cannot start or end with a hyphen.";
   }
   if (
     !fields.contactEmail.trim() ||
