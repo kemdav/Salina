@@ -225,3 +225,66 @@ export async function handleQRCheckInOut(eventId: string, memberId: string) {
 
   throw new Error("Already scanned");
 }
+
+export async function getMyAttendance() {
+  const { tenant } = await resolveCurrentTenant();
+  const viewer = await getCurrentViewer();
+  const userClient = await createSupabaseUserClient();
+
+  if (!tenant || !userClient || !viewer) {
+    throw new Error("You must be logged in to view attendance history.");
+  }
+
+  const { data: membership, error: membershipError } = await userClient
+    .from("organization_memberships")
+    .select("id")
+    .eq("tenant_id", tenant.id)
+    .eq("user_id", viewer.id)
+    .single();
+
+  if (membershipError || !membership) {
+    return [];
+  }
+
+  const { data: attendances, error } = await userClient
+    .from("event_attendees")
+    .select("id, status, check_in_time, check_out_time, event_id")
+    .eq("member_id", membership.id)
+    .eq("tenant_id", tenant.id);
+
+  if (error) throw new Error(error.message);
+  if (!attendances || attendances.length === 0) return [];
+
+  const eventIds = [...new Set(attendances.map((a: { event_id: string }) => a.event_id))];
+
+  const { data: events, error: eventsError } = await userClient
+    .from("events")
+    .select("id, title, start_time, location")
+    .in("id", eventIds)
+    .eq("tenant_id", tenant.id);
+
+  if (eventsError) throw new Error(eventsError.message);
+
+  const eventMap = new Map(
+    (events ?? []).map((e: { id: string; title: string; start_time: string; location: string }) => [e.id, e]),
+  );
+
+  const records = attendances
+    .map((a: { id: string; status: string; check_in_time: string | null; check_out_time: string | null; event_id: string }) => {
+      const event = eventMap.get(a.event_id);
+      if (!event) return null;
+      return {
+        id: a.id,
+        eventTitle: event.title,
+        eventDate: event.start_time,
+        status: a.status,
+        checkInTime: a.check_in_time,
+        checkOutTime: a.check_out_time,
+        location: event.location,
+      };
+    })
+    .filter((r): r is NonNullable<typeof r> => r !== null)
+    .sort((a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime());
+
+  return records;
+}
