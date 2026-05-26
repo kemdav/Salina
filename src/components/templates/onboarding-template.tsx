@@ -17,7 +17,7 @@ import {
   BrandingSetupForm,
   type BrandingThemeConfig,
 } from "@/components/organisms/branding-setup-form";
-import { provisionOrganization } from "@/lib/actions/provisioning";
+import { submitAccreditationRequest } from "@/lib/actions/accreditation-requests";
 
 const INITIAL_ORGANIZATION_SETUP: OrganizationSetupState = {
   name: "",
@@ -107,12 +107,11 @@ export function OnboardingTemplate() {
     setLaunchError("");
 
     try {
-      const result = await provisionOrganization({
+      const result = await submitAccreditationRequest({
         billingEmail: organizationSetup.billingEmail,
         name: organizationSetup.name,
         organizationType: organizationSetup.organizationType,
         slug: organizationSetup.slug,
-        themeConfig: brandingThemeConfig,
       });
 
       if (!result.ok) {
@@ -120,7 +119,7 @@ export function OnboardingTemplate() {
         return;
       }
 
-      window.location.assign(result.redirectUrl);
+      router.refresh(); // Refresh to trigger Server Component redirect
     } catch {
       setLaunchError("Something went wrong. Please try again.");
     } finally {
