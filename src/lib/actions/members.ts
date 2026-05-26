@@ -89,6 +89,18 @@ async function requireRosterAccess() {
   return { tenant, viewer, userClient };
 }
 
+async function requireRosterReadAccess() {
+  const { tenant } = await resolveCurrentTenant();
+  const viewer = await getCurrentViewer();
+  const userClient = await createSupabaseUserClient();
+
+  if (!tenant || !viewer || !userClient || !viewer.tenantRole) {
+    throw new Error("You do not have permission to view members.");
+  }
+
+  return { tenant, viewer, userClient };
+}
+
 function revalidateMemberPaths() {
   revalidatePath("/admin/members");
   revalidatePath("/officer/members");
@@ -96,7 +108,7 @@ function revalidateMemberPaths() {
 }
 
 export async function getMembers(): Promise<Member[]> {
-  const { tenant, userClient } = await requireRosterAccess();
+  const { tenant, userClient } = await requireRosterReadAccess();
   const adminClient = createSupabaseAdminClient("members-fetch");
 
   if (!adminClient) {
