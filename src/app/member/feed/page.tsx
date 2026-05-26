@@ -1,28 +1,45 @@
-import { OrganizationFeed } from "@/components/organisms/organization-feed";
+import {
+  getAnnouncements,
+  acknowledgeAnnouncement,
+} from "@/lib/actions/announcements";
+import { resolveCurrentTenant, getCurrentViewer } from "@/lib/supabase/server";
+import {
+  AnnouncementsBoard,
+  type Announcement,
+} from "@/components/organisms/announcements-board";
+import { notFound } from "next/navigation";
 
-const feedPosts = [
-  {
-    title: "Weekend outreach schedule confirmed",
-    category: "Operations",
-    author: "Secretariat Office",
-    time: "12 minutes ago",
-    body: "The outreach team will gather at 7:30 AM on Saturday. Logistics, name tags, and transportation are already locked in.",
-    stats: "17 reads · 4 acknowledgements",
-  },
-  {
-    title: "Attendance sheet updated for the annual assembly",
-    category: "Attendance",
-    author: "Attendance Committee",
-    time: "Today at 8:15 AM",
-    body: "The QR check-in link has been regenerated and the backup manual list is ready at the registration desk.",
-    stats: "23 reads · 6 confirmations",
-  },
-];
+export const metadata = {
+  title: "Feed | Salina",
+};
 
-export default function MemberFeedPage() {
+export default async function MemberFeedPage() {
+  const { tenant } = await resolveCurrentTenant();
+  const viewer = await getCurrentViewer();
+
+  if (!tenant || !viewer) {
+    notFound();
+  }
+
+  const announcements = await getAnnouncements();
+
   return (
-    <div className="py-8">
-      <OrganizationFeed posts={feedPosts} canPost={false} />
+    <div className="w-full max-w-4xl mx-auto py-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="mb-8 space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
+          Organization Feed
+        </h1>
+        <p className="text-neutral-500 dark:text-neutral-400">
+          Stay updated with the latest official announcements from {tenant.name}
+          .
+        </p>
+      </div>
+
+      <AnnouncementsBoard
+        announcements={announcements as Announcement[]}
+        onAcknowledge={acknowledgeAnnouncement}
+        isOfficerOrAdmin={false}
+      />
     </div>
   );
 }
