@@ -81,3 +81,25 @@ export function canAssignTemporaryRoles(
     viewer.tenantRole === "admin"
   );
 }
+
+export function canManageAnnouncements(
+  viewer: TemporaryApplicantPermissionViewer | null | undefined
+) {
+  if (!viewer) {
+    return false;
+  }
+
+  if (viewer.isPlatformAdmin) {
+    return true;
+  }
+
+  if (viewer.customPermissions.includes("Announcement posting")) {
+    return true;
+  }
+
+  return (
+    viewer.tenantRole === "owner" ||
+    viewer.tenantRole === "admin" ||
+    viewer.tenantRole === "officer"
+  );
+}
