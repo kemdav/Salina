@@ -1,6 +1,7 @@
 
 import { revalidatePath } from "next/cache";
 import { resolveCurrentTenant, getCurrentViewer, createSupabaseUserClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { canManageTemporaryApplicants } from "@/lib/organization-permissions";
 import { z } from "zod";
 
@@ -248,6 +249,22 @@ export async function updateApplicantDecision(
     throw new Error("You do not have permission to manage applicants.");
   }
 
+  // Fetch current applicant to ensure they aren't already approved/rejected and to get `applicant_user_id`.
+  const { data: currentApplicant, error: fetchError } = await userClient
+    .from("temporary_applicants")
+    .select("id, status, applicant_user_id, applicant_email, applicant_name")
+    .eq("id", applicantId)
+    .eq("tenant_id", tenant.id)
+    .single();
+
+  if (fetchError || !currentApplicant) {
+     throw new Error("Applicant not found.");
+  }
+
+  if (currentApplicant.status === "approved" || currentApplicant.status === "rejected") {
+     throw new Error("This applicant's status has already been finalized and cannot be changed.");
+  }
+
   const { data, error } = await userClient
     .from("temporary_applicants")
     .update({ status })
@@ -257,6 +274,68 @@ export async function updateApplicantDecision(
     .single();
 
   if (error) throw new Error(error.message);
+
+  if (status === "approved") {
+    const adminClient = createSupabaseAdminClient("approve-applicant");
+    if (adminClient) {
+      let finalUserId = currentApplicant.applicant_user_id;
+
+      // If they haven't signed up yet, create an account for them
+      if (!finalUserId) {
+        const { data: newUser, error: newUserError } = await adminClient.auth.admin.createUser({
+          email: currentApplicant.applicant_email,
+          email_confirm: true,
+          user_metadata: {
+            full_name: currentApplicant.applicant_name,
+            tenant_id: tenant.id
+          }
+        });
+
+        if (newUser?.user) {
+          finalUserId = newUser.user.id;
+          // Link the temporary applicant to the new user
+          await adminClient.from("temporary_applicants").update({ applicant_user_id: finalUserId }).eq("id", currentApplicant.id);
+        } else if (newUserError) {
+          console.error("Failed to create user account for approved applicant:", newUserError);
+        }
+      }
+
+      if (finalUserId) {
+        // 1. Add to organization_memberships
+        const { error: membershipError } = await adminClient.from("organization_memberships").insert({
+          tenant_id: tenant.id,
+          user_id: finalUserId,
+          role: "member"
+        });
+
+        if (membershipError) {
+          console.error("Failed to insert membership:", membershipError);
+        }
+
+        // 2. Update user metadata to remove temporary flags
+        const { data: authUser } = await adminClient.auth.admin.getUserById(finalUserId);
+        
+        if (authUser?.user) {
+           const newAppMetadata = { 
+             ...authUser.user.app_metadata,
+             temporary_applicant: null,
+             temporary_applicant_id: null
+           };
+
+           const newUserMetadata = { 
+             ...authUser.user.user_metadata,
+             temporary_applicant: null,
+             temporary_applicant_id: null
+           };
+
+           await adminClient.auth.admin.updateUserById(finalUserId, {
+             app_metadata: newAppMetadata,
+             user_metadata: newUserMetadata
+           });
+        }
+      }
+    }
+  }
 
   revalidatePath("/admin/recruitment");
   return data;

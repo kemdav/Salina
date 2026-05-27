@@ -152,18 +152,29 @@ export function ApplicationBoard({
     applicantId: string,
     status: "approved" | "rejected",
   ) {
-    startTransition(async () => {
-      setOptimisticApplicants({ id: applicantId, status });
-      try {
-        await updateApplicantDecision(applicantId, status);
-        router.refresh();
-      } catch {
-        openModal({
-          tone: "error",
-          title: "Decision Failed",
-          message: "Failed to log decision. Please try again.",
-          confirmText: "Okay",
-          showCancel: false,
+    openModal({
+      tone: "warning",
+      title: "Finalize Decision",
+      message: `Are you sure you want to mark this applicant as ${status}? This action is permanent and cannot be undone.`,
+      confirmText: status === "approved" ? "Yes, Approve" : "Yes, Reject",
+      cancelText: "Cancel",
+      showCancel: true,
+      onConfirm: () => {
+        startTransition(async () => {
+          setOptimisticApplicants({ id: applicantId, status });
+          setSelectedApplicant(prev => prev ? { ...prev, status } : null);
+          try {
+            await updateApplicantDecision(applicantId, status);
+            router.refresh();
+          } catch (err) {
+            openModal({
+              tone: "error",
+              title: "Decision Failed",
+              message: err instanceof Error ? err.message : "Failed to log decision. Please try again.",
+              confirmText: "Okay",
+              showCancel: false,
+            });
+          }
         });
       }
     });
@@ -452,24 +463,28 @@ export function ApplicationBoard({
 
           <div className="space-y-4">
             <h3 className="text-sm font-bold text-slate-700">Move to Stage</h3>
-            <div className="flex flex-col gap-2">
-              {effectiveStages.map((s) => (
-                <Button
-                  key={s.id}
-                  variant={
-                    (pendingStage || selectedApplicant.stage) === s.id ? "primary" : "ghost"
-                  }
-                  onClick={() => {
-                    if (selectedApplicant.stage !== s.id) {
-                      setPendingStage(s.id);
+            {selectedApplicant.status === "approved" || selectedApplicant.status === "rejected" ? (
+              <p className="text-sm text-slate-500 italic">This application has been finalized.</p>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {effectiveStages.map((s) => (
+                  <Button
+                    key={s.id}
+                    variant={
+                      (pendingStage || selectedApplicant.stage) === s.id ? "primary" : "ghost"
                     }
-                  }}
-                  className="justify-start"
-                >
-                  {s.name}
-                </Button>
-              ))}
-            </div>
+                    onClick={() => {
+                      if (selectedApplicant.stage !== s.id) {
+                        setPendingStage(s.id);
+                      }
+                    }}
+                    className="justify-start"
+                  >
+                    {s.name}
+                  </Button>
+                ))}
+              </div>
+            )}
 
             {pendingStage && (
               <div className="mt-3 p-4 border border-indigo-100 rounded-xl bg-indigo-50/50 space-y-3 animate-in fade-in slide-in-from-top-2">
@@ -563,32 +578,31 @@ export function ApplicationBoard({
               <h3 className="text-sm font-bold text-slate-700 mb-3">
                 Final Decision
               </h3>
-              <div className="flex flex-col gap-2">
-                <Button
-                  className="w-full bg-success hover:bg-success/90 text-white"
-                  onClick={() => {
-                    handleDecision(selectedApplicant.id, "approved");
-                    setSelectedApplicant((prev) =>
-                      prev ? { ...prev, status: "approved" } : null,
-                    );
-                  }}
-                  disabled={selectedApplicant.status === "approved"}
-                >
-                  Approve Applicant
-                </Button>
-                <Button
-                  className="w-full bg-destructive hover:bg-destructive/90 text-white"
-                  onClick={() => {
-                    handleDecision(selectedApplicant.id, "rejected");
-                    setSelectedApplicant((prev) =>
-                      prev ? { ...prev, status: "rejected" } : null,
-                    );
-                  }}
-                  disabled={selectedApplicant.status === "rejected"}
-                >
-                  Reject Applicant
-                </Button>
-              </div>
+              {selectedApplicant.status === "approved" ? (
+                <div className="rounded-xl bg-emerald-50 p-4 text-center border border-emerald-100">
+                  <p className="text-sm font-bold text-emerald-700">Applicant Approved</p>
+                  <p className="text-xs text-emerald-600 mt-1">They have been added to the organization members.</p>
+                </div>
+              ) : selectedApplicant.status === "rejected" ? (
+                <div className="rounded-xl bg-rose-50 p-4 text-center border border-rose-100">
+                  <p className="text-sm font-bold text-rose-700">Applicant Rejected</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <Button
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+                    onClick={() => handleDecision(selectedApplicant.id, "approved")}
+                  >
+                    Approve Applicant
+                  </Button>
+                  <Button
+                    className="w-full bg-rose-600 hover:bg-rose-700 text-white shadow-sm"
+                    onClick={() => handleDecision(selectedApplicant.id, "rejected")}
+                  >
+                    Reject Applicant
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </aside>
