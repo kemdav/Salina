@@ -1,77 +1,151 @@
 import Link from "next/link";
-const METRIC_CARDS = [
-  { label: "Total Organizations", value: "1,284" },
-  { label: "Pending Accreditation", value: "42" },
-  { label: "Active Members", value: "18.5k" },
-  { label: "New This Week", value: "156", badge: "+10%" },
-];
+import { getOrganizations } from "@/lib/actions/organizations";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { StatusBadge } from "@/components/atoms/status-badge";
 
-const RECENT_ORGS = [
-  {
-    initials: "AL",
-    name: "Aether Labs",
-    slug: "aether-labs",
-    status: "ACTIVE",
-    created: "Oct 20",
-  },
-  {
-    initials: "VS",
-    name: "Vanguard Systems",
-    slug: "vanguard-sys",
-    status: "PENDING",
-    created: "Oct 19",
-  },
-  {
-    initials: "NX",
-    name: "Nexus Core",
-    slug: "nexus-core",
-    status: "ACTIVE",
-    created: "Oct 18",
-  },
-  {
-    initials: "OP",
-    name: "Optic Prime",
-    slug: "optic-prime",
-    status: "INACTIVE",
-    created: "Oct 15",
-  },
-  {
-    initials: "QM",
-    name: "Quantum Mechanics",
-    slug: "quantum-mech",
-    status: "ACTIVE",
-    created: "Oct 12",
-  },
-];
-
-const STATUS_STYLES: Record<string, string> = {
-  ACTIVE: "bg-success/10 text-success border border-success/30",
-  PENDING: "bg-warning/10 text-warning border border-warning/30",
-  INACTIVE: "bg-slate-100 text-slate-500 border border-slate-200",
+const formatTimeAgo = (dateStr: string) => {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  if (diffHours < 24) {
+    if (diffHours === 0) return "Just now";
+    return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+  }
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays === 1) return "Yesterday";
+  return `${diffDays} days ago`;
 };
 
-const ACCREDITATION_REQUESTS = [
-  {
-    title: "ISO 27001 Certification Request",
-    sub: "Submitted by Aether Labs · 3 hours ago",
-  },
-  {
-    title: "Annual Security Audit",
-    sub: "Submitted by Nexus Core · 5 hours ago",
-  },
-  {
-    title: "Governance Compliance Check",
-    sub: "Submitted by Optic Prime · Yesterday",
-  },
-];
+export default async function SuperAdminDashboardPage() {
+  const orgs = await getOrganizations().catch(() => []);
+  const adminClient = createSupabaseAdminClient("superadmin-dashboard");
 
-const QUICK_ACTIONS = [
-  "Register New Organization",
-  "Bulk Accreditation",
-  "Generate Monthly Report",
-];
+  let pendingAccreditationCount = 0;
+  let activeMembersCount = 0;
+  let recentAccreditationRequests: {
+    org_type: string;
+    org_name: string;
+    created_at: string;
+  }[] = [];
 
-export default function SuperAdminDashboardPage() {
+  if (adminClient) {
+    const { count: pendingCount } = await adminClient
+      .from("accreditation_requests")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "pending");
+
+    pendingAccreditationCount = pendingCount || 0;
+
+    const { count: membersCount } = await adminClient
+      .from("organization_memberships")
+      .select("*", { count: "exact", head: true });
+
+    activeMembersCount = membersCount || 0;
+
+    const { data: requests } = await adminClient
+      .from("accreditation_requests")
+      .select("*")
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(5);
+
+    recentAccreditationRequests = requests || [];
+  }
+
+  // Calculate new this week
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+  const twoWeeksAgo = new Date();
+  twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+
+  const newThisWeekCount = orgs.filter(
+    (org) => new Date(org.created_at) >= oneWeekAgo,
+  ).length;
+  const newLastWeekCount = orgs.filter((org) => {
+    const createdDate = new Date(org.created_at);
+    return createdDate >= twoWeeksAgo && createdDate < oneWeekAgo;
+  }).length;
+
+  let percentChange = 0;
+  if (newLastWeekCount === 0) {
+    percentChange = newThisWeekCount > 0 ? 100 : 0;
+  } else {
+    percentChange = Math.round(
+      ((newThisWeekCount - newLastWeekCount) / newLastWeekCount) * 100,
+    );
+  }
+
+  const badgeText =
+    percentChange >= 0 ? `+${percentChange}%` : `${percentChange}%`;
+
+  const totalOrganizationsCount = orgs.length;
+
+  const pendingOrgsCount = orgs.filter(
+    (org) => org.status === "pending",
+  ).length;
+  const totalPendingAccreditation =
+    pendingOrgsCount + pendingAccreditationCount;
+
+  const METRIC_CARDS = [
+    {
+      label: "Total Organizations",
+      value: totalOrganizationsCount.toLocaleString(),
+    },
+    {
+      label: "Pending Accreditation",
+      value: totalPendingAccreditation.toLocaleString(),
+    },
+    {
+      label: "Active Members",
+      value:
+        activeMembersCount > 1000
+          ? (activeMembersCount / 1000).toFixed(1) + "k"
+          : activeMembersCount.toLocaleString(),
+    },
+    {
+      label: "New This Week",
+      value: newThisWeekCount.toLocaleString(),
+      badge: badgeText,
+    },
+  ];
+
+  const RECENT_ORGS = orgs.slice(0, 5).map((org) => ({
+    initials: org.name.substring(0, 2).toUpperCase(),
+    name: org.name,
+    slug: org.slug,
+    status: org.status.toLowerCase(),
+    created: new Date(org.created_at).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    }),
+  }));
+
+  const ACCREDITATION_REQUESTS = recentAccreditationRequests.map((req) => ({
+    title: `${req.org_type || "Organization"} Certification Request`,
+    sub: `Submitted by ${req.org_name} · ${formatTimeAgo(req.created_at)}`,
+  }));
+
+  const QUICK_ACTIONS = [
+    {
+      label: "Register New Organization",
+      href: "/superadmin/organizations",
+      disabled: false,
+    },
+    {
+      label: "Bulk Accreditation",
+      href: "/superadmin/accreditations",
+      disabled: false,
+    },
+    {
+      label: "Generate Monthly Report",
+      href: "#",
+      disabled: true,
+      tooltip: "Coming soon",
+    },
+  ];
+
   return (
     <div style={{ fontFamily: "var(--font-body)" }}>
       {/* Header */}
@@ -165,11 +239,17 @@ export default function SuperAdminDashboardPage() {
                     {org.slug}
                   </td>
                   <td className="px-4 py-3">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[org.status]}`}
+                    <StatusBadge
+                      variant={
+                        org.status === "active"
+                          ? "green"
+                          : org.status === "pending"
+                            ? "yellow"
+                            : "red"
+                      }
                     >
                       {org.status}
-                    </span>
+                    </StatusBadge>
                   </td>
                   <td className="px-4 py-3 text-xs text-slate-500">
                     {org.created}
@@ -224,6 +304,11 @@ export default function SuperAdminDashboardPage() {
               </Link>
             </div>
           ))}
+          {ACCREDITATION_REQUESTS.length === 0 && (
+            <div className="flex items-center justify-center px-4 py-8 text-sm text-slate-500">
+              No pending accreditation requests
+            </div>
+          )}
         </div>
       </div>
 
@@ -236,15 +321,27 @@ export default function SuperAdminDashboardPage() {
           Quick actions
         </h2>
         <div className="mt-4 flex flex-wrap gap-3">
-          {QUICK_ACTIONS.map((action) => (
-            <button
-              key={action}
-              type="button"
-              className="cursor-pointer rounded-xl border border-border bg-white px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-slate-50"
-            >
-              {action}
-            </button>
-          ))}
+          {QUICK_ACTIONS.map((action) =>
+            action.disabled ? (
+              <button
+                key={action.label}
+                type="button"
+                disabled
+                title={action.tooltip}
+                className="cursor-not-allowed opacity-50 rounded-xl border border-border bg-white px-4 py-3 text-sm font-medium text-foreground transition-colors"
+              >
+                {action.label}
+              </button>
+            ) : (
+              <Link
+                key={action.label}
+                href={action.href}
+                className="cursor-pointer inline-flex rounded-xl border border-border bg-white px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-slate-50"
+              >
+                {action.label}
+              </Link>
+            ),
+          )}
         </div>
       </div>
     </div>
