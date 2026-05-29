@@ -1,7 +1,6 @@
 import type { ViewerContext } from "@/lib/supabase/server";
 
 export const AVAILABLE_PERMISSIONS = [
-  "Dashboard access",
   "Member roster edits",
   "Recruitment reviews",
   "Event management",
