@@ -11,10 +11,18 @@ Salina is a multi-tenant platform that gives every accredited organization its o
 - [Salina](#salina)
   - [Table of Contents](#table-of-contents)
   - [Vision](#vision)
-  - [Core Modules](#core-modules)
-    - [Policy Engine](#policy-engine)
-    - [Applicant Kanban Board](#applicant-kanban-board)
+  - [Features](#features)
+    - [Tenant Routing and Isolation](#tenant-routing-and-isolation)
+    - [Authentication and Role System](#authentication-and-role-system)
+    - [Organization Management](#organization-management)
+    - [Member Roster](#member-roster)
+    - [Recruitment Pipeline](#recruitment-pipeline)
+    - [Events and Attendance](#events-and-attendance)
+    - [Announcements and Feed](#announcements-and-feed)
+    - [Documents Library](#documents-library)
     - [Digital QR ID](#digital-qr-id)
+    - [Branding and White-Labeling](#branding-and-white-labeling)
+    - [Admin and Super Admin Portals](#admin-and-super-admin-portals)
   - [Tenant Model](#tenant-model)
     - [Single-Tier Access](#single-tier-access)
     - [Namespace Isolation](#namespace-isolation)
@@ -28,6 +36,7 @@ Salina is a multi-tenant platform that gives every accredited organization its o
     - [Acme](#acme)
     - [ICPEP.SE - CIT University](#icpepse---cit-university)
   - [Project Structure](#project-structure)
+    - [Database](#database)
   - [Contributing](#contributing)
 
 ---
@@ -40,33 +49,106 @@ Every organization on Salina operates under its own subdomain (e.g. `acme.salina
 
 ---
 
-## Core Modules
+## Features
 
-Salina ships three foundational modules. Each is designed as a standalone **Organism** (see [Atomic System Design](CONTRIBUTING.md#atomic-system-design) in the contributing guide) that can be composed, extended, or themed per tenant.
+Salina ships a comprehensive suite of features, each built as an **Organism** (see [Atomic System Design](CONTRIBUTING.md#atomic-system-design)) that can be composed, extended, or themed per tenant.
 
-### Policy Engine
+### Tenant Routing and Isolation
 
-The governance backbone. Organizations define approval workflows, constitutional rules, and operational policies as declarative logic. The Policy Engine evaluates these rules at runtime to automate decisions that would otherwise require manual committee review.
+Every organization operates under its own subdomain (e.g. `acme.salina.software`) with complete namespace isolation enforced at every layer of the stack. The platform resolves tenants from request hostnames at the edge, maps them to database records, and enforces Row Level Security on every query.
 
-- Workflow-driven approval chains (e.g. budget requests, event proposals)
-- Configurable rule sets per organization
-- Audit trail for every policy evaluation
+- Subdomain-based tenant resolution via the Next.js 16 proxy (`src/proxy.ts`)
+- Database-level RLS policies ensure one organization can never access another's data
+- `enforce_tenant_scope()` trigger auto-fills and validates `tenant_id` on every write
+- Reserved subdomains (`www`, `app`, `admin`, `api`) are excluded from tenant routing
 
-### Applicant Kanban Board
+### Authentication and Role System
 
-A visual pipeline for managing recruitment, applications, and onboarding. Candidates move through configurable stages — each transition can trigger Policy Engine rules automatically.
+A six-tier role hierarchy governs access across the platform, from platform-level system administrators down to read-only viewers. Password policies enforce strong, 12-character minimum credentials with complexity requirements.
 
-- Drag-and-drop stage management with **optimistic UI** (React `useOptimistic`)
-- Bulk actions and filtering
-- Stage-transition hooks into the Policy Engine
+- **Roles**: `system_admin` → `owner` → `admin` → `officer` → `member` → `viewer`
+- Server-side password validation via Zod + `bcryptjs`
+- JWT-based session claims for tenant scoping
+- Role-based navigation with customizable sidebar routes
+- Temporary applicant accounts with restricted access
+- Auth landing redirects based on role and tenant membership
+
+### Organization Management
+
+Platform administrators manage the full organization lifecycle through accreditation workflows. Organizations transition through status states — from application to accreditation, with support for suspension and reactivation.
+
+- Accreditation request submission and review
+- Organization status lifecycle: `pending` → `active` → `inactive` / `suspended` / `rejected`
+- Per-organization type classification
+- Onboarding wizard for new organizations (branding, pipeline setup)
+
+### Member Roster
+
+Each tenant manages their own member directory with role assignments, invitations, and temporary applicant review.
+
+- Member table with role-level views
+- Invite members by email with role assignment
+- Temporary applicant submission and officer review queue
+- Temporary role assignments with configurable permissions
+- Realtime membership change listeners
+
+### Recruitment Pipeline
+
+Organizations create recruitment cycles, collect applications, and move candidates through configurable stages.
+
+- Create and manage recruitment cycles
+- Application submission with custom forms
+- Officer review board for evaluating candidates
+- Stage-based pipeline management
+
+### Events and Attendance
+
+Event management with QR-code check-in and live attendance tracking, plus a member-facing calendar view.
+
+- Create and manage events with date, location, and capacity
+- QR code generation for event check-in
+- Live attendance tracker with realtime updates
+- Member event calendar and discovery
+- Attendance history per member
+
+### Announcements and Feed
+
+Per-tenant organization feed for announcements and communications visible to all members.
+
+- Create and publish announcements to the organization feed
+- Feed post display with timestamps
+- Cross-cutting visibility for all tenant members
+
+### Documents Library
+
+Hierarchical document storage with folder organization and access controls.
+
+- Nested folder structure per tenant
+- Document upload and management
+- Access control at the document level
 
 ### Digital QR ID
 
-Every verified member receives a digitally-signed QR identity card that can be scanned for event check-in, access control, or credential verification.
+Verified members receive a branded digital identity card with a scannable QR code for event check-in and credential verification.
 
-- Cryptographically signed payloads
-- Offline-capable verification
+- Per-member QR identity card with tenant branding
+- QR scanner modal for attendance verification
 - Branded per-tenant (logo, colors, layout)
+
+### Branding and White-Labeling
+
+Every tenant can customize their instance to match their organization's brand. These settings are stored in `theme_config` and injected into every page layout.
+
+- **Logo** — Displayed in navigation, emails, and Digital QR ID cards
+- **Color palette** — Primary color applied across the entire UI via CSS custom properties
+- **Typography** — Configurable font family for headings and body text
+
+### Admin and Super Admin Portals
+
+Role-scoped dashboards with dedicated layouts for tenant administrators and platform administrators.
+
+- **Admin Portal** (`/admin`) — Dashboard, member management, events, recruitment, roles, documents, settings
+- **Super Admin Portal** (`/superadmin`) — Organization management, accreditations, adviser management, platform settings
 
 ---
 
@@ -203,32 +285,163 @@ The `supabase/seed.sql` file pre-populates three tenants for local development. 
 ```text
 salina/
 ├── .github/workflows/
-│   └── ci.yml                      # PR validation (lint + db test)
+│   └── ci.yml                           # PR validation (lint + typecheck + build + db test)
 ├── src/
-│   ├── proxy.ts                    # Next.js 16 tenant routing proxy
+│   ├── proxy.ts                         # Next.js 16 tenant routing proxy (subdomain → x-tenant-slug)
 │   ├── app/
-│   │   ├── layout.tsx              # Root layout
-│   │   └── page.tsx                # Tenant runtime debug page
+│   │   ├── layout.tsx                   # Root layout (Geist fonts, Tailwind entry)
+│   │   ├── page.tsx                     # Tenant runtime debug page
+│   │   ├── not-found.tsx                # 404 page
+│   │   ├── globals.css                  # Tailwind v4 entry point
+│   │   ├── _tenantSlug/                 # Tenant-scoped catch-all layout with auth gating
+│   │   ├── (auth)/                      # Auth route group
+│   │   │   ├── login/                   #   Sign-in page
+│   │   │   ├── sign-up/                 #   Registration page
+│   │   │   ├── reset-password/          #   Password reset flow
+│   │   │   └── accreditation/           #   Accreditation form
+│   │   ├── admin/                       # Admin portal (Org Owner/Admin role)
+│   │   │   ├── dashboard/               #   Admin dashboard
+│   │   │   ├── members/                 #   Member management
+│   │   │   ├── events/                  #   Event creation & management
+│   │   │   ├── recruitment/             #   Recruitment cycles & review
+│   │   │   ├── roles/                   #   Role & permission assignment
+│   │   │   ├── settings/                #   Organization settings
+│   │   │   ├── feed/                    #   Organization feed
+│   │   │   └── documents/               #   Document library
+│   │   ├── superadmin/                  # Platform admin portal (system_admin role)
+│   │   │   ├── dashboard/               #   Platform overview
+│   │   │   ├── organizations/           #   Tenant management
+│   │   │   ├── accreditations/          #   Accreditation review
+│   │   │   ├── members/                 #   Platform-wide member view
+│   │   │   ├── settings/                #   Platform settings
+│   │   │   └── advisers/                #   Adviser management
+│   │   ├── member/                      # Member portal (member role)
+│   │   │   ├── dashboard/               #   Member dashboard
+│   │   │   ├── feed/                    #   Organization feed (home)
+│   │   │   ├── events/                  #   Event calendar
+│   │   │   ├── attendance/              #   Attendance history
+│   │   │   ├── applications/            #   Personal applications
+│   │   │   ├── id/                      #   Digital QR ID card
+│   │   │   ├── members/                 #   Member directory
+│   │   │   ├── settings/                #   Profile settings
+│   │   │   └── documents/               #   Document library
+│   │   ├── officer/                     # Officer portal (officer role)
+│   │   │   ├── dashboard/               #   Officer dashboard
+│   │   │   ├── feed/                    #   Organization feed
+│   │   │   ├── events/                  #   Event management
+│   │   │   ├── attendance/              #   Attendance tracking
+│   │   │   ├── recruitment/             #   Recruitment review
+│   │   │   ├── members/                 #   Roster management
+│   │   │   └── documents/               #   Document library
+│   │   ├── landing/                     # Public landing page
+│   │   ├── onboarding/                  # New organization onboarding wizard
+│   │   ├── pending/                     # Organization status: pending accreditation
+│   │   ├── rejected/                    # Organization status: rejected
+│   │   ├── inactive/                    # Organization status: inactive
+│   │   ├── suspended/                   # Organization status: suspended
+│   │   ├── sandbox/                     # Development/testing sandbox
+│   │   ├── [role]/                      # Dynamic role-based routing
+│   │   │   ├── apply/                   #   Role-scoped application
+│   │   │   └── [[...slug]]/             #   Catch-all fallback
+│   │   └── api/                         # API routes (webhooks, RPC proxies)
+│   ├── components/
+│   │   ├── atoms/                       # 11 foundational primitives (button, input, badge, etc.)
+│   │   ├── molecules/                   # 21 composable components (forms, nav, cards, etc.)
+│   │   ├── organisms/                   # 52 full-featured modules (dashboards, managers, forms)
+│   │   ├── providers/                   # React context providers (tenant, temporary-applicant)
+│   │   └── templates/                   # Page-level shells (authenticated, landing, onboarding)
 │   └── lib/
-│       ├── tenant.ts               # getTenantRequestContext() — header-only
+│       ├── tenant.ts                    # getTenantRequestContext() — header-only tenant resolution
+│       ├── host-routing.ts              # Subdomain parsing, root domain config, cookie domain
+│       ├── auth-policy.ts               # Password requirements, session claims extraction
+│       ├── auth-landing.ts              # Auth landing page helpers
+│       ├── navigation-config.tsx        # Route definitions, sidebar navigation, visibility rules
+│       ├── roles.ts                     # Role hierarchy, privilege checking (isRoleAtLeast)
+│       ├── organization-permissions.ts  # Permission system (7 permission types)
+│       ├── notification-data.ts         # Notification type definitions and demo data
+│       ├── officer-demo-data.ts         # Demo events for officer views
+│       ├── root-domain.ts               # Root domain configuration
+│       ├── reserved-subdomains.ts       # Reserved tenant slug blocklist
+│       ├── utils.ts                     # Shared utility functions (cn, etc.)
+│       ├── actions/                     # 15 Server Action files
+│       │   ├── auth.ts                  #   Sign in, sign up, sign out, password reset
+│       │   ├── organizations.ts         #   Organization CRUD
+│       │   ├── accreditation.ts         #   Accreditation workflow
+│       │   ├── accreditation-requests.ts#   Accreditation request handling
+│       │   ├── members.ts               #   Member management
+│       │   ├── temporary-applicants.ts  #   Temporary applicant review
+│       │   ├── recruitment.ts           #   Recruitment cycles (server)
+│       │   ├── recruitment-client.ts    #   Recruitment (client-safe)
+│       │   ├── events.ts                #   Event CRUD
+│       │   ├── attendance.ts            #   Attendance tracking
+│       │   ├── announcements.ts         #   Announcements & feed
+│       │   ├── documents.ts             #   Document management
+│       │   ├── roles.ts                 #   Role assignment
+│       │   ├── organization-settings.ts #   Theme & org config
+│       │   └── provisioning.ts          #   Account provisioning
 │       └── supabase/
-│           └── server.ts           # resolveCurrentTenant() — full DB resolution
+│           └── server.ts                # resolveCurrentTenant(), getCurrentViewer() — React cache()
 ├── supabase/
-│   ├── config.toml                 # Local Supabase CLI config
-│   ├── migrations/
-│   │   ├── ..._01_initial_schema.sql
-│   │   └── ..._02_security.sql
-│   ├── seed.sql                    # Demo tenant data
-│   └── tests/
-│       └── tenant_rls.sql          # pgTAP RLS verification tests
-├── .env.example                    # Environment variable template
-├── CONTRIBUTING.md                 # Developer guide — architecture, conventions, CI
+│   ├── config.toml                      # Local Supabase CLI config
+│   ├── migrations/                      # 23 migration files (schema, RLS, features)
+│   │   ├── ..._01_initial_schema.sql    #   Core tables (organizations, memberships, projects, audit)
+│   │   ├── ..._02_security.sql          #   RLS policies, tenant helper functions
+│   │   ├── ..._03_theme_config.sql      #   Branding/theming support
+│   │   ├── ..._organization_type.sql    #   Organization type classification
+│   │   ├── ..._temporary_applicants*.sql#   Temporary applicant records & security
+│   │   ├── ..._organization_roles.sql   #   Role system enhancements
+│   │   ├── ..._recruitment_*.sql        #   Recruitment pipeline & settings
+│   │   ├── ..._events_and_attendance.sql#   Events & attendance tracking
+│   │   ├── ..._qr_attendance_fields.sql #   QR code support for events
+│   │   ├── ..._organization_status*.sql #   Organization status lifecycle
+│   │   ├── ..._temporary_roles.sql      #   Temporary role assignments
+│   │   ├── ..._accreditation_requests.sql#  Accreditation request workflow
+│   │   ├── ..._announcements.sql        #   Announcements & feed
+│   │   └── ..._documents*.sql           #   Documents, folders, access control
+│   ├── seed.sql                         # Demo tenant data (system-admin, acme, icpep-se)
+│   └── tests/                           # pgTAP RLS verification tests
+├── tasks/
+│   ├── todo.md                          # Active task tracking
+│   └── lessons.md                       # Development lessons learned
+├── Documents/
+│   └── SALINA_Documentation.md          # Architectural and technical specification
+├── .env.example                         # Environment variable template
+├── CONTRIBUTING.md                      # Developer guide — architecture, conventions, CI
 ├── package.json
-└── tsconfig.json
+├── tsconfig.json
+├── eslint.config.mjs
+├── next.config.ts
+└── postcss.config.mjs
 ```
+
+### Database
+
+The database has evolved through 23 tracked migrations from the initial core schema. Current tables include:
+
+| Table | Tenant-scoped | Purpose |
+|---|---|---|
+| `organizations` | N/A (is the tenant) | Tenant records with status, type, and theme config |
+| `organization_memberships` | Yes (`tenant_id`) | User ↔ org role mapping with permissions |
+| `tenant_domains` | Yes (`tenant_id`) | Custom domain → tenant mapping |
+| `projects` | Yes (`tenant_id`) | Workspaces within a tenant |
+| `audit_events` | Yes (`tenant_id`) | Audit trail for all actions |
+| `temporary_applicants` | Yes (`tenant_id`) | Pre-membership applicant records |
+| `recruitment_entries` | Yes (`tenant_id`) | Recruitment cycle definitions |
+| `recruitment_settings` | Yes (`tenant_id`) | Per-tenant recruitment configuration |
+| `events` | Yes (`tenant_id`) | Organization events |
+| `event_attendance` | Yes (`tenant_id`) | Attendance records with QR check-in |
+| `announcements` | Yes (`tenant_id`) | Organization announcements & feed |
+| `documents` | Yes (`tenant_id`) | Document storage with access control |
+| `document_folders` | Yes (`tenant_id`) | Folder hierarchy for documents |
+| `accreditation_requests` | Yes (`tenant_id`) | Organization accreditation workflow |
+| `organization_roles` | Yes (`tenant_id`) | Configurable role definitions |
+
+All tenant-scoped tables are protected by Row Level Security with `has_tenant_access()` policies and `enforce_tenant_scope()` triggers.
 
 ---
 
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the full developer guide: architecture decisions, the Atomic System Design pattern, proxy and data-flow conventions, database workflow, and CI/CD rules.
+
+For the complete architectural and technical specification, see [SALINA Documentation](Documents/SALINA_Documentation.md).
