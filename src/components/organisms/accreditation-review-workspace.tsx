@@ -12,7 +12,9 @@ import { Button } from "@/components/atoms/button";
 import {
   approveApplication,
   rejectApplication,
+  assignAdviser,
 } from "@/lib/actions/accreditation";
+import type { Adviser } from "@/lib/actions/advisers";
 
 export interface AccreditationOrg {
   id: string;
@@ -20,6 +22,8 @@ export interface AccreditationOrg {
   type: string;
   priority: string;
   time: string;
+  adviserId?: string | null;
+  adviserName?: string;
 }
 
 type DocStatus = "VALID" | "REVIEWING" | "DISCREPANCY" | null;
@@ -391,8 +395,10 @@ interface NoteEntry {
 
 export function AccreditationReviewWorkspace({
   initialOrgs = [],
+  advisers = [],
 }: {
   initialOrgs?: AccreditationOrg[];
+  advisers?: Adviser[];
 }) {
   const displayOrgs =
     initialOrgs !== undefined
@@ -409,6 +415,19 @@ export function AccreditationReviewWorkspace({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const noteIdRef = useRef(0);
+
+  const handleAssignAdviser = useCallback(
+    (requestId: string, adviserId: string) => {
+      startTransition(async () => {
+        try {
+          await assignAdviser(requestId, adviserId);
+        } catch (error) {
+          console.error("Failed to assign adviser", error);
+        }
+      });
+    },
+    []
+  );
 
   const selectedOrgData =
     displayOrgs.find((o) => String(o.id) === selectedOrg) || displayOrgs[0];
@@ -613,20 +632,38 @@ export function AccreditationReviewWorkspace({
               </div>
 
               <div className="grid grid-cols-1 gap-4 border-t border-border pt-4 md:grid-cols-3">
-                {[
-                  { label: "Submitted By", value: detail.submittedBy },
-                  { label: "Assigned Adviser", value: detail.adviser },
-                  { label: "Due Date", value: detail.dueDate },
-                ].map(({ label, value }) => (
-                  <div key={label}>
-                    <p className="mb-1 text-xs uppercase tracking-widest text-slate-500">
-                      {label}
-                    </p>
-                    <p className="text-sm font-medium text-foreground">
-                      {value}
-                    </p>
-                  </div>
-                ))}
+                <div>
+                  <p className="mb-1 text-xs uppercase tracking-widest text-slate-500">
+                    Submitted By
+                  </p>
+                  <p className="text-sm font-medium text-foreground">
+                    {detail.submittedBy}
+                  </p>
+                </div>
+                <div>
+                  <p className="mb-1 text-xs uppercase tracking-widest text-slate-500">
+                    Assigned Adviser
+                  </p>
+                  <select
+                    className="w-full rounded-(--radius) border border-border bg-background px-2 py-1 text-sm text-foreground outline-none transition duration-200 focus:border-primary focus:ring-4 focus:ring-primary/10"
+                    value={selectedOrgData?.adviserId || ""}
+                    onChange={(e) => handleAssignAdviser(selectedOrgData.id, e.target.value)}
+                    disabled={isPending}
+                  >
+                    <option value="" disabled>Pending Assignment</option>
+                    {advisers.map(adv => (
+                      <option key={adv.id} value={adv.id}>{adv.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <p className="mb-1 text-xs uppercase tracking-widest text-slate-500">
+                    Due Date
+                  </p>
+                  <p className="text-sm font-medium text-foreground">
+                    {detail.dueDate}
+                  </p>
+                </div>
               </div>
 
               <div className="border-t border-border pt-4">
