@@ -27,10 +27,10 @@ export default async function OfficerFeedPage() {
   return (
     <div className="w-full max-w-4xl mx-auto py-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="mb-8 space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">
           Organization Feed
         </h1>
-        <p className="text-neutral-500 dark:text-neutral-400">
+        <p className="text-neutral-600 dark:text-neutral-400">
           Post and track official announcements for {tenant.name}.
         </p>
       </div>
