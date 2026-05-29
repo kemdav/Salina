@@ -1178,3 +1178,9 @@ on conflict (tenant_id, user_id) do update
 set
   role = excluded.role,
   updated_at = timezone('utc', now());
+
+-- Seed Digital IDs for existing memberships
+insert into public.digital_ids (tenant_id, membership_id)
+select tenant_id, id from public.organization_memberships
+on conflict (tenant_id, membership_id) do nothing;
+
