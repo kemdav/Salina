@@ -18,7 +18,7 @@ export default async function AdviserPage() {
   if (!adviser) redirect("/onboarding");
 
   if (adviser.status === "approved") {
-    redirect("/adviser/accreditations");
+    redirect("/adviser/dashboard");
   }
 
   return (

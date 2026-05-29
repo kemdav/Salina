@@ -23,8 +23,10 @@ const STATUS_TEXT: Record<string, string> = {
 
 export function OrganizationsManager({
   initialOrganizations,
+  isReadOnly = false,
 }: {
   initialOrganizations: Organization[];
+  isReadOnly?: boolean;
 }) {
   const [filterStatus, setFilterStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -101,23 +103,27 @@ export function OrganizationsManager({
         <table className="w-full">
           <thead>
             <tr className="border-b border-border bg-slate-50/50">
-              {["Organization Name", "Slug", "Status", "Created Date", ""].map(
-                (col) => (
-                  <th
-                    key={col}
-                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500"
-                  >
-                    {col}
-                  </th>
-                ),
-              )}
+              {[
+                "Organization Name",
+                "Slug",
+                "Status",
+                "Created Date",
+                ...(!isReadOnly ? [""] : []),
+              ].map((col) => (
+                <th
+                  key={col}
+                  className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500"
+                >
+                  {col}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
               <tr>
                 <td
-                  colSpan={5}
+                  colSpan={isReadOnly ? 4 : 5}
                   className="px-4 py-10 text-center text-sm text-slate-400"
                 >
                   No organizations match your filters.
@@ -159,23 +165,25 @@ export function OrganizationsManager({
                       year: "numeric",
                     })}
                   </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex flex-wrap items-center justify-end gap-2">
-                      <Button
-                        type="button"
-                        variant={
-                          org.status === "suspended"
-                            ? "secondary"
-                            : "destructive"
-                        }
-                        className="h-8 px-3 text-xs"
-                        onClick={() => handleToggleStatus(org)}
-                        disabled={isPending}
-                      >
-                        {org.status === "suspended" ? "Reactivate" : "Suspend"}
-                      </Button>
-                    </div>
-                  </td>
+                  {!isReadOnly && (
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex flex-wrap items-center justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant={
+                            org.status === "suspended"
+                              ? "secondary"
+                              : "destructive"
+                          }
+                          className="h-8 px-3 text-xs"
+                          onClick={() => handleToggleStatus(org)}
+                          disabled={isPending}
+                        >
+                          {org.status === "suspended" ? "Reactivate" : "Suspend"}
+                        </Button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))
             )}

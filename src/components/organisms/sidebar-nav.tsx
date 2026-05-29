@@ -43,7 +43,7 @@ export function SidebarNav({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const pathname = usePathname();
-  const isSuperAdmin = role === "SuperAdmin";
+  const isPlatformLevel = role === "SuperAdmin" || role === "Adviser";
   const routeOptions: SidebarRouteOptions = isTemporaryApplicant
     ? { temporaryApplicant: true }
     : {};
@@ -159,7 +159,7 @@ export function SidebarNav({
 
   const workspaceLogo = tenant?.logoUrl || tenant?.logo;
 
-  const sidebarStyles = isSuperAdmin
+  const sidebarStyles = isPlatformLevel
     ? ({
         backgroundColor: "#020817",
         color: "#f8fafc",
@@ -214,7 +214,7 @@ export function SidebarNav({
       </button>
 
       <div className="flex h-20 shrink-0 items-center border-b border-white/10 px-6">
-        {isSuperAdmin ? (
+        {isPlatformLevel ? (
           <div
             className={cn(
               "flex items-center transition-all duration-300",

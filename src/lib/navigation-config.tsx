@@ -1,6 +1,6 @@
 import React from "react";
 
-export type UserRole = "SuperAdmin" | "Admin" | "Officer" | "Member";
+export type UserRole = "SuperAdmin" | "Admin" | "Officer" | "Member" | "Adviser";
 
 export type VisibilityRole =
   | "Owner"
@@ -278,6 +278,12 @@ const ROLE_ROUTE_SLUGS: Record<UserRole, RouteSlug[]> = {
     "advisers",
     "settings",
   ],
+  Adviser: [
+    "dashboard",
+    "members",
+    "accreditations",
+    "advisers",
+  ],
   Admin: [
     "dashboard",
     "feed",
@@ -313,12 +319,12 @@ function buildRoutesForRole(role: UserRole) {
       Boolean(item),
     )
     .map<NavRoute>((item) => {
-      const isSuperAdminOrganizations =
-        role === "SuperAdmin" && item.slug === "members";
+      const isOrganizationsTab =
+        (role === "SuperAdmin" || role === "Adviser") && item.slug === "members";
 
       return {
-        label: isSuperAdminOrganizations ? "Organizations" : item.label,
-        href: `/${getRolePath(role)}/${isSuperAdminOrganizations ? "organizations" : item.slug}`,
+        label: isOrganizationsTab ? "Organizations" : item.label,
+        href: `/${getRolePath(role)}/${isOrganizationsTab ? "organizations" : item.slug}`,
         icon: item.icon,
         visibleTo: item.visibleTo,
       };
@@ -327,6 +333,7 @@ function buildRoutesForRole(role: UserRole) {
 
 export const ROLE_ROUTES: Record<UserRole, NavRoute[]> = {
   SuperAdmin: buildRoutesForRole("SuperAdmin"),
+  Adviser: buildRoutesForRole("Adviser"),
   Admin: buildRoutesForRole("Admin"),
   Officer: buildRoutesForRole("Officer"),
   Member: buildRoutesForRole("Member"),

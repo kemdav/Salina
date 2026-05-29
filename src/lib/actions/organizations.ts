@@ -36,7 +36,28 @@ export async function getOrganizations(): Promise<Organization[]> {
     throw new Error("Could not initialize Supabase client.");
   }
 
-  await verifyPlatformAdmin(client);
+  let isAuthorized = false;
+  try {
+    await verifyPlatformAdmin(client);
+    isAuthorized = true;
+  } catch {
+    const { data: { user } } = await client.auth.getUser();
+    if (user) {
+      const { data: adviser } = await client
+        .from("advisers")
+        .select("status")
+        .eq("user_id", user.id)
+        .eq("status", "approved")
+        .maybeSingle();
+      if (adviser) {
+        isAuthorized = true;
+      }
+    }
+  }
+
+  if (!isAuthorized) {
+    throw new Error("Unauthorized: Requires platform admin or approved adviser privileges.");
+  }
 
   const { data, error } = await client
     .from("organizations")
