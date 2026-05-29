@@ -3,8 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { idNumber: string } }
+  context: { params: Promise<{ idNumber: string }> }
 ) {
+  const params = await context.params;
   const { idNumber } = params;
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
