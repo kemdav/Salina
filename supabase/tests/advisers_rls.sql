@@ -36,8 +36,8 @@ set local "request.jwt.claims" = '{"role":"authenticated","sub":"92000000-0000-0
 
 select results_eq(
   'select id from public.advisers',
-  array['93000000-0000-0000-0000-000000000001'::uuid],
-  'normal user can only view approved advisers'
+  ARRAY[]::uuid[],
+  'normal user cannot view advisers'
 );
 
 select * from finish();

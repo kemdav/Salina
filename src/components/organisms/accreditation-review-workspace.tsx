@@ -13,6 +13,7 @@ import {
   approveApplication,
   rejectApplication,
   assignAdviser,
+  leaveRecommendationNote,
 } from "@/lib/actions/accreditation";
 import type { Adviser } from "@/lib/actions/advisers";
 
@@ -393,13 +394,17 @@ interface NoteEntry {
   timestamp: string;
 }
 
+interface AccreditationReviewWorkspaceProps {
+  initialOrgs?: AccreditationOrg[];
+  advisers?: Adviser[];
+  isAdviserMode?: boolean;
+}
+
 export function AccreditationReviewWorkspace({
   initialOrgs = [],
   advisers = [],
-}: {
-  initialOrgs?: AccreditationOrg[];
-  advisers?: Adviser[];
-}) {
+  isAdviserMode = false,
+}: AccreditationReviewWorkspaceProps) {
   const displayOrgs =
     initialOrgs !== undefined
       ? initialOrgs
@@ -411,6 +416,7 @@ export function AccreditationReviewWorkspace({
   const [notes, setNotes] = useState<NoteEntry[]>([]);
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState("");
+  const [recommendationText, setRecommendationText] = useState("");
   const [decision, setDecision] = useState<Decision>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -449,12 +455,14 @@ export function AccreditationReviewWorkspace({
 
   function selectOrg(id: string, name: string) {
     setSelectedOrg(id);
+    setExpandedDoc(null);
     setDecision(null);
+    setEditingNoteId(null);
+    setErrorMsg(null);
+    setRecommendationText("");
     setCurrentNote("");
     setNotes([]);
-    setEditingNoteId(null);
-    setEditingText("");
-    setExpandedDoc(null);
+    
     setDocStatuses(initialStatuses(getOrgDetail(id, name)));
     setDocNotes({});
   }
@@ -648,7 +656,7 @@ export function AccreditationReviewWorkspace({
                     className="w-full rounded-(--radius) border border-border bg-background px-2 py-1 text-sm text-foreground outline-none transition duration-200 focus:border-primary focus:ring-4 focus:ring-primary/10"
                     value={selectedOrgData?.adviserId || ""}
                     onChange={(e) => handleAssignAdviser(selectedOrgData.id, e.target.value)}
-                    disabled={isPending}
+                    disabled={isPending || isAdviserMode}
                   >
                     <option value="" disabled>Pending Assignment</option>
                     {advisers.map(adv => (
@@ -881,51 +889,82 @@ export function AccreditationReviewWorkspace({
                         {errorMsg}
                       </span>
                     )}
-                    <Button
-                      variant="secondary"
-                      disabled={isPending}
-                      onClick={() => {
-                        setErrorMsg(null);
-                        startTransition(async () => {
-                          const res = await rejectApplication(selectedOrg);
-                          if (res.ok) {
-                            setDecision("rejected");
-                          } else {
-                            setErrorMsg(
-                              res.error || "Failed to reject application",
-                            );
+
+                    {isAdviserMode ? (
+                      <div className="flex items-center gap-2">
+                        <textarea
+                          className="w-[300px] resize-none rounded-(--radius) border border-border bg-background p-2 text-sm text-foreground outline-none transition duration-200 focus:border-primary focus:ring-4 focus:ring-primary/10 placeholder:text-muted"
+                          placeholder="Leave a recommendation note for admins..."
+                          rows={1}
+                          value={recommendationText}
+                          onChange={(e) => setRecommendationText(e.target.value)}
+                        />
+                        <Button
+                          disabled={!recommendationText.trim() || isPending}
+                          onClick={() => {
+                            setErrorMsg(null);
+                            startTransition(async () => {
+                              const res = await leaveRecommendationNote(selectedOrg, recommendationText);
+                              if (res.ok) {
+                                setRecommendationText("");
+                              } else {
+                                setErrorMsg(res.error || "Failed to leave recommendation");
+                              }
+                            });
+                          }}
+                        >
+                          {isPending ? "Submitting..." : "Submit Note"}
+                        </Button>
+                      </div>
+                    ) : (
+                      <>
+                        <Button
+                          variant="secondary"
+                          disabled={isPending}
+                          onClick={() => {
+                            setErrorMsg(null);
+                            startTransition(async () => {
+                              const res = await rejectApplication(selectedOrg);
+                              if (res.ok) {
+                                setDecision("rejected");
+                              } else {
+                                setErrorMsg(
+                                  res.error || "Failed to reject application",
+                                );
+                              }
+                            });
+                          }}
+                        >
+                          {isPending ? "Rejecting..." : "Reject"}
+                        </Button>
+                        <span
+                          title={
+                            !canApprove
+                              ? "Review all documents before approving"
+                              : undefined
                           }
-                        });
-                      }}
-                    >
-                      {isPending ? "Rejecting..." : "Reject"}
-                    </Button>
-                    <span
-                      title={
-                        !canApprove
-                          ? "Review all documents before approving"
-                          : undefined
-                      }
-                    >
-                      <Button
-                        disabled={!canApprove || isPending}
-                        onClick={() => {
-                          setErrorMsg(null);
-                          startTransition(async () => {
-                            const res = await approveApplication(selectedOrg);
-                            if (res.ok) {
-                              setDecision("approved");
-                            } else {
-                              setErrorMsg(
-                                res.error || "Failed to approve application",
-                              );
-                            }
-                          });
-                        }}
-                      >
-                        {isPending ? "Approving..." : "Approve Accreditation"}
-                      </Button>
-                    </span>
+                        >
+                          <Button
+                            disabled={!canApprove || isPending}
+                            onClick={() => {
+                              setErrorMsg(null);
+                              startTransition(async () => {
+                                const res = await approveApplication(selectedOrg);
+                                if (res.ok) {
+                                  setDecision("approved");
+                                } else {
+                                  setErrorMsg(
+                                    res.error || "Failed to approve application",
+                                  );
+                                }
+                              });
+                            }}
+                          >
+                            {isPending ? "Approving..." : "Approve Accreditation"}
+                          </Button>
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

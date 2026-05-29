@@ -4,7 +4,8 @@ import { useState, useEffect, useTransition } from "react";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { Select } from "@/components/atoms/drop-down";
-import { getAdvisers, approveAdviser, rejectAdviser, type Adviser } from "@/lib/actions/advisers";
+import { getAdvisers, approveAdviser, rejectAdviser, exportAdvisersCSV, bulkReviewAdvisers, type Adviser } from "@/lib/actions/advisers";
+import { InviteAdviserModal } from "@/components/organisms/invite-adviser-modal";
 
 export default function AdvisersPage() {
   const [filterStatus, setFilterStatus] = useState("Pending");
@@ -12,7 +13,10 @@ export default function AdvisersPage() {
   const [page, setPage] = useState(1);
   const [advisers, setAdvisers] = useState<Adviser[]>([]);
   const [totalCount, setTotalCount] = useState(0);
+  const [showInviteModal, setShowInviteModal] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [isBulkMode, setIsBulkMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const limit = 10;
   const totalPages = Math.ceil(totalCount / limit);
@@ -57,6 +61,64 @@ export default function AdvisersPage() {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      const csv = await exportAdvisersCSV({ status: filterStatus, search: searchQuery });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `advisers_export_${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Export failed:", err);
+    }
+  };
+
+  const handleBulkApprove = async () => {
+    if (selectedIds.size === 0) return;
+    try {
+      await bulkReviewAdvisers(Array.from(selectedIds), "approve");
+      setSelectedIds(new Set());
+      setIsBulkMode(false);
+      const { data, count } = await getAdvisers({ status: filterStatus, search: searchQuery, page, limit });
+      setAdvisers(data);
+      setTotalCount(count);
+    } catch (err) {
+      console.error("Bulk approve failed:", err);
+    }
+  };
+
+  const handleBulkReject = async () => {
+    if (selectedIds.size === 0) return;
+    try {
+      await bulkReviewAdvisers(Array.from(selectedIds), "reject");
+      setSelectedIds(new Set());
+      setIsBulkMode(false);
+      const { data, count } = await getAdvisers({ status: filterStatus, search: searchQuery, page, limit });
+      setAdvisers(data);
+      setTotalCount(count);
+    } catch (err) {
+      console.error("Bulk reject failed:", err);
+    }
+  };
+
+  const toggleSelection = (id: string) => {
+    const newSet = new Set(selectedIds);
+    if (newSet.has(id)) newSet.delete(id);
+    else newSet.add(id);
+    setSelectedIds(newSet);
+  };
+
+  const toggleAll = () => {
+    if (selectedIds.size === advisers.length && advisers.length > 0) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(advisers.map(a => a.id)));
+    }
+  };
+
   return (
     <div style={{ fontFamily: "var(--font-body)" }}>
       {/* Header */}
@@ -95,17 +157,48 @@ export default function AdvisersPage() {
         />
 
         <div className="ml-auto flex items-center gap-2">
+          {isBulkMode && selectedIds.size > 0 && (
+            <>
+              <Button
+                type="button"
+                className="h-9 px-3 text-xs bg-success hover:bg-success/90"
+                onClick={handleBulkApprove}
+              >
+                Approve Selected ({selectedIds.size})
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                className="h-9 px-3 text-xs"
+                onClick={handleBulkReject}
+              >
+                Reject Selected ({selectedIds.size})
+              </Button>
+            </>
+          )}
           <Button
             type="button"
-            variant="secondary"
+            onClick={() => setShowInviteModal(true)}
             className="h-9 px-3 text-xs"
           >
-            Export
+            Invite Adviser
           </Button>
           <Button
             type="button"
             variant="secondary"
             className="h-9 px-3 text-xs"
+            onClick={handleExport}
+          >
+            Export
+          </Button>
+          <Button
+            type="button"
+            variant={isBulkMode ? "primary" : "secondary"}
+            className="h-9 px-3 text-xs"
+            onClick={() => {
+              setIsBulkMode(!isBulkMode);
+              if (isBulkMode) setSelectedIds(new Set());
+            }}
           >
             Bulk Review
           </Button>
@@ -117,6 +210,16 @@ export default function AdvisersPage() {
         <table className="w-full">
           <thead>
             <tr className="border-b border-border bg-slate-50/50">
+              {isBulkMode && (
+                <th className="px-4 py-3 text-left w-10">
+                  <input
+                    type="checkbox"
+                    className="rounded border-slate-300 text-primary focus:ring-primary"
+                    checked={advisers.length > 0 && selectedIds.size === advisers.length}
+                    onChange={toggleAll}
+                  />
+                </th>
+              )}
               {[
                 "Adviser Name",
                 "Email",
@@ -138,7 +241,7 @@ export default function AdvisersPage() {
             {advisers.length === 0 ? (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={isBulkMode ? 7 : 6}
                   className="px-4 py-10 text-center text-sm text-slate-400"
                 >
                   No advisers match your filters.
@@ -150,6 +253,16 @@ export default function AdvisersPage() {
                   key={adviser.id}
                   className="border-b border-border last:border-0 transition-colors hover:bg-slate-50/60"
                 >
+                  {isBulkMode && (
+                    <td className="px-4 py-3">
+                      <input
+                        type="checkbox"
+                        className="rounded border-slate-300 text-primary focus:ring-primary"
+                        checked={selectedIds.has(adviser.id)}
+                        onChange={() => toggleSelection(adviser.id)}
+                      />
+                    </td>
+                  )}
                   <td className="px-4 py-3 text-sm">
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-xs font-bold text-accent uppercase">
@@ -254,6 +367,20 @@ export default function AdvisersPage() {
           </button>
         </div>
       </div>
+
+      {showInviteModal && (
+        <InviteAdviserModal
+          onClose={() => setShowInviteModal(false)}
+          onInviteSuccess={() => {
+            getAdvisers({ status: filterStatus, search: searchQuery, page, limit })
+              .then(({ data, count }) => {
+                setAdvisers(data);
+                setTotalCount(count);
+              })
+              .catch(console.error);
+          }}
+        />
+      )}
     </div>
   );
 }

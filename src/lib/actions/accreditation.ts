@@ -174,3 +174,41 @@ export async function assignAdviser(requestId: string, adviserId: string | null)
   revalidatePath("/superadmin/accreditations");
   return { ok: true };
 }
+
+export async function leaveRecommendationNote(requestId: string, note: string) {
+  const userClient = await createUserClient();
+  if (!userClient) return { ok: false, error: "Unauthorized" };
+
+  try {
+    await verifyPlatformAdmin(userClient);
+  } catch {
+    const { data: { user } } = await userClient.auth.getUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+
+    const { data: adviser } = await userClient
+      .from("advisers")
+      .select("id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (!adviser) {
+      return { ok: false, error: "Unauthorized: Requires platform admin or adviser privileges." };
+    }
+  }
+
+  const adminClient = createSupabaseAdminClient();
+  if (!adminClient) return { ok: false, error: "Server configuration error" };
+
+  const { error } = await adminClient
+    .from("accreditation_requests")
+    .update({ adviser_notes: note })
+    .eq("id", requestId);
+
+  if (error) {
+    return { ok: false, error: "Failed to leave recommendation note" };
+  }
+
+  revalidatePath("/adviser/dashboard/accreditations");
+  revalidatePath("/superadmin/accreditations");
+  return { ok: true };
+}
