@@ -8,7 +8,7 @@ import { getAdvisers, approveAdviser, rejectAdviser, exportAdvisersCSV, bulkRevi
 import { InviteAdviserModal } from "@/components/organisms/invite-adviser-modal";
 
 export default function AdvisersPage() {
-  const [filterStatus, setFilterStatus] = useState("Pending");
+  const [filterStatus, setFilterStatus] = useState("All Status");
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [advisers, setAdvisers] = useState<Adviser[]>([]);
