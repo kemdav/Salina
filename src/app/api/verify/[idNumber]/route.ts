@@ -46,7 +46,7 @@ export async function GET(
     return NextResponse.json({ error: 'Incomplete data' }, { status: 500 });
   }
 
-  const { data: userData, error: userError } = await supabase.auth.admin.getUserById(memberships.user_id);
+  const { data: userData } = await supabase.auth.admin.getUserById(memberships.user_id);
   
   const name = userData?.user?.user_metadata?.display_name || 
                userData?.user?.user_metadata?.full_name || 

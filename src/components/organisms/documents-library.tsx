@@ -444,7 +444,7 @@ export function DocumentsLibrary({
       setSelectedMembers(config.allowedMembers);
       setPassword(""); // clear password input
       setEditVisibilityTarget({ id, type });
-    } catch (error: unknown) {
+    } catch {
       setFeedbackConfig({
         isOpen: true,
         title: "Error",

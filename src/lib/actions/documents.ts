@@ -264,7 +264,7 @@ export async function uploadDocument(formData: FormData) {
 
     if (uploadError) throw new Error(`Storage upload failed: ${uploadError.message}`);
 
-  const { data: existingDocs } = await userClient
+  await userClient
     .from("documents")
     .select("file_name, title")
     .eq("tenant_id", tenant.id)
