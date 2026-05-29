@@ -156,37 +156,37 @@ export default function AdvisersPage() {
           className="w-full lg:max-w-sm"
         />
 
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex flex-wrap items-center gap-2">
           {isBulkMode && selectedIds.size > 0 && (
             <>
               <Button
                 type="button"
-                className="h-9 px-3 text-xs bg-success hover:bg-success/90"
+                className="h-9 px-3 text-xs bg-success hover:bg-success/90 whitespace-nowrap text-white"
                 onClick={handleBulkApprove}
               >
-                Approve Selected ({selectedIds.size})
+                Approve ({selectedIds.size})
               </Button>
               <Button
                 type="button"
                 variant="destructive"
-                className="h-9 px-3 text-xs"
+                className="h-9 px-3 text-xs whitespace-nowrap"
                 onClick={handleBulkReject}
               >
-                Reject Selected ({selectedIds.size})
+                Reject ({selectedIds.size})
               </Button>
             </>
           )}
           <Button
             type="button"
             onClick={() => setShowInviteModal(true)}
-            className="h-9 px-3 text-xs"
+            className="h-9 px-3 text-xs whitespace-nowrap"
           >
             Invite Adviser
           </Button>
           <Button
             type="button"
             variant="secondary"
-            className="h-9 px-3 text-xs"
+            className="h-9 px-3 text-xs whitespace-nowrap"
             onClick={handleExport}
           >
             Export
@@ -194,7 +194,7 @@ export default function AdvisersPage() {
           <Button
             type="button"
             variant={isBulkMode ? "primary" : "secondary"}
-            className="h-9 px-3 text-xs"
+            className="h-9 px-3 text-xs whitespace-nowrap"
             onClick={() => {
               setIsBulkMode(!isBulkMode);
               if (isBulkMode) setSelectedIds(new Set());
