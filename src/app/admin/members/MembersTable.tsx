@@ -160,8 +160,8 @@ export default function MembersTable({
         />
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
-        <table className="w-full">
+      <div className="rounded-2xl border border-border bg-white shadow-sm">
+        <table className="w-full [&_tr:last-child_td:first-child]:rounded-bl-2xl [&_tr:last-child_td:last-child]:rounded-br-2xl">
           <thead>
             <tr className="border-b border-border bg-slate-50/50">
               {[
@@ -177,7 +177,7 @@ export default function MembersTable({
               ].map((col) => (
                 <th
                   key={col}
-                  className={`px-4 py-3 text-xs font-semibold uppercase tracking-widest text-slate-500 ${col === "Actions" ? "text-center" : "text-left"}`}
+                  className={`px-4 py-3 text-xs font-semibold uppercase tracking-widest text-slate-500 first:rounded-tl-2xl last:rounded-tr-2xl ${col === "Actions" ? "text-center" : "text-left"}`}
                 >
                   {col}
                 </th>
@@ -189,7 +189,7 @@ export default function MembersTable({
               <tr>
                 <td
                   colSpan={9}
-                  className="px-4 py-10 text-center text-sm text-slate-400"
+                  className="px-4 py-10 text-center text-sm text-slate-400 rounded-b-2xl"
                 >
                   No members match your search.
                 </td>
