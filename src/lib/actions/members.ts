@@ -237,75 +237,121 @@ function generateSecurePassword() {
   return passwordChars.join("");
 }
 
-export async function inviteMember(formData: FormData) {
-  const email = formData.get("email")?.toString().trim().toLowerCase();
-  const name = formData.get("name")?.toString().trim();
-  const role = (formData.get("role")?.toString().trim().toLowerCase() ||
-    "member") as string;
+export async function inviteMember(formData: FormData): Promise<{ success: boolean; tempPassword?: string; error?: string }> {
+  try {
+    const email = formData.get("email")?.toString().trim().toLowerCase();
+    const name = formData.get("name")?.toString().trim();
+    const role = (formData.get("role")?.toString().trim().toLowerCase() ||
+      "member") as string;
 
-  if (!email || !name) {
-    throw new Error("Email and Name are required.");
-  }
-
-  if (!ALLOWED_MEMBERSHIP_ROLES.has(role)) {
-    throw new Error("Invalid membership role.");
-  }
-
-  const { tenant } = await requireRosterAccess();
-  const adminClient = createSupabaseAdminClient("invite-member");
-
-  if (!adminClient) {
-    throw new Error("Could not initialize Admin client.");
-  }
-
-  const tempPassword = generateSecurePassword();
-
-  const { data: userResponse, error: createError } =
-    await adminClient.auth.admin.createUser({
-      email,
-      password: tempPassword,
-      email_confirm: true,
-      user_metadata: {
-        full_name: name,
-        display_name: name,
-        tenant_slug: tenant.slug,
-        tenant_id: tenant.id,
-      },
-      app_metadata: {
-        tenant_id: tenant.id,
-        tenant_slug: tenant.slug,
-      },
-    });
-
-  if (createError) {
-    throw new Error(`Failed to create user: ${createError.message}`);
-  }
-
-  const userId = userResponse.user.id;
-
-  const { error: membershipError } = await adminClient
-    .from("organization_memberships")
-    .insert({
-      tenant_id: tenant.id,
-      user_id: userId,
-      role,
-      membership_status: "Active",
-      dues_status: "Unpaid",
-    });
-
-  if (membershipError) {
-    await adminClient.auth.admin.deleteUser(userId);
-
-    if (membershipError.code === "23505") {
-      throw new Error("Member already exists.");
+    if (!email || !name) {
+      return { success: false, error: "Email and Name are required." };
     }
 
-    throw new Error(`Failed to add membership: ${membershipError.message}`);
+    if (!ALLOWED_MEMBERSHIP_ROLES.has(role)) {
+      return { success: false, error: "Invalid membership role." };
+    }
+
+    const { tenant } = await requireRosterAccess();
+    const adminClient = createSupabaseAdminClient("invite-member");
+
+    if (!adminClient) {
+      return { success: false, error: "Could not initialize Admin client." };
+    }
+
+    // Check if the user already exists in auth
+    const { data: usersData, error: listError } = await adminClient.auth.admin.listUsers();
+    if (listError) {
+      return { success: false, error: `Failed to fetch users: ${listError.message}` };
+    }
+    const existingUser = usersData.users.find(u => u.email?.toLowerCase() === email);
+
+    if (existingUser) {
+      const { data: existingMembership, error: membershipCheckError } = await adminClient
+        .from("organization_memberships")
+        .select("id")
+        .eq("tenant_id", tenant.id)
+        .eq("user_id", existingUser.id)
+        .maybeSingle();
+
+      if (membershipCheckError) {
+        return { success: false, error: `Failed to verify existing membership: ${membershipCheckError.message}` };
+      }
+
+      if (existingMembership) {
+        return { success: false, error: "This user is already a member of this organization." };
+      }
+
+      const { error: insertError } = await adminClient
+        .from("organization_memberships")
+        .insert({
+          tenant_id: tenant.id,
+          user_id: existingUser.id,
+          role,
+          membership_status: "Active",
+          dues_status: "Unpaid",
+        });
+
+      if (insertError) {
+        return { success: false, error: `Failed to add membership: ${insertError.message}` };
+      }
+
+      revalidateMemberPaths();
+      return { success: true };
+    }
+
+    const tempPassword = generateSecurePassword();
+
+    const { data: userResponse, error: createError } =
+      await adminClient.auth.admin.createUser({
+        email,
+        password: tempPassword,
+        email_confirm: true,
+        user_metadata: {
+          full_name: name,
+          display_name: name,
+          tenant_slug: tenant.slug,
+          tenant_id: tenant.id,
+        },
+        app_metadata: {
+          tenant_id: tenant.id,
+          tenant_slug: tenant.slug,
+        },
+      });
+
+    if (createError) {
+      return { success: false, error: `Failed to create user: ${createError.message}` };
+    }
+
+    const userId = userResponse.user.id;
+
+    const { error: membershipError } = await adminClient
+      .from("organization_memberships")
+      .insert({
+        tenant_id: tenant.id,
+        user_id: userId,
+        role,
+        membership_status: "Active",
+        dues_status: "Unpaid",
+      });
+
+    if (membershipError) {
+      await adminClient.auth.admin.deleteUser(userId);
+
+      if (membershipError.code === "23505") {
+        return { success: false, error: "Member already exists." };
+      }
+
+      return { success: false, error: `Failed to add membership: ${membershipError.message}` };
+    }
+
+    revalidateMemberPaths();
+
+    return { success: true, tempPassword };
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "An unexpected error occurred.";
+    return { success: false, error: msg };
   }
-
-  revalidateMemberPaths();
-
-  return tempPassword;
 }
 
 export async function removeMember(membershipId: string, userId: string) {

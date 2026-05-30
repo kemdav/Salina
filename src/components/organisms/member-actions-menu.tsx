@@ -129,6 +129,7 @@ function TagsModal({ isOpen, onClose, member, onSave }: { isOpen: boolean, onClo
 export function MemberActionsMenu({ member, onRemove, onRename, onChangeRole, onUpdateTags }: MemberActionsMenuProps) {
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
+    const [openUpwards, setOpenUpwards] = useState(false);
     
     const [isRenameOpen, setIsRenameOpen] = useState(false);
     const [isRoleOpen, setIsRoleOpen] = useState(false);
@@ -143,6 +144,15 @@ export function MemberActionsMenu({ member, onRemove, onRename, onChangeRole, on
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    useEffect(() => {
+        if (isOpen && menuRef.current) {
+            const rect = menuRef.current.getBoundingClientRect();
+            const spaceBelow = window.innerHeight - rect.bottom;
+            // Dropdown height is ~170px. If less than 185px space below, open upwards.
+            setOpenUpwards(spaceBelow < 185);
+        }
+    }, [isOpen]);
+
     return (
         <div className="relative flex justify-center" ref={menuRef}>
             <button
@@ -154,7 +164,7 @@ export function MemberActionsMenu({ member, onRemove, onRename, onChangeRole, on
             </button>
             
             {isOpen && (
-                <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-border rounded-xl shadow-lg z-10 py-1 overflow-hidden">
+                <div className={`absolute right-0 ${openUpwards ? 'bottom-full mb-1' : 'top-full mt-1'} w-44 bg-white border border-border rounded-xl shadow-lg z-10 py-1 overflow-hidden`}>
                     <button onClick={() => { setIsRenameOpen(true); setIsOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">Rename</button>
                     <button onClick={() => { setIsRoleOpen(true); setIsOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">Change Role</button>
                     <button onClick={() => { setIsTagsOpen(true); setIsOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">Edit Tags</button>

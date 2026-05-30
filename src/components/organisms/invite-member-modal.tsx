@@ -18,14 +18,27 @@ export function InviteMemberModal() {
         setError('');
         const formData = new FormData(e.currentTarget);
         try {
-            const tempPassword = await inviteMember(formData);
+            const res = await inviteMember(formData);
+            if (!res.success) {
+                setError(res.error || 'Failed to invite member');
+                setIsPending(false);
+                return;
+            }
             
             const email = formData.get('email') as string;
             const name = formData.get('name') as string;
             const role = formData.get('role') as string;
             
+            const tempPassword = res.tempPassword;
+            let bodyText = '';
+            if (tempPassword) {
+                bodyText = `Hi ${name},\n\nYou have been invited to join our organization as a ${role}.\n\nPlease head over to our application and sign in with the following credentials to access your dashboard:\n\nEmail: ${email}\nPassword: ${tempPassword}\n\nBest regards,\nThe Admin Team`;
+            } else {
+                bodyText = `Hi ${name},\n\nYou have been added to our organization as a ${role}.\n\nPlease log into your account to access your new dashboard.\n\nBest regards,\nThe Admin Team`;
+            }
+
             const subject = encodeURIComponent("Invitation to join our organization");
-            const body = encodeURIComponent(`Hi ${name},\n\nYou have been invited to join our organization as a ${role}.\n\nPlease head over to our application and sign in with the following credentials to access your dashboard:\n\nEmail: ${email}\nPassword: ${tempPassword}\n\nBest regards,\nThe Admin Team`);
+            const body = encodeURIComponent(bodyText);
             
             setEmailData({ email, subject, body });
             
