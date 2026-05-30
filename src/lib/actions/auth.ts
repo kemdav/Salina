@@ -236,41 +236,104 @@ export async function signUpAction(
     };
   }
 
-  const { data, error } = await supabase.auth.signUp({
-    email: parsed.data.email,
-    password: parsed.data.password,
-    options: {
-      data: {
-        full_name: parsed.data.fullName,
-      },
-    },
-  });
+  let authUser: import("@supabase/supabase-js").User | null = null;
+  let isClientSession = false;
 
-  if (error || !data.user) {
-    return {
-      errors: {
+  const isInviteFlow = Boolean(parsed.data.inviteToken);
+
+  if (isInviteFlow) {
+    if (!adminClient) {
+      return {
+        errors: {},
+        fields: { email: values.email, fullName: values.fullName },
+        formError: "Temporary applicant invitations are unavailable right now.",
+      };
+    }
+
+    // Pre-verify invite
+    const { data: temporaryApplicant, error: temporaryApplicantError } = await adminClient
+      .from("temporary_applicants")
+      .select("id, tenant_id, applicant_email, applicant_name, invite_token")
+      .eq("invite_token", parsed.data.inviteToken)
+      .eq("applicant_email", parsed.data.email)
+      .maybeSingle<{ id: string; tenant_id: string; applicant_email: string; applicant_name: string; invite_token: string }>();
+
+    if (temporaryApplicantError || !temporaryApplicant) {
+      return {
+        errors: {},
+        fields: { email: values.email, fullName: values.fullName },
+        formError: temporaryApplicantError?.message ?? "That temporary applicant invitation is invalid or expired.",
+      };
+    }
+
+    if (temporaryApplicant.applicant_name.trim().toLowerCase() !== parsed.data.fullName.trim().toLowerCase()) {
+      return {
+        errors: {
+          fullName: "Name does not match the invitation.",
+        },
+        fields: { email: values.email, fullName: values.fullName },
+      };
+    }
+
+    // Create user via adminClient to bypass email rate limits
+    const { data: adminUserData, error: adminUserError } = await adminClient.auth.admin.createUser({
+      email: parsed.data.email,
+      password: parsed.data.password,
+      email_confirm: true,
+      user_metadata: {
+        full_name: parsed.data.fullName,
+      }
+    });
+
+    if (adminUserError || !adminUserData.user) {
+      return {
+        errors: {},
+        fields: { email: values.email, fullName: values.fullName },
+        formError: adminUserError?.message ?? "Unable to create your account.",
+      };
+    }
+
+    authUser = adminUserData.user;
+  } else {
+    // Normal public sign-up flow using client signUp
+    const { data, error } = await supabase.auth.signUp({
+      email: parsed.data.email,
+      password: parsed.data.password,
+      options: {
+        data: {
+          full_name: parsed.data.fullName,
+        },
       },
-      fields: {
-        email: values.email,
-        fullName: values.fullName,
-      },
-      formError: error?.message ?? "Unable to create your account.",
-    };
+    });
+
+    if (error || !data.user) {
+      return {
+        errors: {},
+        fields: {
+          email: values.email,
+          fullName: values.fullName,
+        },
+        formError: error?.message ?? "Unable to create your account.",
+      };
+    }
+
+    authUser = data.user;
+    isClientSession = Boolean(data.session);
   }
 
   // Handle users who were invited and try to sign up with the generic form to set their password
   // When a user already exists (e.g. they were invited), Supabase signUp returns success but with an empty identities array.
-  if (data.user.identities?.length === 0) {
+  if (authUser.identities?.length === 0) {
     if (adminClient) {
       // Check if they are already in organization_memberships
       const { data: memberships } = await adminClient
         .from("organization_memberships")
         .select("id")
-        .eq("user_id", data.user.id);
+        .eq("user_id", authUser.id);
         
       if (memberships && memberships.length > 0) {
         // They are an invited member. Set their password and confirm their email so they can log in.
-        await adminClient.auth.admin.updateUserById(data.user.id, {
+        await adminClient.auth.admin.updateUserById(authUser.id, {
           password: parsed.data.password,
           email_confirm: true,
         });
@@ -318,38 +381,14 @@ export async function signUpAction(
       .eq("applicant_email", parsed.data.email)
       .maybeSingle<{ id: string; tenant_id: string; applicant_email: string; applicant_name: string; invite_token: string }>();
 
-    if (temporaryApplicantError) {
+    if (temporaryApplicantError || !temporaryApplicant) {
       return {
         errors: {},
         fields: {
           email: values.email,
           fullName: values.fullName,
         },
-        formError: temporaryApplicantError.message,
-      };
-    }
-
-    if (!temporaryApplicant) {
-      return {
-        errors: {},
-        fields: {
-          email: values.email,
-          fullName: values.fullName,
-        },
-        formError: "That temporary applicant invitation is invalid or expired.",
-      };
-    }
-
-    if (temporaryApplicant.applicant_name.trim().toLowerCase() !== parsed.data.fullName.trim().toLowerCase()) {
-      return {
-        errors: {
-          fullName: "Name does not match the invitation.",
-        },
-        fields: {
-          email: values.email,
-          fullName: values.fullName,
-        },
-        formError: undefined,
+        formError: temporaryApplicantError?.message ?? "That temporary applicant invitation is invalid or expired.",
       };
     }
 
@@ -370,11 +409,11 @@ export async function signUpAction(
       };
     }
 
-    const currentAppMetadata = getCurrentAppMetadata(data.user);
-    const currentUserMetadata = getCurrentUserMetadata(data.user);
+    const currentAppMetadata = getCurrentAppMetadata(authUser);
+    const currentUserMetadata = getCurrentUserMetadata(authUser);
 
     const { error: metadataError } = await adminClient.auth.admin.updateUserById(
-      data.user.id,
+      authUser.id,
       {
         app_metadata: {
           ...currentAppMetadata,
@@ -408,7 +447,7 @@ export async function signUpAction(
     const { error: applicantLinkError } = await adminClient
       .from("temporary_applicants")
       .update({
-        applicant_user_id: data.user.id,
+        applicant_user_id: authUser.id,
       })
       .eq("id", temporaryApplicant.id);
 
@@ -423,8 +462,13 @@ export async function signUpAction(
       };
     }
 
-    if (data.session) {
-      await supabase.auth.refreshSession();
+    // Explicitly sign the user in so we don't prompt them for confirmation email
+    const signInResult = await supabase.auth.signInWithPassword({
+      email: parsed.data.email,
+      password: parsed.data.password,
+    });
+
+    if (signInResult.data.session) {
       redirect(`${await getTenantAppUrl(tenant.slug)}/member/applications`);
     }
 
@@ -435,11 +479,11 @@ export async function signUpAction(
         fullName: values.fullName,
       },
       formNotice:
-        "Check your email to confirm your temporary applicant account, then sign in to continue the application.",
+        "Your account is created. Please sign in to continue your application.",
     };
   }
 
-  if (!data.session) {
+  if (!isClientSession) {
     return {
       errors: {},
       fields: {
