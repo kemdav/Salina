@@ -222,16 +222,12 @@ export async function redeemAdviserInviteAction(
     return { error: "Invalid or expired invite token." };
   }
 
-  const supabase = await createUserClient();
-  if (!supabase) return { error: "Auth client error" };
-
-  const { data: authData, error: authError } = await supabase.auth.signUp({
+  const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
     email: adviser.email,
     password: password,
-    options: {
-      data: {
-        full_name: adviser.name,
-      }
+    email_confirm: true,
+    user_metadata: {
+      full_name: adviser.name,
     }
   });
 
@@ -240,11 +236,6 @@ export async function redeemAdviserInviteAction(
   }
 
   const userId = authData.user.id;
-
-  // Confirm email and sign in
-  await adminClient.auth.admin.updateUserById(userId, {
-    email_confirm: true,
-  });
 
   const { error: updateError } = await adminClient
     .from("advisers")
@@ -258,6 +249,9 @@ export async function redeemAdviserInviteAction(
   if (updateError) {
     return { error: "Failed to link your account to the invite." };
   }
+
+  const supabase = await createUserClient();
+  if (!supabase) return { error: "Auth client error" };
 
   await supabase.auth.signInWithPassword({
     email: adviser.email,
