@@ -116,6 +116,19 @@ export async function signIn(email: string, password: string) {
     redirect("/superadmin");
   }
 
+  const adminClient = createSupabaseAdminClient("auth-signin");
+  if (adminClient) {
+    const { data: adviser } = await adminClient
+      .from("advisers")
+      .select("status")
+      .eq("user_id", data.user.id)
+      .maybeSingle();
+
+    if (adviser) {
+      redirect("/adviser");
+    }
+  }
+
   if (!tenantId) {
     redirect("/onboarding");
   }

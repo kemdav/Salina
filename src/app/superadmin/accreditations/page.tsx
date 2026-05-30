@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { AccreditationReviewWorkspace } from "@/components/organisms/accreditation-review-workspace";
+import { getApprovedAdvisers } from "@/lib/actions/advisers";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,16 @@ export default async function AccreditationsPage() {
 
   const { data: requests, error } = await adminClient
     .from("accreditation_requests")
-    .select("id, org_name, org_type, created_at")
+    .select(`
+      id, 
+      org_name, 
+      org_type, 
+      created_at, 
+      assigned_adviser_id,
+      advisers (
+        name
+      )
+    `)
     .eq("status", "pending")
     .order("created_at", { ascending: false });
 
@@ -36,14 +46,19 @@ export default async function AccreditationsPage() {
     );
   }
 
+  const advisers = await getApprovedAdvisers();
+
   // Map to the format expected by AccreditationReviewWorkspace
-  const mappedOrgs = (requests || []).map((req) => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mappedOrgs = (requests || []).map((req: any) => ({
     id: req.id,
     name: req.org_name,
     type: req.org_type || "Unknown Type",
     priority: "STANDARD", // Can be dynamic if needed
     time: new Date(req.created_at).toLocaleDateString(), // Basic formatting
+    adviserId: req.assigned_adviser_id,
+    adviserName: req.advisers?.name || "Pending Assignment",
   }));
 
-  return <AccreditationReviewWorkspace initialOrgs={mappedOrgs} />;
+  return <AccreditationReviewWorkspace initialOrgs={mappedOrgs} advisers={advisers} />;
 }
