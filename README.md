@@ -22,6 +22,7 @@ Salina is a multi-tenant platform that gives every accredited organization its o
     - [Documents Library](#documents-library)
     - [Digital QR ID](#digital-qr-id)
     - [Branding and White-Labeling](#branding-and-white-labeling)
+    - [Skeleton Loading Screens](#skeleton-loading-screens)
     - [Admin and Super Admin Portals](#admin-and-super-admin-portals)
   - [Tenant Model](#tenant-model)
     - [Single-Tier Access](#single-tier-access)
@@ -142,6 +143,15 @@ Every tenant can customize their instance to match their organization's brand. T
 - **Logo** — Displayed in navigation, emails, and Digital QR ID cards
 - **Color palette** — Primary color applied across the entire UI via CSS custom properties
 - **Typography** — Configurable font family for headings and body text
+
+### Skeleton Loading Screens
+
+Every major page has a skeleton loading state using Next.js Suspense boundaries. Page-specific skeletons mirror the target layout — dashboards, tables, feeds, forms, and ID cards — providing instant perceived performance while data fetches complete.
+
+- Reusable primitives: `SkeletonBox`, `SkeletonText`, `SkeletonCircle`, `SkeletonCard`
+- 11 page-level skeleton templates for common layouts
+- 40 `loading.tsx` files across all role portals and auth pages
+- All skeletons use `animate-pulse` shimmer with `aria-hidden="true"` for accessibility
 
 ### Admin and Super Admin Portals
 
@@ -295,45 +305,45 @@ salina/
 │   │   ├── globals.css                  # Tailwind v4 entry point
 │   │   ├── _tenantSlug/                 # Tenant-scoped catch-all layout with auth gating
 │   │   ├── (auth)/                      # Auth route group
-│   │   │   ├── login/                   #   Sign-in page
-│   │   │   ├── sign-up/                 #   Registration page
+│   │   │   ├── login/                   #   Sign-in page (+ loading.tsx)
+│   │   │   ├── sign-up/                 #   Registration page (+ loading.tsx)
 │   │   │   ├── reset-password/          #   Password reset flow
-│   │   │   └── accreditation/           #   Accreditation form
+│   │   │   └── accreditation/           #   Accreditation form (+ loading.tsx)
 │   │   ├── admin/                       # Admin portal (Org Owner/Admin role)
-│   │   │   ├── dashboard/               #   Admin dashboard
-│   │   │   ├── members/                 #   Member management
-│   │   │   ├── events/                  #   Event creation & management
-│   │   │   ├── recruitment/             #   Recruitment cycles & review
-│   │   │   ├── roles/                   #   Role & permission assignment
-│   │   │   ├── settings/                #   Organization settings
-│   │   │   ├── feed/                    #   Organization feed
-│   │   │   └── documents/               #   Document library
+│   │   │   ├── dashboard/               #   Admin dashboard (+ loading.tsx)
+│   │   │   ├── members/                 #   Member management (+ loading.tsx)
+│   │   │   ├── events/                  #   Event creation & management (+ loading.tsx)
+│   │   │   ├── recruitment/             #   Recruitment cycles & review (+ loading.tsx)
+│   │   │   ├── roles/                   #   Role & permission assignment (+ loading.tsx)
+│   │   │   ├── settings/                #   Organization settings (+ loading.tsx)
+│   │   │   ├── feed/                    #   Organization feed (+ loading.tsx)
+│   │   │   └── documents/               #   Document library (+ loading.tsx)
 │   │   ├── superadmin/                  # Platform admin portal (system_admin role)
-│   │   │   ├── dashboard/               #   Platform overview
-│   │   │   ├── organizations/           #   Tenant management
-│   │   │   ├── accreditations/          #   Accreditation review
-│   │   │   ├── members/                 #   Platform-wide member view
-│   │   │   ├── settings/                #   Platform settings
-│   │   │   └── advisers/                #   Adviser management
+│   │   │   ├── dashboard/               #   Platform overview (+ loading.tsx)
+│   │   │   ├── organizations/           #   Tenant management (+ loading.tsx)
+│   │   │   ├── accreditations/          #   Accreditation review (+ loading.tsx)
+│   │   │   ├── members/                 #   Platform-wide member view (+ loading.tsx)
+│   │   │   ├── settings/                #   Platform settings (+ loading.tsx)
+│   │   │   └── advisers/                #   Adviser management (+ loading.tsx)
 │   │   ├── member/                      # Member portal (member role)
-│   │   │   ├── dashboard/               #   Member dashboard
-│   │   │   ├── feed/                    #   Organization feed (home)
-│   │   │   ├── events/                  #   Event calendar
-│   │   │   ├── attendance/              #   Attendance history
-│   │   │   ├── applications/            #   Personal applications
-│   │   │   ├── id/                      #   Digital QR ID card
-│   │   │   ├── members/                 #   Member directory
-│   │   │   ├── settings/                #   Profile settings
-│   │   │   └── documents/               #   Document library
+│   │   │   ├── dashboard/               #   Member dashboard (+ loading.tsx)
+│   │   │   ├── feed/                    #   Organization feed (home) (+ loading.tsx)
+│   │   │   ├── events/                  #   Event calendar (+ loading.tsx)
+│   │   │   ├── attendance/              #   Attendance history (+ loading.tsx)
+│   │   │   ├── applications/            #   Personal applications (+ loading.tsx)
+│   │   │   ├── id/                      #   Digital QR ID card (+ loading.tsx)
+│   │   │   ├── members/                 #   Member directory (+ loading.tsx)
+│   │   │   ├── settings/                #   Profile settings (+ loading.tsx)
+│   │   │   └── documents/               #   Document library (+ loading.tsx)
 │   │   ├── officer/                     # Officer portal (officer role)
-│   │   │   ├── dashboard/               #   Officer dashboard
-│   │   │   ├── feed/                    #   Organization feed
-│   │   │   ├── events/                  #   Event management
-│   │   │   ├── attendance/              #   Attendance tracking
-│   │   │   ├── recruitment/             #   Recruitment review
-│   │   │   ├── members/                 #   Roster management
-│   │   │   └── documents/               #   Document library
-│   │   ├── landing/                     # Public landing page
+│   │   │   ├── dashboard/               #   Officer dashboard (+ loading.tsx)
+│   │   │   ├── feed/                    #   Organization feed (+ loading.tsx)
+│   │   │   ├── events/                  #   Event management (+ loading.tsx)
+│   │   │   ├── attendance/              #   Attendance tracking (+ loading.tsx)
+│   │   │   ├── recruitment/             #   Recruitment review (+ loading.tsx)
+│   │   │   ├── members/                 #   Roster management (+ loading.tsx)
+│   │   │   └── documents/               #   Document library (+ loading.tsx)
+│   │   ├── landing/                     # Public landing page (+ loading.tsx)
 │   │   ├── onboarding/                  # New organization onboarding wizard
 │   │   ├── pending/                     # Organization status: pending accreditation
 │   │   ├── rejected/                    # Organization status: rejected
@@ -345,8 +355,8 @@ salina/
 │   │   │   └── [[...slug]]/             #   Catch-all fallback
 │   │   └── api/                         # API routes (webhooks, RPC proxies)
 │   ├── components/
-│   │   ├── atoms/                       # 11 foundational primitives (button, input, badge, etc.)
-│   │   ├── molecules/                   # 21 composable components (forms, nav, cards, etc.)
+│   │   ├── atoms/                       # 12 foundational primitives (button, input, badge, skeleton, etc.)
+│   │   ├── molecules/                   # 22 composable components (forms, nav, cards, skeleton shells, etc.)
 │   │   ├── organisms/                   # 52 full-featured modules (dashboards, managers, forms)
 │   │   ├── providers/                   # React context providers (tenant, temporary-applicant)
 │   │   └── templates/                   # Page-level shells (authenticated, landing, onboarding)
