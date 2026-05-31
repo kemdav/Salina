@@ -9,6 +9,7 @@ import {
   deleteRole,
   type OrganizationRole,
 } from "@/lib/actions/roles";
+import { FeedbackModal } from "@/components/organisms/feedback-modal";
 
 export function RolesManager({
   initialRoles,
@@ -45,6 +46,9 @@ export function RolesManager({
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<OrganizationRole | null>(null);
+  const [roleToDelete, setRoleToDelete] = useState<OrganizationRole | null>(
+    null,
+  );
 
   // Form State
   const [name, setName] = useState("");
@@ -130,8 +134,6 @@ export function RolesManager({
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this role?")) return;
-
     setError(null);
     setIsPending(true);
     try {
@@ -332,8 +334,8 @@ export function RolesManager({
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleDelete(role.id)}
-                          className="text-xs text-destructive transition-colors hover:opacity-80 disabled:opacity-50"
+                          onClick={() => setRoleToDelete(role)}
+                          className="text-xs text-destructive transition-colors hover:opacity-80 disabled:opacity-50 cursor-pointer"
                           disabled={isPending || role.member_count! > 0}
                           title={
                             role.member_count! > 0
@@ -378,6 +380,20 @@ export function RolesManager({
           </div>
         </div>
       </div>
+
+      <FeedbackModal
+        isOpen={!!roleToDelete}
+        onClose={() => setRoleToDelete(null)}
+        title="Delete Role"
+        message={`Are you sure you want to delete the role "${roleToDelete?.name}"?`}
+        tone="error"
+        onConfirm={() => {
+          if (roleToDelete) handleDelete(roleToDelete.id);
+          setRoleToDelete(null);
+        }}
+        confirmText="Delete"
+        showCancel
+      />
     </div>
   );
 }

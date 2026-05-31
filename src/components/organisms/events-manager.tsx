@@ -8,6 +8,7 @@ import {
   getAttendanceRecords,
 } from "@/lib/actions/attendance";
 import { QRScannerModal } from "@/components/organisms/qr-scanner-modal";
+import { FeedbackModal } from "@/components/organisms/feedback-modal";
 
 type View = "list" | "calendar";
 
@@ -58,6 +59,7 @@ export function EventsManager({
   const [requireCheckOut, setRequireCheckOut] = useState(false);
 
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState<OrgEvent | null>(null);
 
   async function loadAttendance(eventId: string) {
     try {
@@ -97,7 +99,6 @@ export function EventsManager({
   }
 
   async function handleDeleteEvent(id: string) {
-    if (!confirm("Are you sure?")) return;
     try {
       await deleteEvent(id);
       const updated = await getEvents();
@@ -330,7 +331,7 @@ export function EventsManager({
                       variant="secondary"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDeleteEvent(event.id);
+                        setEventToDelete(event);
                       }}
                     >
                       Delete
@@ -445,9 +446,13 @@ export function EventsManager({
                     return `"${sanitized}"`;
                   };
                   const csv = [
-                    ["Member", "Status", "Check-in Time", "Check-out Time"].map(escapeCSV),
+                    ["Member", "Status", "Check-in Time", "Check-out Time"].map(
+                      escapeCSV,
+                    ),
                     ...attendanceRecords.map((r) =>
-                      [r.member, r.status, r.checkIn, r.checkOut || ""].map(escapeCSV),
+                      [r.member, r.status, r.checkIn, r.checkOut || ""].map(
+                        escapeCSV,
+                      ),
                     ),
                   ]
                     .map((e) => e.join(","))
@@ -474,14 +479,16 @@ export function EventsManager({
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-slate-50/50">
-                  {["Member", "Check-in", "Check-out", "Status", "Actions"].map((col) => (
-                    <th
-                      key={col}
-                      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500"
-                    >
-                      {col}
-                    </th>
-                  ))}
+                  {["Member", "Check-in", "Check-out", "Status", "Actions"].map(
+                    (col) => (
+                      <th
+                        key={col}
+                        className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500"
+                      >
+                        {col}
+                      </th>
+                    ),
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -573,6 +580,20 @@ export function EventsManager({
           }}
         />
       )}
+
+      <FeedbackModal
+        isOpen={!!eventToDelete}
+        onClose={() => setEventToDelete(null)}
+        title="Delete Event"
+        message={`Are you sure you want to delete ${eventToDelete?.title}?`}
+        tone="error"
+        onConfirm={() => {
+          if (eventToDelete) handleDeleteEvent(eventToDelete.id);
+          setEventToDelete(null);
+        }}
+        confirmText="Delete"
+        showCancel
+      />
     </div>
   );
 }
