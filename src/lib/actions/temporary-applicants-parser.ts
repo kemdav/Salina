@@ -3,7 +3,6 @@ import { z } from "zod";
 const createTemporaryApplicantSchema = z.object({
   applicantEmail: z.string().trim().email("Enter a valid email address."),
   applicantName: z.string().trim().min(1, "Applicant name is required."),
-  recruitmentEntryId: z.string().uuid("Invalid recruitment cycle.").optional(),
 });
 
 export type SelfInitiateApplicationSubmission =
@@ -68,7 +67,6 @@ export function parseSelfInitiateApplicationSubmission(
       notice:
         fieldErrors.applicantEmail?.[0] ??
         fieldErrors.applicantName?.[0] ??
-        fieldErrors.recruitmentEntryId?.[0] ??
         "Enter applicant details.",
       fields,
     };
