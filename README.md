@@ -252,39 +252,7 @@ Open **<http://salina.localhost:3000/login>** to sign in with the shared local a
 
 ### Seeded Demo Tenants
 
-The `supabase/seed.sql` file pre-populates three tenants for local development. The System Admin tenant is where all organizations are managed — its accounts are all platform-level `system_admin` for the Salina dev team. The other two tenants each have accounts spanning every role:
-
-### System Admin (Platform Management)
-
-| Tenant | Role | Email | Password |
-| --- | --- | --- | --- |
-| System Admin | System Admin | `system-admin@salina.dev` | `SalinaPreview123!` |
-| System Admin | System Admin | `system-admin-1@salina.dev` | `SalinaPreview123!` |
-| System Admin | System Admin | `system-admin-2@salina.dev` | `SalinaPreview123!` |
-
-### Acme
-
-| Tenant | Role | Email | Password |
-| --- | --- | --- | --- |
-| Acme | Owner | `acme-admin@salina.dev` | `SalinaPreview123!` |
-| Acme | Officer | `acme-officer@salina.dev` | `SalinaPreview123!` |
-| Acme | Member | `acme-member@salina.dev` | `SalinaPreview123!` |
-| Acme | Viewer | `acme-viewer@salina.dev` | `SalinaPreview123!` |
-
-### ICPEP.SE - CIT University
-
-| Tenant | Role | Email | Password |
-| --- | --- | --- | --- |
-| ICPEP.SE - CIT University | Owner | `icpep-se-admin@salina.dev` | `SalinaPreview123!` |
-| ICPEP.SE - CIT University | Officer | `icpep-se-officer@salina.dev` | `SalinaPreview123!` |
-| ICPEP.SE - CIT University | Member | `icpep-se-member@salina.dev` | `SalinaPreview123!` |
-| ICPEP.SE - CIT University | Viewer | `icpep-se-viewer@salina.dev` | `SalinaPreview123!` |
-
-| Tenant | Slug | Local URL |
-| --- | --- | --- |
-| System Admin | `system-admin` | <http://system-admin.salina.localhost:3000> |
-| Acme | `acme` | <http://acme.salina.localhost:3000> |
-| ICPEP.SE - CIT University | `icpep-se` | <http://icpep-se.salina.localhost:3000> |
+The seeded account roster is now kept in [Documents/SEEDED_ACCOUNTS.md](Documents/SEEDED_ACCOUNTS.md) so the long list stays separate from the main overview. That file includes the original seeded accounts plus the newly added CIT-U SSG and Tokyo Jujutsu accounts.
 
 > These credentials are **local/preview only**. They are committed intentionally for development convenience.
 
