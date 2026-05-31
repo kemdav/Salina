@@ -84,7 +84,7 @@ export function PasswordField({
         />
         <button
           aria-label={showPassword ? "Hide password" : "Show password"}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition duration-200 hover:text-foreground"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition duration-200 hover:text-foreground cursor-pointer"
           onClick={() => setShowPassword((current) => !current)}
           type="button"
         >

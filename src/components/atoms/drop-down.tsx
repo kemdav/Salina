@@ -13,7 +13,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           ref={ref}
           aria-invalid={error || props["aria-invalid"]}
           className={cn(
-            "flex h-[46px] w-full appearance-none rounded-(--radius) border-[1.5px] border-[#E5E7EB] bg-[#F9FAFB] px-3.5 pr-10 text-sm text-foreground outline-none transition duration-200 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:opacity-60",
+            "flex h-[46px] w-full appearance-none rounded-(--radius) border-[1.5px] border-[#E5E7EB] bg-[#F9FAFB] px-3.5 pr-10 text-sm text-foreground outline-none transition duration-200 cursor-pointer focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10 disabled:cursor-not-allowed disabled:opacity-60",
             error &&
               "border-destructive focus:border-destructive focus:ring-destructive/10",
             className,
