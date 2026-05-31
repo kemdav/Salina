@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { parseSelfInitiateApplicationSubmission } from "./temporary-applicants";
+import { parseSelfInitiateApplicationSubmission } from "./temporary-applicants-parser";
 
 function makeFormData(values: Record<string, string>) {
   const formData = new FormData();
