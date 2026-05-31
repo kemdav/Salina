@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { resolveCurrentTenant, getCurrentViewer } from "@/lib/supabase/server";
 import { createUserClient } from "@/lib/supabase/user-server";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { canAssignTemporaryRoles } from "@/lib/organization-permissions";
+import { canAssignTemporaryRoles, canManageMembers } from "@/lib/organization-permissions";
 
 export interface OrganizationRole {
   id: string;
@@ -79,9 +79,10 @@ export async function getRoles(): Promise<OrganizationRole[]> {
 
   const isTenantAdmin = ["admin", "owner", "system_admin"].includes(viewer.tenantRole || "");
   const hasTempRolePermission = canAssignTemporaryRoles(viewer);
+  const hasManageMembersPermission = canManageMembers(viewer);
 
-  if (!isTenantAdmin && !hasTempRolePermission) {
-    throw new Error("Unauthorized: Requires admin privileges or Temporary role assignment permission.");
+  if (!isTenantAdmin && !hasTempRolePermission && !hasManageMembersPermission) {
+    throw new Error("Unauthorized: Requires admin privileges, member management, or Temporary role assignment permission.");
   }
 
   const { data, error } = await client
