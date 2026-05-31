@@ -31,13 +31,12 @@ export async function isFolderAccessible(folderId: string | null, previewRole?: 
     if (!folder) break;
     
     const effectiveRole = previewRole || viewer.tenantRole || "";
-    const isOfficerOrAdmin = previewRole ? false : ["owner", "admin", "officer", "system_admin"].includes(viewer.tenantRole ?? "");
     const isAdmin = previewRole ? false : ["owner", "admin", "system_admin"].includes(viewer.tenantRole ?? "");
     const isPlatformAdmin = previewRole ? false : viewer.isPlatformAdmin;
 
     if (folder.visibility === "password_protected") {
       const isUnlocked = cookieStore.get(`folder_unlock_${folder.id}`)?.value === "true";
-      if (!isUnlocked && !isOfficerOrAdmin && !isPlatformAdmin) {
+      if (!isUnlocked) {
          return false;
       }
     } else if (folder.visibility === "roles") {
@@ -118,16 +117,16 @@ export async function checkDocumentAccess(documentId: string): Promise<'granted'
   const canViewFolder = await isFolderAccessible(doc.folder_id);
   if (!canViewFolder) return 'denied';
 
-  const isOfficerOrAdmin = ["owner", "admin", "officer", "system_admin"].includes(viewer.tenantRole ?? "");
-  if (isOfficerOrAdmin || viewer.isPlatformAdmin) return 'granted';
-
-  if (doc.visibility === 'public') return 'granted';
-
   if (doc.visibility === 'password_protected') {
     const cookieStore = await cookies();
     const isUnlocked = cookieStore.get(`document_unlock_${documentId}`)?.value === "true";
     return isUnlocked ? 'granted' : 'password_required';
   }
+
+  const isOfficerOrAdmin = ["owner", "admin", "officer", "system_admin"].includes(viewer.tenantRole ?? "");
+  if (isOfficerOrAdmin || viewer.isPlatformAdmin) return 'granted';
+
+  if (doc.visibility === 'public') return 'granted';
 
   if (doc.visibility === 'roles') {
     const { data: roles } = await userClient.from("document_access_roles").select("role").eq("document_id", documentId);
@@ -352,19 +351,14 @@ export async function getDocuments(category?: string, folderId?: string | null, 
 
   // Filter individual document visibility (same logic as folder)
   const viewer = await getCurrentViewer();
-  const cookieStore = await cookies();
   const effectiveRole = previewRole || viewer?.tenantRole || "";
-  const isOfficerOrAdmin = previewRole ? false : ["owner", "admin", "officer", "system_admin"].includes(viewer?.tenantRole ?? "");
   const isAdmin = previewRole ? false : ["owner", "admin", "system_admin"].includes(viewer?.tenantRole ?? "");
   const isPlatformAdmin = previewRole ? false : viewer?.isPlatformAdmin;
 
   const filtered = [];
   for (const doc of data) {
-    if (doc.visibility === "public") {
+    if (doc.visibility === "public" || doc.visibility === "password_protected") {
       filtered.push(doc);
-    } else if (doc.visibility === "password_protected") {
-      const isUnlocked = cookieStore.get(`document_unlock_${doc.id}`)?.value === "true";
-      if (isUnlocked || isOfficerOrAdmin || isPlatformAdmin) filtered.push(doc);
     } else if (doc.visibility === "roles") {
       const { data: roles } = await userClient.from("document_access_roles").select("role").eq("document_id", doc.id);
       const allowedRoles = roles?.map(r => r.role) || [];
@@ -401,12 +395,11 @@ export async function getDownloadUrl(documentId: string) {
   if (!canViewFolder) throw new Error("Unauthorized to access parent folder");
 
   // Verify direct document access
-  const isOfficerOrAdmin = ["owner", "admin", "officer", "system_admin"].includes(viewer.tenantRole ?? "");
   const isAdmin = ["owner", "admin", "system_admin"].includes(viewer.tenantRole ?? "");
   
   if (doc.visibility === "password_protected") {
     const isUnlocked = cookieStore.get(`document_unlock_${doc.id}`)?.value === "true";
-    if (!isUnlocked && !isOfficerOrAdmin && !viewer.isPlatformAdmin) throw new Error("Password required");
+    if (!isUnlocked) throw new Error("Password required");
   } else if (doc.visibility === "roles") {
     const { data: roles } = await userClient.from("document_access_roles").select("role").eq("document_id", doc.id);
     const allowedRoles = roles?.map(r => r.role) || [];
