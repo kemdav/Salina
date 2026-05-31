@@ -203,6 +203,14 @@ Interactive features use React `useOptimistic` for instant feedback. No SWR, Rea
 | ICPEP.SE - CIT University | `icpep-se` | `http://icpep-se.salina.localhost:3000` | `icpep-se-officer@salina.dev` | `SalinaPreview123!` | officer |
 | ICPEP.SE - CIT University | `icpep-se` | `http://icpep-se.salina.localhost:3000` | `icpep-se-member@salina.dev` | `SalinaPreview123!` | member |
 | ICPEP.SE - CIT University | `icpep-se` | `http://icpep-se.salina.localhost:3000` | `icpep-se-viewer@salina.dev` | `SalinaPreview123!` | viewer |
+| CIT-U SSG | `cit-u-ssg` | `http://cit-u-ssg.salina.localhost:3000` | `cit-u-ssg-admin@salina.dev` | `SalinaPreview123!` | owner |
+| CIT-U SSG | `cit-u-ssg` | `http://cit-u-ssg.salina.localhost:3000` | `cit-u-ssg-officer@salina.dev` | `SalinaPreview123!` | officer |
+| CIT-U SSG | `cit-u-ssg` | `http://cit-u-ssg.salina.localhost:3000` | `cit-u-ssg-member@salina.dev` | `SalinaPreview123!` | member |
+| CIT-U SSG | `cit-u-ssg` | `http://cit-u-ssg.salina.localhost:3000` | `cit-u-ssg-viewer@salina.dev` | `SalinaPreview123!` | viewer |
+| Tokyo Metropolitan Curse Technical College | `tokyo-jujutsu` | `http://tokyo-jujutsu.salina.localhost:3000` | `tokyo-jujutsu-admin@salina.dev` | `SalinaPreview123!` | owner |
+| Tokyo Metropolitan Curse Technical College | `tokyo-jujutsu` | `http://tokyo-jujutsu.salina.localhost:3000` | `tokyo-jujutsu-officer@salina.dev` | `SalinaPreview123!` | officer |
+| Tokyo Metropolitan Curse Technical College | `tokyo-jujutsu` | `http://tokyo-jujutsu.salina.localhost:3000` | `tokyo-jujutsu-member@salina.dev` | `SalinaPreview123!` | member |
+| Tokyo Metropolitan Curse Technical College | `tokyo-jujutsu` | `http://tokyo-jujutsu.salina.localhost:3000` | `tokyo-jujutsu-viewer@salina.dev` | `SalinaPreview123!` | viewer |
 
 These credentials are local-only and committed intentionally.
 

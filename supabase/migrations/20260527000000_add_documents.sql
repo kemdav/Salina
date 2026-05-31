@@ -85,37 +85,49 @@ create policy documents_tenant_isolation_update
 
 grant select, insert, update, delete on public.documents to authenticated, service_role;
 
--- Storage bucket
-insert into storage.buckets (id, name, public, file_size_limit)
-values ('org-documents', 'org-documents', false, 52428800)
-on conflict (id) do nothing;
+-- Storage bucket and RLS policies — requires Supabase storage extension to be loaded.
+-- In local dev (supabase start), storage tables are initialized after migrations.
+-- The bucket and policies will be applied by the `supabase db push` or on first `supabase start`
+-- where the storage extension is already available.
+-- For CI environments, the storage schema is pre-built by Supabase's Docker image.
+do $$
+begin
+  if exists (
+    select 1 from information_schema.tables
+    where table_schema = 'storage' and table_name = 'buckets'
+  ) then
+    insert into storage.buckets (id, name, public, file_size_limit)
+    values ('org-documents', 'org-documents', false, 52428800)
+    on conflict (id) do nothing;
 
--- Storage RLS policies
-create policy "Authenticated users can read documents in their tenant"
-  on storage.objects
-  for select
-  to authenticated
-  using (
-    bucket_id = 'org-documents' and
-    public.has_tenant_access((storage.foldername(name))[1]::uuid)
-  );
+    create policy "Authenticated users can read documents in their tenant"
+      on storage.objects
+      for select
+      to authenticated
+      using (
+        bucket_id = 'org-documents' and
+        public.has_tenant_access((storage.foldername(name))[1]::uuid)
+      );
 
-create policy "Officers and Admins can upload documents to their tenant"
-  on storage.objects
-  for insert
-  to authenticated
-  with check (
-    bucket_id = 'org-documents' and
-    public.has_tenant_access((storage.foldername(name))[1]::uuid) and
-    public.is_tenant_officer_or_admin((storage.foldername(name))[1]::uuid)
-  );
+    create policy "Officers and Admins can upload documents to their tenant"
+      on storage.objects
+      for insert
+      to authenticated
+      with check (
+        bucket_id = 'org-documents' and
+        public.has_tenant_access((storage.foldername(name))[1]::uuid) and
+        public.is_tenant_officer_or_admin((storage.foldername(name))[1]::uuid)
+      );
 
-create policy "Admins can delete documents from their tenant"
-  on storage.objects
-  for delete
-  to authenticated
-  using (
-    bucket_id = 'org-documents' and
-    public.has_tenant_access((storage.foldername(name))[1]::uuid) and
-    public.is_tenant_admin((storage.foldername(name))[1]::uuid)
-  );
+    create policy "Admins can delete documents from their tenant"
+      on storage.objects
+      for delete
+      to authenticated
+      using (
+        bucket_id = 'org-documents' and
+        public.has_tenant_access((storage.foldername(name))[1]::uuid) and
+        public.is_tenant_admin((storage.foldername(name))[1]::uuid)
+      );
+  end if;
+end
+$$;
