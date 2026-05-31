@@ -295,30 +295,44 @@ export async function signUpAction(
 
     authUser = adminUserData.user;
   } else {
-    // Normal public sign-up flow using client signUp
-    const { data, error } = await supabase.auth.signUp({
+    if (!adminClient) {
+      return {
+        errors: {},
+        fields: { email: values.email, fullName: values.fullName },
+        formError: "Signups are temporarily unavailable.",
+      };
+    }
+
+    // Normal public sign-up flow using adminClient to bypass rate limits
+    const { data: adminUserData, error: adminUserError } = await adminClient.auth.admin.createUser({
       email: parsed.data.email,
       password: parsed.data.password,
-      options: {
-        data: {
-          full_name: parsed.data.fullName,
-        },
-      },
+      email_confirm: true,
+      user_metadata: {
+        full_name: parsed.data.fullName,
+      }
     });
 
-    if (error || !data.user) {
+    if (adminUserError || !adminUserData.user) {
       return {
         errors: {},
         fields: {
           email: values.email,
           fullName: values.fullName,
         },
-        formError: error?.message ?? "Unable to create your account.",
+        formError: adminUserError?.message ?? "Unable to create your account.",
       };
     }
 
-    authUser = data.user;
-    isClientSession = Boolean(data.session);
+    authUser = adminUserData.user;
+    
+    // Explicitly sign the user in so we don't prompt them for confirmation email
+    const signInResult = await supabase.auth.signInWithPassword({
+      email: parsed.data.email,
+      password: parsed.data.password,
+    });
+    
+    isClientSession = Boolean(signInResult.data.session);
   }
 
   // Handle users who were invited and try to sign up with the generic form to set their password
