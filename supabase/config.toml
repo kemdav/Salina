@@ -28,7 +28,7 @@ schema_paths = []
 
 [db.seed]
 enabled = true
-sql_paths = ["./seed.sql", "./seed_additions.sql", "./seed_roster_additions.sql"]
+sql_paths = ["./seed.sql", "./seed_additions.sql", "./seed_roster_additions.sql", "./seed_activity_additions.sql"]
 
 [realtime]
 enabled = true
