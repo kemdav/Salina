@@ -38,11 +38,13 @@ export default function MembersTable({
   roles,
   canAssignRoles,
   canManageSystemRoles,
+  canManageMembers = false,
 }: {
   members: Member[];
   roles: OrganizationRole[];
   canAssignRoles?: boolean;
   canManageSystemRoles?: boolean;
+  canManageMembers?: boolean;
 }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [now, setNow] = useState<number>(0);
@@ -317,7 +319,7 @@ export default function MembersTable({
                         handleStatusChange(member.id, member.status)
                       }
                       className="focus:outline-none cursor-pointer"
-                      disabled={isPending}
+                      disabled={isPending || !canManageMembers}
                     >
                       <Badge className={STATUS_CLASS[member.status]}>
                         {member.status}
@@ -328,7 +330,7 @@ export default function MembersTable({
                     <button
                       onClick={() => handleDuesChange(member.id, member.dues)}
                       className="focus:outline-none cursor-pointer"
-                      disabled={isPending}
+                      disabled={isPending || !canManageMembers}
                     >
                       <Badge className={DUES_CLASS[member.dues]}>
                         {member.dues}
@@ -355,13 +357,17 @@ export default function MembersTable({
                     {new Date(member.joinedAt).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3">
-                    <MemberActionsMenu
-                      member={member}
-                      onRemove={handleRemove}
-                      onRename={handleRename}
-                      onChangeRole={handleRoleEdit}
-                      onUpdateTags={handleTags}
-                    />
+                    {canManageMembers ? (
+                      <MemberActionsMenu
+                        member={member}
+                        onRemove={handleRemove}
+                        onRename={handleRename}
+                        onChangeRole={handleRoleEdit}
+                        onUpdateTags={handleTags}
+                      />
+                    ) : (
+                      <span className="text-xs text-slate-400">—</span>
+                    )}
                   </td>
                 </tr>
               ))

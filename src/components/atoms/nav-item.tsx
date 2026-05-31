@@ -29,7 +29,7 @@ export function NavItem({
         "relative z-10 flex h-10.5 items-center gap-3 overflow-hidden rounded-lg pl-4 pr-3 transition-all duration-300 ease-out group cursor-pointer",
         isActive
           ? "bg-(--sidebar-active-bg,rgba(255,255,255,0.08)) text-(--sidebar-active-text,#ffffff) font-medium"
-          : "text-(--sidebar-text,#94a3b8) hover:text-(--sidebar-hover-text,#f8fafc)",
+          : "text-(--sidebar-text,#94a3b8) hover:bg-(--sidebar-hover-bg,rgba(255,255,255,0.05)) hover:text-(--sidebar-hover-text,#f8fafc)",
       )}
     >
       {isActive && (

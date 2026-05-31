@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   UserRole,
   getSidebarRoutes,
+  type NavRoute,
   type SidebarRouteOptions,
 } from "@/lib/navigation-config";
 import { NavItem } from "@/components/atoms/nav-item";
@@ -41,7 +42,6 @@ export function SidebarNav({
   onSignOut,
 }: SidebarNavProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const pathname = usePathname();
   const isPlatformLevel = role === "SuperAdmin" || role === "Adviser";
   const routeOptions: SidebarRouteOptions = isTemporaryApplicant
@@ -50,9 +50,32 @@ export function SidebarNav({
   const baseNavItems = getSidebarRoutes(role, routeOptions) ?? [];
 
   // Inject additional nav items based on custom permissions if the user is a Member
-  const navItems = [...baseNavItems];
+  let extraRoutes: NavRoute[] = [];
   if (role === "Member" || role === "Officer") {
-    const extraRoutes = [];
+    if (customPermissions.includes("Announcement posting")) {
+      extraRoutes.push({
+        label: "Feed",
+        href: "/officer/feed",
+        icon: (
+          <svg
+            width="20"
+            height="20"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M7 8h10M7 12h6m-6 4h8M5 5h14a2 2 0 012 2v10a2 2 0 01-2 2H9l-4 3v-3H5a2 2 0 01-2-2V7a2 2 0 012-2z"
+            />
+          </svg>
+        ),
+        visibleTo: ["Member" as const, "Officer" as const],
+      });
+    }
     if (customPermissions.includes("Event management")) {
       extraRoutes.push({
         label: "Events",
@@ -147,14 +170,41 @@ export function SidebarNav({
         visibleTo: ["Member" as const, "Officer" as const],
       });
     }
+    if (customPermissions.includes("Settings access")) {
+      extraRoutes.push({
+        label: "Settings",
+        href: "/officer/settings",
+        icon: (
+          <svg
+            width="20"
+            height="20"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+            />
+          </svg>
+        ),
+        visibleTo: ["Member" as const, "Officer" as const],
+      });
+    }
 
-    // Add extra routes and remove duplicates (e.g. if Member already has an 'Events' tab, we might want to override it,
-    // but the member route for events is /member/events which gets relabeled as "Calendar").
-    extraRoutes.forEach((route) => {
-      if (!navItems.find((n) => n.href === route.href)) {
-        navItems.push(route);
-      }
-    });
+    // Filter out extraRoutes if their href already exists in baseNavItems
+    extraRoutes = extraRoutes.filter(
+      (route) => !baseNavItems.find((n) => n.href === route.href),
+    );
   }
 
   const workspaceLogo = tenant?.logoUrl || tenant?.logo;
@@ -259,20 +309,8 @@ export function SidebarNav({
         )}
       </div>
 
-      <nav
-        className="relative flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto px-3 py-6 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20"
-        onMouseLeave={() => setHoveredIndex(null)}
-      >
-        <div
-          className="pointer-events-none absolute left-3 right-3 z-0 h-10.5 rounded-lg bg-(--sidebar-hover-bg,rgba(255,255,255,0.05)) transition-all duration-300 ease-out"
-          style={{
-            top: "24px",
-            transform: `translateY(${hoveredIndex !== null ? hoveredIndex * 48 : 0}px)`,
-            opacity: hoveredIndex !== null ? 1 : 0,
-          }}
-        />
-
-        {navItems.map((route, index) => {
+      <nav className="relative flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto px-3 py-6 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20">
+        {baseNavItems.map((route) => {
           const isActive =
             pathname === route.href || pathname?.startsWith(`${route.href}/`);
 
@@ -299,7 +337,35 @@ export function SidebarNav({
               label={label}
               isActive={isActive}
               isCollapsed={isCollapsed}
-              onMouseEnter={() => setHoveredIndex(index)}
+            />
+          );
+        })}
+
+        {extraRoutes.length > 0 && (
+          <div className="my-2 border-t border-white/10 mx-3 shrink-0" />
+        )}
+
+        {extraRoutes.map((route) => {
+          const isActive =
+            pathname === route.href || pathname?.startsWith(`${route.href}/`);
+
+          const label =
+            role === "Officer" && route.href.endsWith("/members")
+              ? "Roster"
+              : role === "Member" && route.href.startsWith("/officer/settings")
+                ? "Settings (Admin)"
+                : role === "Member" && route.href.startsWith("/officer/feed")
+                  ? "Home Feed (Admin)"
+                  : route.label;
+
+          return (
+            <NavItem
+              key={route.href}
+              href={route.href}
+              icon={route.icon}
+              label={label}
+              isActive={isActive}
+              isCollapsed={isCollapsed}
             />
           );
         })}

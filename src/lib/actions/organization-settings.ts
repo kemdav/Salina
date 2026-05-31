@@ -100,6 +100,21 @@ export async function updateOrganizationSettings(
     const billingEmail = getFormValue(formData, 'billingEmail');
     const organizationType = getFormValue(formData, 'organizationType');
     const themeConfig = parseThemeConfig(formData.get('themeConfig'));
+    const intent = getFormValue(formData, 'intent');
+
+    if (intent === 'suspend') {
+        const { error } = await client
+            .from('organizations')
+            .update({ status: 'suspended' })
+            .eq('id', tenantContext.tenant.id);
+
+        if (error) {
+            return { error: error.message };
+        }
+
+        revalidatePath('/', 'layout');
+        return { success: 'Organization suspended successfully.' };
+    }
 
     const updatePayload: Record<string, unknown> = {};
 

@@ -3,15 +3,19 @@ import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { getMembers } from "@/lib/actions/members";
 import { getRoles } from "@/lib/actions/roles";
-import { canAssignTemporaryRoles } from "@/lib/organization-permissions";
+import {
+  canAssignTemporaryRoles,
+  canManageMembers as getCanManageMembers,
+} from "@/lib/organization-permissions";
 import { getCurrentViewer } from "@/lib/supabase/server";
 import MembersTable from "@/app/admin/members/MembersTable";
 
 export default async function OfficerRosterPage() {
   const viewer = await getCurrentViewer();
   const canAssignRoles = canAssignTemporaryRoles(viewer);
+  const canManageMembers = getCanManageMembers(viewer);
 
-  if (canAssignRoles) {
+  if (canAssignRoles || canManageMembers) {
     const members = await getMembers();
     const roles = await getRoles();
 
@@ -22,17 +26,21 @@ export default async function OfficerRosterPage() {
         canAssignRoles={canAssignRoles}
         canManageSystemRoles={
           viewer
-            ? ["admin", "owner", "system_admin"].includes(viewer.tenantRole || "") ||
-              viewer.isPlatformAdmin
+            ? ["admin", "owner", "system_admin"].includes(
+                viewer.tenantRole || "",
+              ) || viewer.isPlatformAdmin
             : false
         }
+        canManageMembers={canManageMembers}
       />
     );
   }
 
   const members = await getMembers();
 
-  const activeMembers = members.filter((member) => member.status === "Active").length;
+  const activeMembers = members.filter(
+    (member) => member.status === "Active",
+  ).length;
   const onLeave = members.filter((member) =>
     ["Alumni", "Probation", "Suspended"].includes(member.status),
   ).length;
@@ -41,7 +49,11 @@ export default async function OfficerRosterPage() {
   ).length;
 
   const rosterStats = [
-    { label: "Active members", value: activeMembers.toString(), tone: "emerald" },
+    {
+      label: "Active members",
+      value: activeMembers.toString(),
+      tone: "emerald",
+    },
     { label: "On leave/Probation", value: onLeave.toString(), tone: "amber" },
     { label: "Officers", value: officersCount.toString(), tone: "blue" },
   ];
@@ -51,13 +63,16 @@ export default async function OfficerRosterPage() {
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:p-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-2xl space-y-4">
-            <Badge className="border-transparent bg-[var(--primary)] text-white">Roster</Badge>
+            <Badge className="border-transparent bg-[var(--primary)] text-white">
+              Roster
+            </Badge>
             <div>
               <h2 className="font-[family:var(--font-heading)] text-3xl font-bold tracking-tight text-slate-900">
                 Organization members
               </h2>
               <p className="mt-3 text-sm leading-6 text-slate-500">
-                Track current members, assignments, and levels in a single data table.
+                Track current members, assignments, and levels in a single data
+                table.
               </p>
             </div>
           </div>
@@ -75,7 +90,9 @@ export default async function OfficerRosterPage() {
             >
               <p className="text-sm font-medium text-slate-500">{stat.label}</p>
               <div className="mt-3 flex items-center justify-between gap-3">
-                <p className="text-3xl font-bold text-slate-900">{stat.value}</p>
+                <p className="text-3xl font-bold text-slate-900">
+                  {stat.value}
+                </p>
                 <span
                   className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] ${stat.tone === "emerald" ? "bg-emerald-50 text-emerald-700" : stat.tone === "amber" ? "bg-amber-50 text-amber-700" : "bg-blue-50 text-blue-700"}`}
                 >
@@ -111,11 +128,16 @@ export default async function OfficerRosterPage() {
               </thead>
               <tbody className="divide-y divide-slate-200 bg-white">
                 {members.map((member) => (
-                  <tr key={member.membership_id} className="align-top transition-colors hover:bg-slate-50">
+                  <tr
+                    key={member.membership_id}
+                    className="align-top transition-colors hover:bg-slate-50"
+                  >
                     <td className="px-4 py-4 font-medium text-slate-900">
                       {member.name || "Unnamed Member"}
                     </td>
-                    <td className="px-4 py-4 capitalize text-slate-600">{member.role}</td>
+                    <td className="px-4 py-4 capitalize text-slate-600">
+                      {member.role}
+                    </td>
                     <td className="px-4 py-4">
                       <Badge
                         className={
@@ -147,7 +169,10 @@ export default async function OfficerRosterPage() {
                 ))}
                 {members.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-4 py-6 text-center text-slate-500">
+                    <td
+                      colSpan={5}
+                      className="px-4 py-6 text-center text-slate-500"
+                    >
                       No members found.
                     </td>
                   </tr>
@@ -159,9 +184,13 @@ export default async function OfficerRosterPage() {
 
         <aside className="space-y-6">
           <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-slate-900">Roster actions</h3>
+            <h3 className="text-lg font-semibold text-slate-900">
+              Roster actions
+            </h3>
             <div className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
-              <p>• Sync membership changes from onboarding and admin approvals.</p>
+              <p>
+                • Sync membership changes from onboarding and admin approvals.
+              </p>
               <p>• Export a filtered view before officer meetings.</p>
               <p>• Keep attendance history ready for event planning.</p>
             </div>

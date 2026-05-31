@@ -102,3 +102,46 @@ export function canManageAnnouncements(
     viewer.tenantRole === "officer"
   );
 }
+
+export function canManageMembers(
+  viewer: TemporaryApplicantPermissionViewer | null | undefined
+) {
+  if (!viewer) {
+    return false;
+  }
+
+  if (viewer.isPlatformAdmin) {
+    return true;
+  }
+
+  if (viewer.customPermissions.includes("Member roster edits")) {
+    return true;
+  }
+
+  return (
+    viewer.tenantRole === "owner" ||
+    viewer.tenantRole === "admin" ||
+    viewer.tenantRole === "officer"
+  );
+}
+
+export function canAccessOrganizationSettings(
+  viewer: TemporaryApplicantPermissionViewer | null | undefined
+) {
+  if (!viewer) {
+    return false;
+  }
+
+  if (viewer.isPlatformAdmin) {
+    return true;
+  }
+
+  if (viewer.customPermissions.includes("Settings access")) {
+    return true;
+  }
+
+  return (
+    viewer.tenantRole === "owner" ||
+    viewer.tenantRole === "admin"
+  );
+}

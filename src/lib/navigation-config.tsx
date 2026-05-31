@@ -1,6 +1,11 @@
 import React from "react";
 
-export type UserRole = "SuperAdmin" | "Admin" | "Officer" | "Member" | "Adviser";
+export type UserRole =
+  | "SuperAdmin"
+  | "Admin"
+  | "Officer"
+  | "Member"
+  | "Adviser";
 
 export type VisibilityRole =
   | "Owner"
@@ -144,7 +149,7 @@ const NAV_ITEM_DEFINITIONS: Array<{
   {
     label: "Attendance",
     slug: "attendance",
-    visibleTo: ["Officer", "Member"],
+    visibleTo: ["Admin", "Officer", "Member"],
     icon: (
       <IconWrapper>
         <path
@@ -278,18 +283,14 @@ const ROLE_ROUTE_SLUGS: Record<UserRole, RouteSlug[]> = {
     "advisers",
     "settings",
   ],
-  Adviser: [
-    "dashboard",
-    "members",
-    "accreditations",
-    "advisers",
-  ],
+  Adviser: ["dashboard", "members", "accreditations", "advisers"],
   Admin: [
     "dashboard",
     "feed",
     "members",
     "recruitment",
     "events",
+    "attendance",
     "roles",
     "settings",
     "documents",
@@ -321,7 +322,8 @@ function buildRoutesForRole(role: UserRole) {
     )
     .map<NavRoute>((item) => {
       const isOrganizationsTab =
-        (role === "SuperAdmin" || role === "Adviser") && item.slug === "members";
+        (role === "SuperAdmin" || role === "Adviser") &&
+        item.slug === "members";
 
       return {
         label: isOrganizationsTab ? "Organizations" : item.label,
