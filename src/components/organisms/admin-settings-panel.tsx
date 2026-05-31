@@ -208,7 +208,15 @@ export function AdminSettingsPanel({ tenant }: { tenant: TenantSettings }) {
               hide the org from public listings until reactivated by a Super
               Admin.
             </p>
-            <Button variant="destructive">Suspend Organization</Button>
+            <Button
+              variant="destructive"
+              type="submit"
+              name="intent"
+              value="suspend"
+              disabled={generalPending}
+            >
+              {generalPending ? "Suspending..." : "Suspend Organization"}
+            </Button>
           </div>
         </form>
       ) : null}
