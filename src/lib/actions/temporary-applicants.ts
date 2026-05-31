@@ -51,6 +51,27 @@ export type TemporaryApplicantApplicationActionState = {
   };
 };
 
+export type SelfInitiateApplicationSubmission =
+  | {
+      ok: true;
+      values: {
+        applicantEmail: string;
+        applicantName: string;
+        recruitmentEntryId: string;
+        tenantSlug: string;
+      };
+    }
+  | {
+      ok: false;
+      error?: string;
+      notice?: string;
+      fields: {
+        applicantEmail: string;
+        applicantName: string;
+        recruitmentEntryId?: string;
+      };
+    };
+
 type TemporaryApplicantRecord = {
   applicant_email: string;
   applicant_name: string;
@@ -251,31 +272,83 @@ export async function createTemporaryApplicantAction(
   };
 }
 
+export function parseSelfInitiateApplicationSubmission(
+  tenantSlug: string,
+  recruitmentEntryId: string,
+  formData: FormData,
+): SelfInitiateApplicationSubmission {
+  const fields = {
+    applicantEmail: String(formData.get("applicantEmail") ?? "").trim(),
+    applicantName: String(formData.get("applicantName") ?? "").trim(),
+    recruitmentEntryId: recruitmentEntryId.trim() || undefined,
+  };
+
+  if (!fields.recruitmentEntryId) {
+    return {
+      ok: false,
+      error: "Application link is missing its recruitment cycle.",
+      fields,
+    };
+  }
+
+  if (!tenantSlug.trim()) {
+    return {
+      ok: false,
+      error: "Application link is missing its tenant information.",
+      fields,
+    };
+  }
+
+  const values = createTemporaryApplicantSchema.safeParse({
+    applicantEmail: fields.applicantEmail,
+    applicantName: fields.applicantName,
+    recruitmentEntryId: fields.recruitmentEntryId,
+  });
+
+  if (!values.success) {
+    const fieldErrors = values.error.flatten().fieldErrors;
+
+    return {
+      ok: false,
+      notice:
+        fieldErrors.applicantEmail?.[0] ??
+        fieldErrors.applicantName?.[0] ??
+        fieldErrors.recruitmentEntryId?.[0] ??
+        "Enter applicant details.",
+      fields,
+    };
+  }
+
+  return {
+    ok: true,
+    values: {
+      applicantEmail: values.data.applicantEmail,
+      applicantName: values.data.applicantName,
+      recruitmentEntryId: fields.recruitmentEntryId,
+      tenantSlug: tenantSlug.trim(),
+    },
+  };
+}
+
 export async function selfInitiateApplicationAction(
+  tenantSlug: string,
+  recruitmentEntryId: string,
   _previousState: TemporaryApplicantActionState,
   formData: FormData,
 ): Promise<TemporaryApplicantActionState> {
-  const values = createTemporaryApplicantSchema.safeParse({
-    applicantEmail: String(formData.get("applicantEmail") ?? "").trim(),
-    applicantName: String(formData.get("applicantName") ?? "").trim(),
-    recruitmentEntryId: formData.get("recruitmentEntryId") ? String(formData.get("recruitmentEntryId")).trim() : undefined,
-  });
+  const submission = parseSelfInitiateApplicationSubmission(
+    tenantSlug,
+    recruitmentEntryId,
+    formData,
+  );
 
-  const tenantSlug = String(formData.get("tenantSlug") ?? "").trim();
-
-  if (!values.success || !values.data.recruitmentEntryId || !tenantSlug) {
-    const fieldErrors = !values.success ? values.error.flatten().fieldErrors : {};
-
+  if (!submission.ok) {
     return {
-      error: undefined,
-      fields: {
-        applicantEmail: String(formData.get("applicantEmail") ?? "").trim(),
-        applicantName: String(formData.get("applicantName") ?? "").trim(),
-        recruitmentEntryId: formData.get("recruitmentEntryId") ? String(formData.get("recruitmentEntryId")).trim() : undefined,
-      },
+      error: submission.error,
+      fields: submission.fields,
       inviteToken: undefined,
       inviteUrl: undefined,
-      notice: fieldErrors.applicantEmail?.[0] ?? fieldErrors.applicantName?.[0] ?? "Enter applicant details.",
+      notice: submission.notice,
     };
   }
 
@@ -284,44 +357,56 @@ export async function selfInitiateApplicationAction(
   if (!adminClient) {
     return {
       error: "Application system is unavailable right now.",
-      fields: values.data,
+      fields: {
+        applicantEmail: submission.values.applicantEmail,
+        applicantName: submission.values.applicantName,
+        recruitmentEntryId: submission.values.recruitmentEntryId,
+      },
     };
   }
 
   const { data: tenantData, error: tenantError } = await adminClient
     .from("organizations")
     .select("id")
-    .eq("slug", tenantSlug)
+    .eq("slug", submission.values.tenantSlug)
     .single();
 
   if (tenantError || !tenantData) {
     return {
       error: "Organization not found.",
-      fields: values.data,
+      fields: {
+        applicantEmail: submission.values.applicantEmail,
+        applicantName: submission.values.applicantName,
+        recruitmentEntryId: submission.values.recruitmentEntryId,
+      },
     };
   }
 
   const { data: entryData, error: entryError } = await adminClient
     .from("recruitment_entries")
     .select("status")
-    .eq("id", values.data.recruitmentEntryId)
+    .eq("id", submission.values.recruitmentEntryId)
     .eq("tenant_id", tenantData.id)
     .single();
 
   if (entryError || !entryData || entryData.status !== "published") {
     return {
       error: "This recruitment cycle is not currently open.",
-      fields: values.data,
+      fields: {
+        applicantEmail: submission.values.applicantEmail,
+        applicantName: submission.values.applicantName,
+        recruitmentEntryId: submission.values.recruitmentEntryId,
+      },
     };
   }
 
   const { data: applicant, error } = await adminClient
     .from("temporary_applicants")
     .insert({
-      applicant_email: values.data.applicantEmail,
-      applicant_name: values.data.applicantName,
+      applicant_email: submission.values.applicantEmail,
+      applicant_name: submission.values.applicantName,
       tenant_id: tenantData.id,
-      recruitment_entry_id: values.data.recruitmentEntryId,
+      recruitment_entry_id: submission.values.recruitmentEntryId,
     })
     .select("id, invite_token")
     .single<{ id: string; invite_token: string }>();
@@ -334,16 +419,24 @@ export async function selfInitiateApplicationAction(
 
     return {
       error: errorMessage,
-      fields: values.data,
+      fields: {
+        applicantEmail: submission.values.applicantEmail,
+        applicantName: submission.values.applicantName,
+        recruitmentEntryId: submission.values.recruitmentEntryId,
+      },
     };
   }
 
   return {
     error: undefined,
-    fields: values.data,
+    fields: {
+      applicantEmail: submission.values.applicantEmail,
+      applicantName: submission.values.applicantName,
+      recruitmentEntryId: submission.values.recruitmentEntryId,
+    },
     inviteToken: applicant.invite_token,
-    inviteUrl: await buildInviteUrl(tenantSlug, applicant.invite_token),
-    notice: `Application started for ${values.data.applicantName}.`,
+    inviteUrl: await buildInviteUrl(submission.values.tenantSlug, applicant.invite_token),
+    notice: `Application started for ${submission.values.applicantName}.`,
   };
 }
 

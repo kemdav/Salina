@@ -29,7 +29,7 @@ export function SelfInitiateApplicationForm({
   entryDescription?: string | null;
 }) {
   const [state, action, pending] = useActionState(
-    selfInitiateApplicationAction,
+    selfInitiateApplicationAction.bind(null, tenantSlug, entryId),
     INITIAL_STATE,
   );
 
@@ -63,9 +63,6 @@ export function SelfInitiateApplicationForm({
         </p>
 
         <div className="mt-6 space-y-4">
-          <input type="hidden" name="tenantSlug" value={tenantSlug} />
-          <input type="hidden" name="recruitmentEntryId" value={entryId} />
-
           <TextField
             defaultValue={state.fields.applicantName}
             id="applicantName"
