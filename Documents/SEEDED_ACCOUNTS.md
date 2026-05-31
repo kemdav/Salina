@@ -56,6 +56,7 @@ This file lists the local preview accounts seeded for development. All accounts 
 
 | Tenant | Role | Email | Local URL |
 | --- | --- | --- | --- |
+| CIT-U SSG | Owner | `cit-u-ssg-admin@salina.dev` | <http://cit-u-ssg.salina.localhost:3000> |
 | CIT-U SSG | Officer | `cit-u-ssg-mia-santos@salina.dev` | <http://cit-u-ssg.salina.localhost:3000> |
 | CIT-U SSG | Officer | `cit-u-ssg-paolo-mercado@salina.dev` | <http://cit-u-ssg.salina.localhost:3000> |
 | CIT-U SSG | Member | `cit-u-ssg-jessa-lim@salina.dev` | <http://cit-u-ssg.salina.localhost:3000> |
@@ -73,6 +74,7 @@ This file lists the local preview accounts seeded for development. All accounts 
 
 | Tenant | Role | Email | Local URL |
 | --- | --- | --- | --- |
+| Tokyo Jujutsu | Owner | `tokyo-jujutsu-admin@salina.dev` | <http://tokyo-jujutsu.salina.localhost:3000> |
 | Tokyo Jujutsu | Officer | `tokyo-jujutsu-utahime@salina.dev` | <http://tokyo-jujutsu.salina.localhost:3000> |
 | Tokyo Jujutsu | Officer | `tokyo-jujutsu-shoko@salina.dev` | <http://tokyo-jujutsu.salina.localhost:3000> |
 | Tokyo Jujutsu | Member | `tokyo-jujutsu-yuta@salina.dev` | <http://tokyo-jujutsu.salina.localhost:3000> |

@@ -7,6 +7,7 @@
 with roster as (
   select *
   from (values
+    ('20202020-2020-20e0-2020-202020202020'::uuid, 'cit-u-ssg-admin@salina.dev', 'CIT-U SSG Owner', 'owner'),
     ('20202020-2020-20e1-2020-202020202020'::uuid, 'cit-u-ssg-mia-santos@salina.dev', 'Mia Santos', 'officer'),
     ('20202020-2020-20e2-2020-202020202020'::uuid, 'cit-u-ssg-paolo-mercado@salina.dev', 'Paolo Mercado', 'officer'),
     ('20202020-2020-20e3-2020-202020202020'::uuid, 'cit-u-ssg-jessa-lim@salina.dev', 'Jessa Mae Lim', 'member'),
@@ -65,6 +66,7 @@ set
 with roster as (
   select *
   from (values
+    ('20202020-2020-20e0-2020-202020202020'::uuid, 'cit-u-ssg-admin@salina.dev', 'CIT-U SSG Owner', 'owner'),
     ('20202020-2020-20e1-2020-202020202020'::uuid, 'cit-u-ssg-mia-santos@salina.dev', 'Mia Santos', 'officer'),
     ('20202020-2020-20e2-2020-202020202020'::uuid, 'cit-u-ssg-paolo-mercado@salina.dev', 'Paolo Mercado', 'officer'),
     ('20202020-2020-20e3-2020-202020202020'::uuid, 'cit-u-ssg-jessa-lim@salina.dev', 'Jessa Mae Lim', 'member'),
@@ -102,6 +104,7 @@ set
 with roster as (
   select *
   from (values
+    ('20202020-2020-20e0-2020-202020202020'::uuid, 'cit-u-ssg-admin@salina.dev', 'CIT-U SSG Owner', 'owner'),
     ('20202020-2020-20e1-2020-202020202020'::uuid, 'cit-u-ssg-mia-santos@salina.dev', 'Mia Santos', 'officer'),
     ('20202020-2020-20e2-2020-202020202020'::uuid, 'cit-u-ssg-paolo-mercado@salina.dev', 'Paolo Mercado', 'officer'),
     ('20202020-2020-20e3-2020-202020202020'::uuid, 'cit-u-ssg-jessa-lim@salina.dev', 'Jessa Mae Lim', 'member'),
@@ -132,6 +135,7 @@ set
 with roster as (
   select *
   from (values
+    ('21212121-2121-21e0-2121-212121212121'::uuid, 'tokyo-jujutsu-admin@salina.dev', 'Tokyo Jujutsu Owner', 'owner'),
     ('21212121-2121-21e1-2121-212121212121'::uuid, 'tokyo-jujutsu-utahime@salina.dev', 'Utahime Iori', 'officer'),
     ('21212121-2121-21e2-2121-212121212121'::uuid, 'tokyo-jujutsu-shoko@salina.dev', 'Shoko Ieiri', 'officer'),
     ('21212121-2121-21e3-2121-212121212121'::uuid, 'tokyo-jujutsu-yuta@salina.dev', 'Yuta Okkotsu', 'member'),
@@ -190,6 +194,7 @@ set
 with roster as (
   select *
   from (values
+    ('21212121-2121-21e0-2121-212121212121'::uuid, 'tokyo-jujutsu-admin@salina.dev', 'Tokyo Jujutsu Owner', 'owner'),
     ('21212121-2121-21e1-2121-212121212121'::uuid, 'tokyo-jujutsu-utahime@salina.dev', 'Utahime Iori', 'officer'),
     ('21212121-2121-21e2-2121-212121212121'::uuid, 'tokyo-jujutsu-shoko@salina.dev', 'Shoko Ieiri', 'officer'),
     ('21212121-2121-21e3-2121-212121212121'::uuid, 'tokyo-jujutsu-yuta@salina.dev', 'Yuta Okkotsu', 'member'),
@@ -227,6 +232,7 @@ set
 with roster as (
   select *
   from (values
+    ('21212121-2121-21e0-2121-212121212121'::uuid, 'tokyo-jujutsu-admin@salina.dev', 'Tokyo Jujutsu Owner', 'owner'),
     ('21212121-2121-21e1-2121-212121212121'::uuid, 'tokyo-jujutsu-utahime@salina.dev', 'Utahime Iori', 'officer'),
     ('21212121-2121-21e2-2121-212121212121'::uuid, 'tokyo-jujutsu-shoko@salina.dev', 'Shoko Ieiri', 'officer'),
     ('21212121-2121-21e3-2121-212121212121'::uuid, 'tokyo-jujutsu-yuta@salina.dev', 'Yuta Okkotsu', 'member'),
